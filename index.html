@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<meta name="ext-resource-dependency" content="https://cdn.prod.website-files.com/61bfcea949e78a64df3dcc8a/65b5721a80c184325a8fea91_rewards-2.png" data-resource-id="m0">
+<meta name="ext-resource-dependency" content="https://cdn.prod.website-files.com/61bfcea949e78a64df3dcc8a/65b0054ef470b736a1e01bf0_chat-1.png" data-resource-id="m1">
+<meta name="ext-resource-dependency" content="https://cdn.prod.website-files.com/61bfcea949e78a64df3dcc8a/65b0054f1a6aab36d00e14e5_ratings-1.png" data-resource-id="m2">
+<meta name="ext-resource-dependency" content="https://cdn.prod.website-files.com/61bfcea949e78a64df3dcc8a/65b005b8069fd5247b08aab1_sp-1.png" data-resource-id="m3">
+<meta name="ext-resource-dependency" content="./assets/ouster-fleet.png" data-resource-id="m4">
+<meta name="ext-resource-dependency" content="https://cdn.prod.website-files.com/61bfcea949e78a64df3dcc8a/65b041af6127d88b289d5fba_nw-1.png" data-resource-id="m5">
+<meta name="ext-resource-dependency" content="./assets/moi.png" data-resource-id="moi">
+<template id="__bundler_thumbnail" data-bg-color="#0a0b0e">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#0a0b0e"></rect>
+    <g transform="translate(600 400)">
+      <rect x="-70" y="-360" width="140" height="290" rx="26" fill="#e9e9ee" transform="rotate(18)"></rect>
+      <rect x="-70" y="-150" width="140" height="290" rx="26" fill="#c7ccd8" transform="rotate(-8)"></rect>
+      <rect x="-70" y="70" width="140" height="290" rx="26" fill="#8f97a8" transform="rotate(14)"></rect>
+    </g>
+    <text x="60" y="90" font-family="Georgia, serif" font-size="64" fill="#ececf0">Jason Lim</text>
+  </svg>
+</template>
+<style>
+  /* PP Neue Montreal — one family, weights 350–700 */
+  @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal Book'), url('./assets/fonts/extra3.woff2') format('woff2'); font-weight: 350; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal'), local('PP Neue Montreal Regular'), url('./assets/fonts/extra4.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal Medium'), url('./assets/fonts/extra1.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal SemiBold'), url('./assets/fonts/extra5.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal Bold'), url('./assets/fonts/extra2.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0a0b0e; overflow: hidden; }
+  a { color: #8aa0ff; text-decoration: none; transition: filter .26s ease, opacity .26s ease; }
+  a:hover { color: #ffffff; }
+  ::selection { background: #8aa0ff; color: #0a0b0e; }
+  @keyframes spiralFadeIn { from { opacity: 0; transform: scale(.98); } to { opacity: 1; transform: scale(1); } }
+  @keyframes spiralTextIn { 0% { opacity: 0; filter: blur(26px); } 35% { opacity: 1; } 100% { opacity: 1; filter: blur(0); } }
+  @keyframes crtSweep { 0% { transform: translateY(-14vh); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(112vh); opacity: 0; } }
+  @keyframes scanMove { from { background-position: 0 0; } to { background-position: 0 60px; } }
+  @keyframes scanMask { from { -webkit-mask-position: 0 0; mask-position: 0 0; } to { -webkit-mask-position: 0 6px; mask-position: 0 6px; } }
+  @keyframes colonBlink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+  @keyframes marquee { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+</style>
+</helmet>
+
+<div ref="{{ setRoot }}" style="position: fixed; inset: 0; background: #000000; font-family: PP Neue Montreal; color: #ececf0; overflow: hidden; cursor: grab; user-select: none; font-weight: 300; text-transform: uppercase; font-size: 32px; line-height: 1" onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" onPointerLeave="{{ onUp }}" onWheel="{{ onWheel }}">
+
+  <!-- "Slurbt"-style glitch: stepped horizontal tear + RGB split (applied to non-hovered devices) -->
+  <svg width="0" height="0" style="position:absolute; width:0; height:0; pointer-events:none;" aria-hidden="true">
+    <filter id="slurbt" x="-30%" y="-6%" width="160%" height="112%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0 0.07" numOctaves="1" seed="2" result="n0">
+        <animate attributeName="seed" values="2;11;5;14;7;1;9;3" dur="{{ slurDur }}" calcMode="discrete" repeatCount="indefinite"></animate>
+        <animate attributeName="baseFrequency" values="0 0.05; 0 0.13; 0 0.07" dur="1.8s" repeatCount="indefinite"></animate>
+      </feTurbulence>
+      <feComponentTransfer in="n0" result="n">
+        <feFuncB type="discrete" tableValues="0.5"></feFuncB>
+      </feComponentTransfer>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="{{ slurScale }}" ref="{{ setSlurDisp }}" xChannelSelector="R" yChannelSelector="B" result="disp"></feDisplacementMap>
+      <feColorMatrix in="disp" type="saturate" values="0" result="gray"></feColorMatrix>
+      <!-- Grainy pixelation: chunky animated noise, clipped to the device, blended over -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="4" stitchTiles="stitch" result="gn">
+        <animate attributeName="seed" values="1;6;3;9;2;7" dur="0.28s" calcMode="discrete" repeatCount="indefinite"></animate>
+      </feTurbulence>
+      <feColorMatrix in="gn" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.26 0" ref="{{ setSlurGrain }}" result="grain"></feColorMatrix>
+      <feComposite in="grain" in2="gray" operator="in" result="grainClipped"></feComposite>
+      <feBlend in="gray" in2="grainClipped" mode="overlay"></feBlend>
+    </filter>
+    <filter id="goo" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGoo }}" result="blur"></feGaussianBlur>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 {{ gooThresh }} -9"></feColorMatrix>
+    </filter>
+    <filter id="gooReveal" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal }}" result="blur"></feGaussianBlur>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 {{ gooThresh }} -9"></feColorMatrix>
+    </filter>
+  </svg>
+
+  <!-- Spiral scene -->
+  <div ref="{{ setScene }}" style="position:absolute; inset:0; perspective:2100px; perspective-origin:50% 50%; opacity:0;">
+    <div ref="{{ setHelix }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); transform-style:preserve-3d; will-change:transform;">
+      <sc-for list="{{ cards }}" as="card" hint-placeholder-count="0">
+        <div ref="{{ card.ref }}" style="{{ card.style }}">
+          <div style="{{ card.innerStyle }}" onMouseEnter="{{ card.onEnter }}" onMouseLeave="{{ card.onLeave }}" onClick="{{ card.onOpen }}">
+            {{ card.body }}
+            <div style="{{ card.cardScan }}"></div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- Subtle darkened vignette -->
+  <div style="position:absolute; inset:0; z-index:8; pointer-events:none; background:radial-gradient(115% 95% at 50% 50%, rgba(0,0,0,0) 42%, rgba(0,0,0,.72) 100%);"></div>
+
+  <!-- CRT scanline overlay + occasional bright sweep line (hidden on hover) -->
+  <div style="{{ scanStyle }}">
+    <div ref="{{ setSweep }}" style="position:absolute; left:0; right:0; top:0; height:2px; background:linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.1) 50%, rgba(255,255,255,0)); filter:blur(.6px); box-shadow:0 0 8px rgba(255,255,255,.12); opacity:0; will-change:transform;"></div>
+  </div>
+
+  <!-- Progressive-blur header & footer backdrops (blur strong at the edge, unblurs inward) -->
+  <div style="position:absolute; top:0; left:0; right:0; height:172px; z-index:6; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to bottom,rgba(10,11,14,.72),rgba(10,11,14,0));"></div>
+  <div style="position:absolute; bottom:0; left:0; right:0; height:160px; z-index:6; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to top,rgba(10,11,14,.72),rgba(10,11,14,0));"></div>
+
+  <!-- Header -->
+  <header ref="{{ setHeaderEl }}" style="position:absolute; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:16; pointer-events:none; mix-blend-mode:difference; opacity:0;">
+    <div style="pointer-events:auto;">
+      <h1 style="margin:0; font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; cursor:pointer;" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goHome }}">Jason Lim</h1>
+    </div>
+    <nav style="pointer-events:auto; display:flex; gap:26px; align-items:center;">
+      <a href="mailto:jason.jinulim@gmail.com" style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ececf0;" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ contact }}">Contact</a>
+    </nav>
+  </header>
+
+  <!-- Center avatar (kept out of the header's difference blend so the photo stays true colour) -->
+  <div ref="{{ setAvatarEl }}" style="position:absolute; top:0px; left:0; right:0; z-index:16; display:flex; justify-content:center; pointer-events:none; opacity:0;">
+    <div style="position:relative; display:flex; align-items:center; gap:12px;">
+      <div style="position:relative; width:52px; height:52px; flex:0 0 auto;">
+        <img src="./assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block;" />
+        <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(128,128,128,0.06) 0px, rgba(128,128,128,0.06) 3px, transparent 3px, transparent 6px); animation:scanMove 1.2s linear infinite;"></div>
+      </div>
+      <span style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ffffff; pointer-events:auto; -webkit-mask-image:repeating-linear-gradient(to bottom, #000 0px, #000 3px, rgba(0,0,0,0.92) 3px, rgba(0,0,0,0.92) 6px); mask-image:repeating-linear-gradient(to bottom, #000 0px, #000 3px, rgba(0,0,0,0.92) 3px, rgba(0,0,0,0.92) 6px); animation:scanMask 1.2s linear infinite; cursor:pointer;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goAbout }}">About</span>
+    </div>
+  </div>
+
+  <!-- Footer hint -->
+  <footer ref="{{ setFooterEl }}" style="position:absolute; bottom:0; left:0; right:0; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px; z-index:16; pointer-events:none; font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff; mix-blend-mode:difference; opacity:0;">
+    <span ref="{{ setUpdatedEl }}" style="justify-self:start;">Last updated 2026</span>
+    <span ref="{{ setScrollEl }}" style="justify-self:center; transition:opacity .5s ease;">Scroll ↕</span>
+    <span style="justify-self:end;">Brooklyn, NY &nbsp;•&nbsp; <span ref="{{ setHrEl }}">{{ estHours }}</span><span style="animation:colonBlink 1s steps(1,end) infinite;">:</span><span ref="{{ setMinEl }}">{{ estMinutes }}</span> EST</span>
+  </footer>
+
+  <!-- Hover caption (flat text, scramble-in on hover, above the footer) -->
+  <sc-if value="{{ hasHover }}" hint-placeholder-val="{{ false }}">
+    <div ref="{{ setCaption }}" style="position:absolute; left:0; right:0; bottom:74px; z-index:16; display:flex; flex-direction:column; align-items:center; gap:{{ hoverGap }}; pointer-events:none; mix-blend-mode:difference; animation:spiralFadeIn .2s ease both;">
+      <span ref="{{ setCompanyEl }}" style="font-family:{{ eyebrowFam }}; font-weight:{{ eyebrowWeight }}; font-size:{{ eyebrowSize }}; letter-spacing:{{ eyebrowSpacing }}; text-transform:{{ eyebrowCase }}; color:#ffffff;">{{ hover.company }}</span>
+      <span ref="{{ setTitleEl }}" style="font-family:{{ hoverFam }}; font-weight:{{ hoverWeight }}; font-size:{{ hoverSize }}; line-height:1; letter-spacing:{{ hoverSpacing }}; text-transform:{{ hoverCase }}; color:#f2f2f5;">{{ hover.title }}</span>
+    </div>
+  </sc-if>
+
+  <!-- Case-study overlay (built in renderVals so no img-src hole streams) -->
+  {{ overlayEl }}
+
+  <!-- About page (sits below the shared chrome: header, footer, scanlines + vignette all render over it) -->
+  <div ref="{{ setAboutEl }}" style="position:absolute; inset:0; z-index:3; opacity:0; pointer-events:none; overflow-y:auto; transition:opacity .7s ease; background:#000000;">
+    <div style="position:sticky; top:0; height:100vh; margin-bottom:-100vh; z-index:5; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(0,0,0,0.17) 0px, rgba(0,0,0,0.17) 3px, transparent 3px, transparent 6px); animation:scanMove 1.2s linear infinite;">
+      <div style="position:absolute; left:0; right:0; top:0; height:2px; background:linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.12) 50%, rgba(255,255,255,0)); filter:blur(.6px); box-shadow:0 0 8px rgba(255,255,255,.12); animation:crtSweep 7s linear infinite;"></div>
+    </div>
+    <div ref="{{ setAboutInner }}" style="box-sizing:border-box; padding:0 48px 150px; display:flex; flex-direction:column; align-items:center;">
+      <div ref="{{ setMoiWrap }}" style="position:relative; width:{{ aboutImgW }}; max-width:100%; flex:0 0 auto; overflow:hidden;">
+        <img ref="{{ setMoiImg }}" alt="Jason Lim" draggable="false" style="width:100%; height:100%; object-fit:cover; object-position:50% 100%; display:block;" />
+        <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(128,128,128,0.07) 0px, rgba(128,128,128,0.07) 3px, transparent 3px, transparent 6px);"></div>
+      </div>
+      <p ref="{{ setBioEl }}" style="width:100%; max-width:{{ aboutBioMax }}; margin:{{ aboutBioTop }} 0 0; font-family:{{ aboutBioFam }}; font-weight:{{ aboutBioWeight }}; font-size:{{ aboutBioSize }}; line-height:{{ aboutBioLH }}; letter-spacing:{{ aboutBioSpacing }}; text-transform:{{ aboutBioCase }}; color:#f2f2f5; text-align:justify; text-wrap:pretty;">I&rsquo;m an autodidactic product designer based in Brooklyn with roots planted in Korea and the Rocky Mountains (read Colorado).<br><br>Past companies and clients include:</p>
+      <div ref="{{ setMarqueeEl }}" style="width:100vw; margin:34px 0 0 calc(50% - 50vw); overflow:hidden; -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%); mask-image:linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);">
+        <div style="display:flex; width:max-content; animation:marquee 40s linear infinite;">
+          <div style="display:flex; align-items:center; gap:78px; padding-right:78px; flex:0 0 auto;">
+            <img src="./assets/logos/lime.svg" alt="Lime" draggable="false" style="height:42px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/pinterest.svg" alt="Pinterest" draggable="false" style="height:46px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/doordash.svg" alt="DoorDash" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/uber.svg" alt="Uber" draggable="false" style="height:36px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/nerdwallet.svg" alt="NerdWallet" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/calm.svg" alt="Calm" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/ouster.png" alt="Ouster" draggable="false" style="height:72px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+          </div>
+          <div aria-hidden="true" style="display:flex; align-items:center; gap:78px; padding-right:78px; flex:0 0 auto;">
+            <img src="./assets/logos/lime.svg" alt="" draggable="false" style="height:42px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/pinterest.svg" alt="" draggable="false" style="height:46px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/doordash.svg" alt="" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/uber.svg" alt="" draggable="false" style="height:36px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/nerdwallet.svg" alt="" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/calm.svg" alt="" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/ouster.png" alt="" draggable="false" style="height:72px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+          </div>
+        </div>
+      </div>
+      <p ref="{{ setReachEl }}" style="width:100%; max-width:{{ aboutBioMax }}; margin:34px 0 0; font-family:{{ aboutBioFam }}; font-weight:{{ aboutBioWeight }}; font-size:{{ aboutBioSize }}; line-height:{{ aboutBioLH }}; letter-spacing:{{ aboutBioSpacing }}; text-transform:{{ aboutBioCase }}; color:#f2f2f5; text-align:justify; text-wrap:pretty;">Please reach out if you&rsquo;re looking to collaborate or seeking mentorship.</p>
+    </div>
+  </div>
+
+  <!-- Boot loader: black + scanlines, centred count-up, melts out on complete -->
+  <div ref="{{ setLoader }}" style="position:absolute; inset:0; z-index:40; background:#000000; display:flex; align-items:center; justify-content:center; pointer-events:none;">
+    <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(128,128,128,0.06) 0px, rgba(128,128,128,0.06) 3px, transparent 3px, transparent 6px); animation:scanMove 1.2s linear infinite;"></div>
+    <span ref="{{ setLoaderPct }}" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff;">0%</span>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;autoSpinSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:0,&quot;max&quot;:26,&quot;step&quot;:1,&quot;unit&quot;:&quot;°/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;spiralWidth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.6,&quot;max&quot;:1.15,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#8aa0ff&quot;,&quot;options&quot;:[&quot;#8aa0ff&quot;,&quot;#e0a86b&quot;,&quot;#8fd3b8&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Style&quot;},&quot;slurScale&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:120,&quot;min&quot;:0,&quot;max&quot;:120,&quot;step&quot;:5,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;slurSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.45,&quot;min&quot;:0.15,&quot;max&quot;:1.6,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;gooStrength&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:4.4,&quot;min&quot;:0.5,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;gooThresh&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:35,&quot;min&quot;:6,&quot;max&quot;:40,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;headerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:16,&quot;max&quot;:72,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1.5,&quot;min&quot;:-3,&quot;max&quot;:12,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;lowercase&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;footerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:8,&quot;max&quot;:28,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-0.4,&quot;min&quot;:-1,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;UPPERCASE&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;eyebrowFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:400,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:8,&quot;max&quot;:32,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-0.5,&quot;min&quot;:-1,&quot;max&quot;:10,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;UPPERCASE&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;hoverFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:300,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:115,&quot;min&quot;:20,&quot;max&quot;:160,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-4,&quot;min&quot;:-4,&quot;max&quot;:10,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;lowercase&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverGap&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-40,&quot;min&quot;:-60,&quot;max&quot;:24,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;aboutBioSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:20,&quot;max&quot;:64,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioLineHeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.9,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1,&quot;min&quot;:-3,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioWeight&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;300&quot;,&quot;options&quot;:[&quot;300&quot;,&quot;400&quot;,&quot;500&quot;,&quot;700&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;As typed&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutImgW&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:452,&quot;min&quot;:300,&quot;max&quot;:760,&quot;step&quot;:10,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;}}">
+class Component extends DCLogic {
+  state = { hovered: null, selected: null };
+  cardEls = [];   // must exist before ref callbacks fire (they run before componentDidMount)
+  videoEls = new Set();   // all mounted <video> faces, for autoplay recovery
+
+  // shared geometry constants (used by both render + animation loop)
+  PER_TURN = 6;
+  Y_STEP = 118;
+  ANG = 36;
+  FROM = -24;
+  TO = 24;
+  TILT = 8;
+
+  // Radius so the spiral spans from the header logo to the "Site" link.
+  radius() {
+    const w = (typeof window !== 'undefined' ? window.innerWidth : 1200);
+    const span = Math.max(320, w - 96);           // header inner width (40px pad each side)
+    const factor = this.props.spiralWidth ?? 1;
+    return Math.min(760, Math.max(300, (span / 2) * factor * 0.9));
+  }
+
+  get mocks() {
+    const B = 'https://cdn.prod.website-files.com/61bfcea949e78a64df3dcc8a/';
+    // Resolve to a bundled blob URL (standalone export) when available, else the live URL.
+    const R = (id, url) => (typeof window !== 'undefined' && window.__resources && window.__resources[id]) || url;
+    return [
+      { img: R('m0', B+'65b5721a80c184325a8fea91_rewards-2.png'), video: './assets/video/rewards.mp4', title: 'Dasher Rewards', company: 'DoorDash', href: 'https://jasonlim.design/#mobilization', blurb: 'A tiered recognition program that rewards Dashers for consistency and milestones — turning everyday deliveries into visible progress.', o: 'portrait' },
+      { img: R('m5', B+'65b041af6127d88b289d5fba_nw-1.png'), title: 'Homescreen Redesign', company: 'NerdWallet', href: 'https://jasonlim.design/#nw', blurb: 'A refreshed home surface that centers each member\u2019s most relevant financial next step.', o: 'portrait' },
+      { img: R('m2', B+'65b0054f1a6aab36d00e14e5_ratings-1.png'), title: 'Dasher Ratings', company: 'DoorDash', href: 'https://jasonlim.design/#ratings', blurb: 'A clearer, fairer ratings system that helps Dashers understand their standing and what actually moves it.', o: 'portrait' },
+      { img: R('m3', B+'65b005b8069fd5247b08aab1_sp-1.png'), video: './assets/video/mobilization.mp4', title: 'Dasher Mobilization', company: 'DoorDash', href: 'https://jasonlim.design/#promo', blurb: 'Promotional surfaces that mobilize Dashers toward high-demand windows without pressure or clutter.', o: 'portrait' },
+      { img: R('m4', './assets/ouster-fleet.png'), video: './assets/video/ouster.mp4', title: 'Fleet Management', company: 'Ouster', href: 'https://jasonlim.design/#ouster', blurb: 'A web tool for monitoring, configuring, and interpreting fleets of lidar sensors at scale.', o: 'landscape' },
+      { img: R('m1', './assets/chat-poster.png'), video: './assets/video/in-app-chat.mp4', title: 'In-app Chat', company: 'DoorDash', href: 'https://jasonlim.design/#chat', blurb: 'Real-time messaging that connects Dashers, customers, and support in one calm, legible thread during an active delivery.', o: 'portrait' },
+    ];
+  }
+
+  mod(n, m) { return ((n % m) + m) % m; }
+
+  // Non-uniform angular layout: the iPad slot gets a wider arc on both sides so
+  // it can render large yet keep the same optical gap as phone-to-phone.
+  // Periodic every PER_TURN (loop stays seamless): 2*WIDE + (PER_TURN-2)*narrow = 360.
+  slotAngle(i) {
+    const P = this.PER_TURN, ipad = 4, WIDE = 58;
+    const narrow = (360 - 2 * WIDE) / (P - 2);
+    const gap = (s) => (s === ipad - 1 || s === ipad) ? WIDE : narrow;
+    const slot = this.mod(i, P);
+    let cum = 0;
+    for (let s = 0; s < slot; s++) cum += gap(s);
+    return 360 * Math.floor(i / P) + cum;
+  }
+
+  // Reveal the About page: spiral + "Scroll" hint fade out, content fades in.
+  openAbout() {
+    this._aboutOpen = true;
+    // Longer fade of the spiral + Scroll hint, then the empty page holds ~1s before the About page goo-reveals in.
+    if (this.sceneEl) { this.sceneEl.style.transition = 'opacity .8s ease'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
+    if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .8s ease'; this.scrollEl.style.opacity = '0'; }
+    if (this.aboutEl) { this.aboutEl.style.pointerEvents = 'auto'; this.aboutEl.style.transition = 'none'; this.aboutEl.style.opacity = '0'; }
+    clearTimeout(this._aboutTimer);
+    this._aboutTimer = setTimeout(() => {
+      if (!this._aboutOpen || !this.aboutEl) return;
+      this.aboutEl.style.opacity = '1';
+      // Portrait: plain 0.5s fade in. Bio: goo-reveal starting 0.3s after the image fade begins.
+      if (this.moiWrap) { const w = this.moiWrap; w.style.filter = ''; w.style.transition = 'none'; w.style.opacity = '0'; void w.offsetHeight; w.style.transition = 'opacity 1s ease'; requestAnimationFrame(() => { if (this.moiWrap) this.moiWrap.style.opacity = '1'; }); }
+      if (this.bioEl) this.bioEl.style.opacity = '0';
+      if (this.marqueeEl) this.marqueeEl.style.opacity = '0';
+      if (this.reachEl) this.reachEl.style.opacity = '0';
+      this._aboutTimer = setTimeout(() => { if (this._aboutOpen) this.meltRevealMany([this.bioEl, this.marqueeEl, this.reachEl], null, 1150); }, 300);
+    }, 800);
+  }
+  closeAbout(instant) {
+    this._aboutOpen = false;
+    clearTimeout(this._aboutTimer);
+    cancelAnimationFrame(this._revRaf);
+    if (this.aboutInner) this.aboutInner.style.filter = '';
+    if (this.moiWrap) { this.moiWrap.style.filter = ''; this.moiWrap.style.opacity = ''; }
+    if (this.bioEl) { this.bioEl.style.filter = ''; this.bioEl.style.opacity = ''; }
+    if (this.marqueeEl) { this.marqueeEl.style.filter = ''; this.marqueeEl.style.opacity = ''; }
+    if (this.reachEl) { this.reachEl.style.filter = ''; this.reachEl.style.opacity = ''; }
+    if (this.aboutEl) { this.aboutEl.style.transition = 'opacity .3s ease'; this.aboutEl.style.opacity = '0'; this.aboutEl.style.pointerEvents = 'none'; this.aboutEl.scrollTop = 0; }
+    if (this.scrollEl) this.scrollEl.style.opacity = '';
+    if (this.sceneEl) this.sceneEl.style.pointerEvents = '';
+  }
+
+  // Crop the portrait 10% narrower and taller than its natural aspect (object-fit:cover — no warp).
+  _sizeMoi() {
+    const img = this.moiImg, wrap = this.moiWrap;
+    if (!img || !wrap || !img.naturalWidth) return;
+    const w = wrap.clientWidth || parseFloat(getComputedStyle(wrap).width) || img.naturalWidth;
+    const h = w * 1.415;   // fixed frame ratio (matches the prior framing regardless of the photo's own aspect)
+    wrap.style.height = Math.round(h) + 'px';
+  }
+
+  componentDidMount() {
+    this.spin = 0;
+    this.dragMomentum = 0;
+    this.dragging = false;
+    this.last = performance.now();
+    this.tick = this.tick.bind(this);
+    this._running = true;
+    this.raf = requestAnimationFrame(this.tick);
+    this._onResize = () => this.forceUpdate();
+    window.addEventListener('resize', this._onResize);
+    // Randomised CRT sweep: fires at uneven, infrequent intervals.
+    this._runSweep = () => {
+      const b = this.sweepEl;
+      if (!b) return;
+      b.style.animation = 'none';
+      void b.offsetWidth;            // force reflow so it restarts
+      b.style.animation = 'crtSweep 3s linear';
+    };
+    this._scheduleSweep = () => {
+      const delay = 8000 + Math.random() * 13000;   // 8–21s, uneven
+      this._sweepTimer = setTimeout(() => { this._runSweep(); this._scheduleSweep(); }, delay);
+    };
+    this._scheduleSweep();
+    // Autoplay + hover-isolation: normally all videos loop; while a mock is hovered, only that one plays.
+    this._applyVideoPlayback = () => {
+      if (!this._running) { this.videoEls.forEach(v => { if (v && !v.paused) v.pause(); }); return; }
+      const hov = this.state.hovered;
+      // Active set is chosen in the tick loop (most on-screen cards); hover isolates to one.
+      const active = (hov != null) ? new Set([String(hov)]) : (this._activeSlots || new Set());
+      this.videoEls.forEach(v => {
+        if (!v) return;
+        if (active.has(v.dataset.slot)) { if (v._loaded !== false && v.paused) { v.muted = true; const p = v.play(); if (p && p.catch) p.catch(() => {}); } }
+        else if (!v.paused) { v.pause(); }
+      });
+    };
+    this._playAll = this._applyVideoPlayback;
+    this._playAll();
+    this._playTimer = setInterval(this._playAll, 1500);
+    window.addEventListener('pointerdown', this._playAll);
+    window.addEventListener('focus', this._playAll);
+    document.addEventListener('visibilitychange', this._playAll);
+    // First-interaction unlock: any gesture (incl. a mouse move) satisfies the autoplay policy, so the front clip starts even if pre-interaction autoplay was blocked.
+    const unlock = () => { this._playAll && this._playAll(); };
+    ['pointermove', 'pointerdown', 'keydown', 'touchstart', 'wheel'].forEach(ev => window.addEventListener(ev, unlock, { once: true, passive: true }));
+
+    // Pause the RAF loop + videos when the tab is hidden or the spiral is scrolled off-screen.
+    this._onScreen = true;      // set by IntersectionObserver
+    this._visible = !document.hidden;
+    this._syncRunning = () => {
+      const shouldRun = this._onScreen && this._visible;
+      if (shouldRun && !this._running) {
+        this._running = true;
+        this.last = performance.now();
+        this.raf = requestAnimationFrame(this.tick);
+        this._playAll();
+      } else if (!shouldRun && this._running) {
+        this._running = false;
+        cancelAnimationFrame(this.raf);
+        this.videoEls.forEach(v => { if (v && !v.paused) v.pause(); });
+      }
+    };
+    this._onVis = () => { this._visible = !document.hidden; this._syncRunning(); };
+    document.addEventListener('visibilitychange', this._onVis);
+    if (this.rootEl && 'IntersectionObserver' in window) {
+      this._io = new IntersectionObserver((ents) => {
+        this._onScreen = ents[0].isIntersecting;
+        this._syncRunning();
+      }, { threshold: 0.01 });
+      this._io.observe(this.rootEl);
+    }
+
+    this.runLoader();
+
+    // Keep the EST clock current — update HH / MM every second via direct DOM (renderVals isn't called per frame).
+    this._tickClock = () => {
+      const p = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+      const hh = p.find(x => x.type === 'hour').value, mm = p.find(x => x.type === 'minute').value;
+      if (this.hrEl && this.hrEl.textContent !== hh) this.hrEl.textContent = hh;
+      if (this.minEl && this.minEl.textContent !== mm) this.minEl.textContent = mm;
+    };
+    this._tickClock();
+    this._clockTimer = setInterval(this._tickClock, 1000);
+  }
+
+  // Boot intro: count 0→100 over the loader, then melt it out and reveal the scene.
+  runLoader() {
+    const pctEl = this.loaderPctEl, loader = this.loaderEl;
+    const chrome = [this.headerEl, this.footerEl, this.avatarEl].filter(Boolean);
+    const scene = this.sceneEl;
+    chrome.forEach(el => { el.style.opacity = '0'; el.style.filter = ''; });
+    if (scene) { scene.style.transition = 'none'; scene.style.opacity = '0'; }
+    if (loader) { loader.style.display = ''; loader.style.visibility = ''; loader.style.transition = 'none'; loader.style.opacity = '1'; }
+    if (pctEl) { pctEl.style.opacity = ''; pctEl.style.filter = ''; pctEl.textContent = '0%'; }
+    if (!pctEl || !loader) {
+      if (scene) scene.style.opacity = '1';
+      chrome.forEach(el => { el.style.opacity = ''; });
+      return;
+    }
+    loader.style.display = '';
+    loader.style.transition = 'none';
+    loader.style.opacity = '1';
+    cancelAnimationFrame(this._loadRaf);
+    const t0 = performance.now();
+    const MINDUR = 1400, MAXDUR = 14000;   // min visible loader; hard cap so a slow file can't hang the intro
+    let shownPct = 0;
+    const step = (t) => {
+      const el = t - t0;
+      // One representative <video> per unique clip; force-load each and gate on ALL of them being ready, so every device is buffered before reveal (not just the ones on screen at spin 0).
+      const bySrc = {};
+      [...(this.videoEls || [])].forEach(v => { const s = v.getAttribute('src') || v.currentSrc || ''; if (!s) return; if (!bySrc[s] || v.readyState > bySrc[s].readyState) bySrc[s] = v; });
+      const reps = Object.values(bySrc);
+      if (!this._kicked && reps.length) { this._kicked = true; reps.forEach(v => { try { v.preload = 'auto'; v.load(); } catch (e) {} }); }
+      const loadFrac = reps.length ? reps.reduce((a, v) => a + Math.min(1, v.readyState / 4), 0) / reps.length : 0;
+      const timeFrac = Math.min(1, el / MINDUR);
+      const target = Math.round(Math.min(timeFrac, 0.06 + 0.94 * loadFrac) * 100);
+      if (target > shownPct) shownPct = target;               // monotonic — never counts backward
+      pctEl.textContent = shownPct + '%';
+      const ready = reps.length >= 4 && reps.every(v => v.readyState >= 4);
+      if ((ready && el >= MINDUR) || el > MAXDUR) { pctEl.textContent = '100%'; setTimeout(() => this.finishLoader(), 220); }
+      else this._loadRaf = requestAnimationFrame(step);
+    };
+    this._loadRaf = requestAnimationFrame(step);
+  }
+
+  finishLoader() {
+    const pctEl = this.loaderPctEl, loader = this.loaderEl;
+    // 1) percentage melts into goo and dissolves
+    this.meltAway(pctEl, () => {
+      // percentage is gone — keep it hidden so it can't flash back before the loader is removed
+      pctEl.style.opacity = '0';
+      pctEl.style.filter = '';
+      // 2) black loader backdrop fades away, then the loader is fully removed
+      loader.style.transition = 'opacity .5s ease';
+      loader.style.opacity = '0';
+      setTimeout(() => { if (loader) { loader.style.display = 'none'; loader.style.visibility = 'hidden'; } }, 520);
+      // 3) staggered reveal: header (+avatar) first, then footer, then spiral fades in
+      const head = [this.headerEl, this.avatarEl].filter(Boolean);
+      head.forEach(el => { el.style.opacity = ''; });
+      this.meltRevealMany(head, () => {
+        const foot = [this.footerEl].filter(Boolean);
+        foot.forEach(el => { el.style.opacity = ''; });
+        this.meltRevealMany(foot, () => {
+          // 4) spiral fades in (opacity only) over 1s
+          if (this.sceneEl) { this.sceneEl.style.transition = 'opacity 1s ease'; this.sceneEl.style.opacity = '1'; }
+        });
+      });
+    });
+  }
+
+  // Gooey resolve on several elements at once, driving the shared reveal blur.
+  meltRevealMany(els, onDone, dur) {
+    els = (els || []).filter(Boolean);
+    const blur = this.gooRevealBlurEl;
+    if (!els.length || !blur) { els.forEach(el => { el.style.filter = ''; }); if (onDone) onDone(); return; }
+    cancelAnimationFrame(this._revRaf);
+    els.forEach(el => { el.style.opacity = ''; el.style.filter = 'url(#gooReveal)'; });
+    const start = (this.props.gooStrength ?? 3.4) + 4.6;
+    const t0 = performance.now(); dur = dur || 520;
+    const stepFn = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      const eased = 1 - Math.pow(1 - k, 4);
+      const v = start * (1 - eased) + 0.01 * eased;
+      blur.setAttribute('stdDeviation', v.toFixed(2));
+      if (k < 1) this._revRaf = requestAnimationFrame(stepFn);
+      else { els.forEach(el => { el.style.filter = ''; }); if (onDone) onDone(); }
+    };
+    blur.setAttribute('stdDeviation', start.toFixed(2));
+    this._revRaf = requestAnimationFrame(stepFn);
+  }
+  setRoot = (el) => { this.rootEl = el; };
+  componentWillUnmount() { cancelAnimationFrame(this.raf); clearInterval(this._clockTimer); window.removeEventListener('resize', this._onResize); clearTimeout(this._sweepTimer); clearInterval(this._playTimer); window.removeEventListener('pointerdown', this._playAll); window.removeEventListener('focus', this._playAll); document.removeEventListener('visibilitychange', this._playAll); document.removeEventListener('visibilitychange', this._onVis); if (this._io) this._io.disconnect(); }
+
+  // Inverse of the reveal: caption melts into goo and dissolves, then unmounts via onDone.
+  meltAway(el, onDone) {
+    if (!el) { if (onDone) onDone(); return; }
+    const blur = this.gooRevealBlurEl;
+    el.style.filter = 'url(#gooReveal)';
+    if (!blur) { el.style.filter = ''; if (onDone) onDone(); return; }
+    cancelAnimationFrame(this._revRaf);
+    const end = (this.props.gooStrength ?? 3.4) + 4.6;
+    const t0 = performance.now(), dur = 520;
+    const from = parseFloat(blur.getAttribute('stdDeviation')) || 0.01;
+    const stepFn = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      const eased = k * k;                       // accelerate into the goo
+      blur.setAttribute('stdDeviation', (from + (end - from) * eased).toFixed(2));
+      el.style.opacity = (1 - k).toFixed(3);
+      if (k < 1) this._revRaf = requestAnimationFrame(stepFn);
+      else { el.style.filter = ''; el.style.opacity = ''; if (onDone) onDone(); }
+    };
+    this._revRaf = requestAnimationFrame(stepFn);
+  }
+
+  // One-shot reveal: the caption comes in gooey and resolves sharp (à la "Hey, I'm Artem").
+  meltReveal(el) {
+    if (!el) return;
+    const blur = this.gooRevealBlurEl;
+    el.style.opacity = '';                 // clear any leftover fade from a melt-away
+    el.style.filter = 'url(#gooReveal)';
+    if (!blur) { el.style.filter = ''; return; }
+    cancelAnimationFrame(this._revRaf);
+    const start = (this.props.gooStrength ?? 3.4) + 4.6;   // begin much gooier
+    const t0 = performance.now(), dur = 1250;
+    const stepFn = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      const eased = 1 - Math.pow(1 - k, 4);   // hold the goo longer, resolve late
+      const v = start * (1 - eased) + 0.01 * eased;
+      blur.setAttribute('stdDeviation', v.toFixed(2));
+      if (k < 1) this._revRaf = requestAnimationFrame(stepFn);
+      else el.style.filter = '';
+    };
+    blur.setAttribute('stdDeviation', start.toFixed(2));
+    this._revRaf = requestAnimationFrame(stepFn);
+  }
+
+  animateMelt(el, on) {
+    if (!el) return;
+    const blur = this.gooBlurEl;
+    const target = on ? (this.props.gooStrength ?? 3.4) : 0.01;
+    if (on) el.style.filter = 'url(#goo)';
+    if (!blur) { if (!on) el.style.filter = ''; return; }
+    cancelAnimationFrame(this._gooRaf);
+    const from = parseFloat(blur.getAttribute('stdDeviation')) || 0;
+    const dur = on ? 440 : 240;
+    const t0 = performance.now();
+    const step = (t) => {
+      let k = Math.min(1, (t - t0) / dur);
+      const eased = on ? (1 - Math.pow(1 - k, 3)) : k;   // ease-out melt-in, linear melt-out
+      const v = from + (target - from) * eased;
+      blur.setAttribute('stdDeviation', v.toFixed(2));
+      if (k < 1) this._gooRaf = requestAnimationFrame(step);
+      else if (!on) el.style.filter = '';
+    };
+    this._gooRaf = requestAnimationFrame(step);
+  }
+
+  // Footer left label cycles: "Last updated 2026" ↔ "PRODUCT DESIGN PORTFOLIO", 5s each, scrambling between.
+  _startFooterCycle() {
+    const el = this.updatedEl;
+    if (!el || this._footerCycling) return;
+    this._footerCycling = true;
+    const A = 'Last updated 2026', B = 'PRODUCT DESIGN PORTFOLIO';
+    el.textContent = A;
+    let showA = true;
+    const loop = () => {
+      this._footerTimer = setTimeout(() => {
+        showA = !showA;
+        this.scramble(el, showA ? A : B);
+        loop();
+      }, 8000);
+    };
+    loop();
+  }
+
+  scramble(el, target) {
+    if (!el) return;
+    const glyphs = '!<>-_\\/[]{}=+*^?#%&@';
+    clearInterval(el.__scr);
+    const total = 24;
+    let frame = 0;
+    el.__scr = setInterval(() => {
+      frame++;
+      const progress = frame / total;
+      let out = '';
+      for (let k = 0; k < target.length; k++) {
+        const ch = target[k];
+        if (ch === ' ') { out += ' '; continue; }
+        if (progress >= (k / target.length) * 0.85 + 0.12) out += ch;
+        else out += glyphs[Math.floor(Math.random() * glyphs.length)];
+      }
+      el.textContent = out;
+      if (frame >= total) { el.textContent = target; clearInterval(el.__scr); }
+    }, 28);
+  }
+
+  tick(now) {
+    const dt = Math.min(0.05, (now - this.last) / 1000);
+    this.last = now;
+    if (this.sceneEl) this.sceneEl.style.zIndex = (this.state.hovered != null || (this.slurProg || 0) > 0.02) ? '14' : '';
+    const auto = this.props.autoSpinSpeed ?? 8;
+    const paused = this.state.selected != null || (this.state.hovered != null && !this.dragging);
+    if (!paused && !this.dragging) {
+      this.spin += auto * dt;
+      this.spin += this.dragMomentum * dt;
+    }
+    this.dragMomentum *= Math.pow(0.9, dt * 60);
+    if (Math.abs(this.dragMomentum) < 0.02) this.dragMomentum = 0;
+
+    const rad = Math.PI / 180;
+    const R = this.radius();
+    const P = 2100;                       // must match perspective in template
+    const cosT = Math.cos(this.TILT * rad), sinT = Math.sin(this.TILT * rad);
+    const turnH = this.PER_TURN * this.Y_STEP;
+    const driftY = this.mod((this.spin / 360) * turnH, turnH);
+    // Vertical offset so the front-facing card lands centred, nudged slightly up.
+    const offset = (R * sinT) * P / (P - R * cosT) - window.innerHeight * 0.075;
+    if (this.helixEl) {
+      this.helixEl.style.transform =
+        `translate(-50%,-50%) translateY(${offset.toFixed(1)}px) rotateX(${this.TILT}deg) translateY(${driftY.toFixed(2)}px) rotateY(${this.spin.toFixed(2)}deg)`;
+    }
+    // Horizontal fade tied to the header: appear as the left edge reaches "J",
+    // disappear as the card centre reaches "Site" (before any back face shows).
+    const vw = window.innerWidth, cx = vw / 2;
+    const SITE = vw - 70;
+    const hovered = this.state.hovered;
+    const hoveredEl = (hovered != null) ? this.cardEls[hovered - this.FROM] : null;
+    // Ease the slur/dim in and out instead of snapping on.
+    if (this.slurProg == null) this.slurProg = 0;
+    if (hovered != null) this.slurProg += (1 - this.slurProg) * Math.min(1, dt * 9);
+    else this.slurProg = 0;   // devices return immediately on un-hover
+    if (this.slurProg < 0.0005) this.slurProg = 0;
+    const hoveredIdx = (hovered != null) ? (hovered - this.FROM) : -1;
+    if (hovered != null) this._lastHovIdx = hoveredIdx;
+    const slurScaleMax = this.props.slurScale ?? 55;
+    if (this.slurDispEl) this.slurDispEl.setAttribute('scale', (slurScaleMax * this.slurProg).toFixed(2));
+    if (this.slurGrainEl) this.slurGrainEl.setAttribute('values', '0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 ' + (0.26 * this.slurProg).toFixed(3) + ' 0');
+    // Exempt the hovered card by INDEX (ref objects are recreated on re-render,
+    // so an object reference would go stale during the leave/ease-out).
+    const exemptIdx = (hovered != null) ? hoveredIdx : (this._lastHovIdx != null ? this._lastHovIdx : -1);
+    const slurActive = this.slurProg > 0.002;
+    // Warm-band lazy loading: attach a clip's src only when it's near the front, detach when deep back-facing to free decoder RAM.
+    const markVid = (e, shown, warm) => {
+      if (e.vid === undefined) e.vid = e.el.querySelector('video');
+      const v = e.vid; if (!v) return;
+      // Load each clip only ONCE (kept resident). Re-entry never re-loads, so a heavy clip like Ouster resumes from buffer instantly instead of re-buffering to black.
+      if (warm) { if (!v._everLoaded) { v._everLoaded = true; try { v.load(); } catch (e) {} } v._loaded = true; }
+      else { if (v._loaded !== false) { v.pause(); v._loaded = false; } }
+      if (v._shown !== shown) { v._shown = shown; this._visDirty = true; }
+    };
+    const prom = [];   // on-screen prominence per card, for choosing which few clips decode
+    for (let k = 0; k < this.cardEls.length; k++) {
+      const e = this.cardEls[k];
+      if (!e || !e.el) continue;
+      const th = (e.a + this.spin) * rad;
+      const c = Math.cos(th);
+      // Deep back-facing (c<=0.10): cold, drop the source. Between 0.10 and 0.22: hidden but kept warm as a pre-load buffer.
+      if (c <= 0.22) { e.el.style.visibility = 'hidden'; markVid(e, false, c > 0.10); continue; }
+      const er = e.rad || R;
+      const scale = P / (P - er * c * cosT);
+      const sinth = Math.sin(th);
+      const screenX = cx + er * sinth * scale;
+      let op;
+      if (sinth < 0) {
+        // left / incoming: reveal quickly only once the front face turns toward us
+        op = Math.min(1, Math.max(0, (c - 0.34) / 0.2));
+      } else {
+        // right / outgoing: hold until the card centre reaches "Site", before the back shows
+        op = Math.min(1, Math.max(0, (SITE - screenX) / 130));
+      }
+      // Ensure the device is fully faded before its front face turns away (no back showing).
+      op *= Math.min(1, Math.max(0, (c - 0.22) / 0.16));
+      if (slurActive && k !== exemptIdx) {
+        op *= (1 - 0.7 * this.slurProg);       // eases 1 → 0.3
+        e.el.style.filter = 'url(#slurbt)';    // scale ramps via slurProg
+      } else {
+        e.el.style.filter = 'none';
+      }
+      e.el.style.visibility = op < 0.012 ? 'hidden' : 'visible';
+      e.el.style.setProperty('--f', op.toFixed(3));
+      markVid(e, op > 0.06, true);
+      if (op > 0.12) prom.push(this.FROM + k);
+    }
+    // Play only devices actually on screen (plus the ones fading in from the left / out to the right); everything further out is paused. Fewer concurrent decoders = far less RAM/GPU, and the 4 clips are cached so re-entry is instant (no buffering flash).
+    this._activeSlots = new Set(prom.map(String));
+    if (this._applyVideoPlayback) { this._visDirty = false; this._applyVideoPlayback(); }
+    if (this._running) this.raf = requestAnimationFrame(this.tick);
+  }
+
+  renderVals() {
+    const R = this.radius();
+    const accent = this.props.accentColor ?? '#8aa0ff';
+    const slurScale = this.props.slurScale ?? 55;
+    const slurDur = (this.props.slurSpeed ?? 0.5) + 's';
+    const gooStrength = this.props.gooStrength ?? 3.4;
+    const gooThresh = this.props.gooThresh ?? 20;
+
+    // Per-region type controls (font / weight / size / spacing / capitalization)
+    const FONTS = {
+      'PP Mondwest': "'PP Neue Montreal',sans-serif",
+      'PP Neue Montreal': "'PP Neue Montreal',sans-serif",
+      'PP NeueBit': "'PP Neue Montreal',sans-serif",
+    };
+    const CAPS = { 'As typed': 'none', 'UPPERCASE': 'uppercase', 'lowercase': 'lowercase', 'Capitalize': 'capitalize' };
+    const fam = (v, d) => FONTS[v] || FONTS[d];
+    const cap = (v) => CAPS[v] || 'none';
+    const headerFam = fam(this.props.headerFont, 'PP Neue Montreal');
+    const headerWeight = this.props.headerWeight ?? 400;
+    const headerSize = (this.props.headerSize ?? 34) + 'px';
+    const headerSpacing = (this.props.headerSpacing ?? -0.5) + 'px';
+    const headerCase = cap(this.props.headerCase);
+    const footerFam = fam(this.props.footerFont, 'PP Neue Montreal');
+    const footerWeight = this.props.footerWeight ?? 400;
+    const footerSize = (this.props.footerSize ?? 10) + 'px';
+    const footerSpacing = (this.props.footerSpacing ?? 2.2) + 'px';
+    const footerCase = cap(this.props.footerCase);
+    const hoverFam = fam(this.props.hoverFont, 'PP Neue Montreal');
+    const hoverWeight = this.props.hoverWeight ?? 400;
+    const hoverSize = (this.props.hoverSize ?? 38) + 'px';
+    const hoverSpacing = (this.props.hoverSpacing ?? -0.3) + 'px';
+    const hoverCase = cap(this.props.hoverCase);
+    const hoverGap = (this.props.hoverGap ?? 2) + 'px';
+    const eyebrowFam = fam(this.props.eyebrowFont, 'PP Neue Montreal');
+    const eyebrowWeight = this.props.eyebrowWeight ?? 400;
+    const eyebrowSize = (this.props.eyebrowSize ?? 11) + 'px';
+    const eyebrowSpacing = (this.props.eyebrowSpacing ?? 3.5) + 'px';
+    const eyebrowCase = cap(this.props.eyebrowCase);
+    // About-page bio typography (all tweakable)
+    const aboutBioFam = fam(this.props.aboutBioFont, 'PP Neue Montreal');
+    const aboutBioWeight = this.props.aboutBioWeight ?? 300;
+    const aboutBioSize = (this.props.aboutBioSize ?? 40) + 'px';
+    const aboutBioLH = this.props.aboutBioLineHeight ?? 1;
+    const aboutBioSpacing = (this.props.aboutBioSpacing ?? -1) + 'px';
+    const aboutBioCase = cap(this.props.aboutBioCase);
+    const aboutImgW = (this.props.aboutImgW ?? 452) + 'px';
+    const aboutBioMax = '720px';
+    const aboutBioTop = '52px';
+    const mocks = this.mocks;
+    const hovered = this.state.hovered;
+
+    // Caption reveal is triggered explicitly from onEnter now (so it can also melt away on leave).
+    const hovMock = hovered != null ? mocks[this.mod(hovered, this.PER_TURN)] : null;
+    const hovKey = hovMock ? hovMock.title : null;
+    if (hovered !== this._lastScrHover) {
+      this._lastScrHover = hovered;
+      if (this._applyVideoPlayback) this._applyVideoPlayback();
+    }
+    // Reveal the caption once per distinct mock — keying on identity (not slot index) stops re-goo flicker as the spiral drifts under a still cursor.
+    if (hovKey !== this._lastRevealKey) {
+      this._lastRevealKey = hovKey;
+      if (hovKey != null) requestAnimationFrame(() => this.meltReveal(this.captionEl));
+    }
+
+    const PHONE_W = 204, TABLET_W = 400;   // iPad large; extra arc gives it the room
+    const FADE = 'var(--f,1)';
+    const cards = [];
+    for (let i = this.FROM; i <= this.TO; i++) {
+      const base = mocks[this.mod(i, this.PER_TURN)];
+      const isTablet = base.o === 'landscape';
+      const y = i * this.Y_STEP;
+      const a = this.slotAngle(i);
+      const W = isTablet ? TABLET_W : PHONE_W;
+      const DEVICE_W = W;   // render at full width; spacing comes from the arc layout
+      const cardR = R;   // iPad sits on the same Z as the phones
+      const isHov = hovered === i;
+      const scv = isHov ? 1.1 : 1;
+      const idx = i - this.FROM;
+      const h = React.createElement;
+      // Face media: video cards render a still poster under a lazily-loaded <video> (src attached only near the front).
+      const mkFace = (style) => {
+        if (!base.video) return h('img', { key: 'face', src: base.img, alt: '', draggable: false, style });
+        const fit = style.objectFit || 'cover';
+        // Poster under every clip (incl. the Ouster tablet) so a still shows instead of black while the video buffers.
+        const showPoster = true;
+        return h('div', { key: 'face', style: Object.assign({}, style, { position: style.position || 'relative', overflow: 'hidden', background: '#000' }) }, [
+          showPoster ? h('img', { key: 'poster', src: base.img, alt: '', draggable: false, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: fit, display: 'block' } }) : null,
+          h('video', { key: 'vid', autoPlay: true, loop: true, muted: true, playsInline: true, preload: 'auto', draggable: false,
+            src: base.video, 'data-slot': String(i), 'data-vsrc': base.video, 'data-tablet': base.o === 'landscape' ? '1' : '0',
+            ref: (v) => { if (v) { v.defaultMuted = true; v.muted = true; v.setAttribute('muted', ''); v.loop = true; v.dataset.slot = String(i); v.dataset.vsrc = base.video; v.dataset.tablet = base.o === 'landscape' ? '1' : '0'; this.videoEls.add(v); this._applyVideoPlayback && this._applyVideoPlayback(); } },
+            style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: fit, display: 'block' } }),
+        ]);
+      };
+      const faceFit = isTablet ? 'contain' : 'cover';
+
+      // --- Titanium body: stacked side-wall layers behind the glass ---
+      const depth = isTablet ? Math.round(DEVICE_W * 0.03) : Math.round(W * 0.062); // thinner
+      const rad0 = isTablet ? 22 : Math.round(W * 0.135);
+      const nL = isTablet ? 12 : 16;
+      const parts = [];
+      for (let j = 0; j < nL; j++) {
+        const t = (j + 1) / nL;
+        const z = -(depth * t);
+        const inset = -(0.4 + t * 1.0);          // slim wall
+        const dark = 1 - 0.45 * t;               // deeper layers darker
+        const g = `linear-gradient(96deg, hsl(220 5% ${Math.round(28*dark)}%) 0%, hsl(222 7% ${Math.round(14*dark)}%) 20%, hsl(224 9% ${Math.round(5*dark)}%) 52%, hsl(222 7% ${Math.round(12*dark)}%) 80%, hsl(220 5% ${Math.round(24*dark)}%) 100%)`;
+        parts.push(h('div', { key: 'l' + j, style: {
+          position: 'absolute', top: inset + 'px', left: inset + 'px', right: inset + 'px', bottom: inset + 'px',
+          borderRadius: (rad0 + Math.abs(inset)) + 'px', background: g, opacity: FADE,
+          transform: `translateZ(${z.toFixed(1)}px)`,
+          boxShadow: j === nL - 1 ? '0 40px 80px rgba(0,0,0,.6)' : 'none',
+        } }));
+      }
+
+      // --- Physical side buttons ---
+      const bz = -Math.round(depth * 0.45);
+      const btnBg = 'linear-gradient(180deg,#2c2e33,#141519)';
+      const mkBtn = (k, side, topPct, hPct) => {
+        const s = { position: 'absolute', top: topPct + '%', height: hPct + '%', width: '3px',
+          background: btnBg, borderRadius: '2px', opacity: FADE, transform: `translateZ(${bz}px)` };
+        if (side === 'l') s.left = '-2.5px'; else s.right = '-2.5px';
+        return h('div', { key: k, style: s });
+      };
+      if (!isTablet) {
+        parts.push(mkBtn('ba', 'l', 15, 5), mkBtn('bvu', 'l', 25, 9), mkBtn('bvd', 'l', 37, 9), mkBtn('bp', 'r', 27, 15));
+        parts.push(h('div', { key: 'rim', style: {
+          position: 'absolute', top: '-2px', left: '-2px', right: '-2px', bottom: '-2px',
+          borderRadius: (rad0 + 2) + 'px', opacity: FADE, transform: 'translateZ(0.3px)',
+          background: 'linear-gradient(120deg,#44474d,#1a1b1f 38%,#0a0b0d 60%,#3a3d43)',
+        } }));
+        parts.push(mkFace({
+          position: 'absolute', inset: '0', width: '100%', height: '100%', objectFit: faceFit,
+          borderRadius: rad0 + 'px', opacity: FADE, transform: 'translateZ(0.7px)', display: 'block',
+        }));
+      } else {
+        parts.push(mkBtn('bp', 'r', 8, 12), mkBtn('bv', 'r', 26, 9));
+        parts.push(h('div', { key: 'pad', style: {
+          position: 'absolute', inset: '0', borderRadius: (rad0 + 2) + 'px', opacity: FADE,
+          background: 'linear-gradient(140deg,#232529,#0d0e11)', transform: 'translateZ(0.7px)',
+          padding: '9px', display: 'flex', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,.04)',
+        } },
+          h('div', { style: { flex: '1', borderRadius: '13px', overflow: 'hidden', background: '#000', display: 'flex' } },
+            mkFace({ flex: '1', width: '100%', height: '100%', objectFit: faceFit, display: 'block', background: '#000' })
+          )
+        ));
+      }
+      const body = h('div', { style: {
+        position: 'relative', width: DEVICE_W + 'px', aspectRatio: isTablet ? '1.4' : '0.4997',
+        transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
+      } }, parts);
+
+      cards.push({
+        key: i,
+        body,
+        ref: (el) => { this.cardEls[idx] = el ? { el, a, isTablet, W, rad: cardR } : null; },
+        onEnter: () => this.setState({ hovered: i }),
+        onLeave: () => this.setState(s => (s.hovered === i ? { hovered: null } : null)),
+        onOpen: () => this.setState({ selected: base, hovered: null }),
+        style: {
+          position: 'absolute', top: 0, left: 0, width: '1px', height: '1px',
+          transform: `translateY(${y}px) rotateY(${a}deg) translateZ(${cardR}px)`,
+          transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
+          '--f': 1,
+          zIndex: isHov ? 30 : 1,
+        },
+        innerStyle: {
+          position: 'absolute', left: 0, top: 0, width: W + 'px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transform: `translate(-50%,-50%) scale(${scv})`,
+          transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
+          transition: 'transform .35s ease',
+          cursor: 'pointer',
+        },
+        cardScan: {
+          position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: '26px',
+          opacity: (!isHov && hovered != null) ? 1 : 0,
+          transition: 'opacity .3s ease',
+          backgroundImage: 'repeating-linear-gradient(to bottom, rgba(128,128,128,0.07) 0px, rgba(128,128,128,0.07) 3px, transparent 3px, transparent 6px)',
+          animation: 'scanMove 1.2s linear infinite',
+        },
+      });
+    }
+
+    const selected = this.state.selected;
+    const hov = hovered != null ? mocks[this.mod(hovered, this.PER_TURN)] : null;
+    const H = React.createElement;
+    // Shared type treatments — single source for the eyebrow + title styles used
+    // by BOTH the hover caption and the case-study overlay below (size set per use).
+    const eyebrowStyle = { fontFamily: eyebrowFam, fontWeight: eyebrowWeight, letterSpacing: eyebrowSpacing, textTransform: eyebrowCase };
+    const titleStyle = { fontFamily: hoverFam, fontWeight: hoverWeight, lineHeight: 1, letterSpacing: hoverSpacing, textTransform: hoverCase };
+    const close = () => this.setState({ selected: null });
+    let overlayEl = null;
+    if (selected) {
+      overlayEl = H('div', {
+        onClick: (e) => { if (e.target === e.currentTarget) close(); },
+        style: { position: 'absolute', inset: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '56px', background: 'rgba(6,7,9,.72)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', animation: 'spiralFadeIn .3s ease', cursor: 'auto' },
+      },
+        H('div', { style: { position: 'relative', display: 'flex', gap: '56px', alignItems: 'center', maxWidth: '1000px', width: '100%' } },
+          H('div', { style: { flex: '0 0 auto', maxWidth: '46%', display: 'flex', justifyContent: 'center' } },
+            selected.video
+              ? H('video', { src: selected.video, autoPlay: true, loop: true, muted: true, playsInline: true, ref: (v) => { if (v) { v.muted = true; const p = v.play(); if (p && p.catch) p.catch(() => {}); } }, style: { maxHeight: '74vh', maxWidth: '100%', borderRadius: '16px', border: '1px solid rgba(255,255,255,.1)', boxShadow: '0 40px 100px rgba(0,0,0,.6)' } })
+              : H('img', { src: selected.img, alt: selected.title, style: { maxHeight: '74vh', maxWidth: '100%', borderRadius: '16px', border: '1px solid rgba(255,255,255,.1)', boxShadow: '0 40px 100px rgba(0,0,0,.6)' } })
+          ),
+          H('div', { style: { flex: '1 1 auto', maxWidth: '440px' } },
+            H('p', { style: { margin: '0 0 18px', fontSize: '11px', color: accent, ...eyebrowStyle } }, selected.company),
+            H('h2', { style: { margin: '0 0 22px', fontSize: '52px', ...titleStyle } }, selected.title),
+            H('p', { style: { margin: '0 0 34px', fontSize: '16px', lineHeight: 1.6, color: '#b8bcc8', maxWidth: '38ch' } }, selected.blurb),
+            H('a', { href: selected.href, target: '_blank', rel: 'noopener', onMouseEnter: (e) => this.animateMelt(e.currentTarget, true), onMouseLeave: (e) => this.animateMelt(e.currentTarget, false), style: { display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', color: '#fff', border: '1px solid rgba(255,255,255,.22)', padding: '13px 22px', borderRadius: '999px' } }, 'View case study ↗')
+          ),
+          H('button', { onClick: close, style: { position: 'absolute', top: '-18px', right: '-18px', width: '44px', height: '44px', borderRadius: '999px', border: '1px solid rgba(255,255,255,.16)', background: 'rgba(20,22,28,.9)', color: '#ececf0', fontSize: '20px', lineHeight: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, '×')
+        )
+      );
+    }
+    const estParts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+    const estHours = estParts.find(p => p.type === 'hour').value;
+    const estMinutes = estParts.find(p => p.type === 'minute').value;
+    return {
+      cards,
+      estHours,
+      estMinutes,
+      setRoot: this.setRoot,
+      accent,
+      overlayEl,
+      scanStyle: {
+        position: 'absolute', inset: 0, zIndex: 12, pointerEvents: 'none', overflow: 'hidden',
+        opacity: 1,
+        backgroundImage: 'repeating-linear-gradient(to bottom, rgba(128,128,128,0.06) 0px, rgba(128,128,128,0.06) 3px, transparent 3px, transparent 6px)',
+        animation: 'scanMove 1.2s linear infinite',
+      },
+      setSweep: (el) => { this.sweepEl = el; },
+      setGoo: (el) => { this.gooBlurEl = el; },
+      setGooReveal: (el) => { this.gooRevealBlurEl = el; },
+      setCaption: (el) => { this.captionEl = el; },
+      setSlurDisp: (el) => { this.slurDispEl = el; },
+      setSlurGrain: (el) => { this.slurGrainEl = el; },
+      meltIn: (e) => this.animateMelt(e.currentTarget, true),
+      meltOut: (e) => this.animateMelt(e.currentTarget, false),
+      setScene: (el) => { this.sceneEl = el; if (el) el.style.zIndex = this.state.hovered != null ? '14' : ''; },
+      setHeaderEl: (el) => { this.headerEl = el; },
+      setFooterEl: (el) => { this.footerEl = el; },
+      setAvatarEl: (el) => { this.avatarEl = el; },
+      setLoader: (el) => { this.loaderEl = el; },
+      setLoaderPct: (el) => { this.loaderPctEl = el; },
+      setScrollEl: (el) => { this.scrollEl = el; },
+      setAboutEl: (el) => { this.aboutEl = el; },
+      setAboutInner: (el) => { this.aboutInner = el; },
+      setBioEl: (el) => { this.bioEl = el; },
+      setMarqueeEl: (el) => { this.marqueeEl = el; },
+      setReachEl: (el) => { this.reachEl = el; },
+      setMoiWrap: (el) => { this.moiWrap = el; this._sizeMoi && this._sizeMoi(); },
+      setMoiImg: (el) => { this.moiImg = el; if (el) { el.onload = () => { this._sizeMoi && this._sizeMoi(); }; el.src = (typeof window !== 'undefined' && window.__resources && window.__resources.moi) || './assets/moi.png'; this._sizeMoi && this._sizeMoi(); } },
+      setHrEl: (el) => { this.hrEl = el; },
+      setMinEl: (el) => { this.minEl = el; },
+      setUpdatedEl: (el) => { this.updatedEl = el; this._startFooterCycle && this._startFooterCycle(); },
+      goAbout: () => { this.openAbout(); },
+      goHome: () => { this.spin = 0; this.dragMomentum = 0; this.closeAbout(true); this.setState({ selected: null, hovered: null }); this.runLoader(); },
+      contact: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } window.location.href = 'mailto:jason.jinulim@gmail.com'; },
+      setCompanyEl: (el) => { this.companyEl = el; },
+      setTitleEl: (el) => { this.titleEl = el; },
+      slurScale: slurScale,
+      slurDur: slurDur,
+      gooStrength: gooStrength,
+      gooThresh: gooThresh,
+      headerFam, headerWeight, headerSize, headerSpacing, headerCase,
+      footerFam, footerWeight, footerSize, footerSpacing, footerCase,
+      hoverFam, hoverWeight, hoverSize, hoverSpacing, hoverCase, hoverGap,
+      eyebrowFam, eyebrowWeight, eyebrowSize, eyebrowSpacing, eyebrowCase,
+      aboutBioFam, aboutBioWeight, aboutBioSize, aboutBioLH, aboutBioSpacing, aboutBioCase, aboutImgW, aboutBioMax, aboutBioTop,
+      hasHover: hov != null,
+      captionShown: this.state.captionShown,
+      disp: this._displayHover || {},
+      hover: hov ? { company: hov.company + '\u2002\u2002\u2022\u2002\u2002Case study coming soon', title: hov.title } : {},
+      setHelix: (el) => { this.helixEl = el; },
+      onDown: (e) => { if (e.target && e.target.closest && e.target.closest('a, h1, [data-clickable]')) return; this.dragging = true; this.lastX = e.clientX; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} if (e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grabbing'; },
+      onMove: (e) => { if (!this.dragging) return; const dx = e.clientX - this.lastX; this.lastX = e.clientX; this.spin += dx * 0.28; this.dragMomentum = dx * 12; },
+      onUp: (e) => { this.dragging = false; if (e && e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grab'; },
+      onWheel: (e) => { this.dragMomentum += e.deltaY * 0.5; },
+    };
+  }
+}
+</script>
+</body>
+</html>
