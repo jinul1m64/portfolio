@@ -47,11 +47,16 @@
   @keyframes scanMask { from { -webkit-mask-position: 0 0; mask-position: 0 0; } to { -webkit-mask-position: 0 6px; mask-position: 0 6px; } }
   @keyframes colonBlink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
   @keyframes marquee { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+  @keyframes chromeSpinX { from { transform: rotateX(0deg); } to { transform: rotateX(360deg); } }
 </style>
 </helmet>
 
 <div ref="{{ setRoot }}" style="position: fixed; inset: 0; background: #000000; font-family: PP Neue Montreal; color: #ececf0; overflow: hidden; cursor: grab; user-select: none; font-weight: 300; text-transform: uppercase; font-size: 32px; line-height: 1" onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" onPointerLeave="{{ onUp }}" onWheel="{{ onWheel }}">
 
+  <!-- Gridded background (haoqi-style): faint fixed lattice behind everything -->
+  <div style="position:absolute; inset:0; z-index:0; pointer-events:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3C/svg%3E&quot;), linear-gradient(to right, rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.045) 1px, transparent 1px); background-size:128px 128px, 128px 128px, 128px 128px; background-position:50% 50%, calc(50% + 64px) calc(50% + 64px), calc(50% + 64px) calc(50% + 64px); -webkit-mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%); mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%);"></div>
+
+  <!-- Cursor "soft light": a brighter copy of the grid revealed only under a radial gradient that follows the pointer (à la stitch.withgoogle.com) -->
   <!-- "Slurbt"-style glitch: stepped horizontal tear + RGB split (applied to non-hovered devices) -->
   <svg width="0" height="0" style="position:absolute; width:0; height:0; pointer-events:none;" aria-hidden="true">
     <filter id="slurbt" x="-30%" y="-6%" width="160%" height="112%" color-interpolation-filters="sRGB">
@@ -80,11 +85,15 @@
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal }}" result="blur"></feGaussianBlur>
       <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"></feColorMatrix>
     </filter>
+    <filter id="gooReveal2" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal2 }}" result="blur"></feGaussianBlur>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"></feColorMatrix>
+    </filter>
   </svg>
 
   <!-- Spiral scene -->
-  <div ref="{{ setScene }}" style="position:absolute; inset:0; perspective:2100px; perspective-origin:50% 50%; opacity:0;">
-    <div ref="{{ setHelix }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); transform-style:preserve-3d; will-change:transform;">
+  <div ref="{{ setScene }}" style="position:absolute; inset:0; opacity:0;">
+    <div ref="{{ setHelix }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); will-change:transform;">
       <sc-for list="{{ cards }}" as="card" hint-placeholder-count="0">
         <div ref="{{ card.ref }}" style="{{ card.style }}">
           <div style="{{ card.innerStyle }}" onMouseEnter="{{ card.onEnter }}" onMouseLeave="{{ card.onLeave }}" onClick="{{ card.onOpen }}">
@@ -121,24 +130,32 @@
   <!-- Center avatar (kept out of the header's difference blend so the photo stays true colour) -->
   <div ref="{{ setAvatarEl }}" style="position:absolute; top:0px; left:0; right:0; z-index:16; display:flex; justify-content:center; pointer-events:none; opacity:0;">
     <div style="position:relative; display:flex; align-items:center; gap:12px;">
-      <div style="position:relative; width:52px; height:52px; flex:0 0 auto;">
-        <img src="./assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block;" />
+      <div ref="{{ setProfileWrap }}" style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer; transition:opacity .5s ease;" data-clickable="true" onClick="{{ avatarClick }}">
+        <img ref="{{ setProfileImg }}" src="./assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block; transition:opacity .5s ease;" />
         <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(128,128,128,0.06) 0px, rgba(128,128,128,0.06) 3px, transparent 3px, transparent 6px); animation:scanMove 1.2s linear infinite;"></div>
       </div>
-      <span style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ffffff; pointer-events:auto; -webkit-mask-image:repeating-linear-gradient(to bottom, #000 0px, #000 3px, rgba(0,0,0,0.92) 3px, rgba(0,0,0,0.92) 6px); mask-image:repeating-linear-gradient(to bottom, #000 0px, #000 3px, rgba(0,0,0,0.92) 3px, rgba(0,0,0,0.92) 6px); animation:scanMask 1.2s linear infinite; cursor:pointer;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goAbout }}">About</span>
+      <span ref="{{ setAboutLabelEl }}" style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ffffff; pointer-events:auto; -webkit-mask-image:repeating-linear-gradient(to bottom, #000 0px, #000 3px, rgba(0,0,0,0.92) 3px, rgba(0,0,0,0.92) 6px); mask-image:repeating-linear-gradient(to bottom, #000 0px, #000 3px, rgba(0,0,0,0.92) 3px, rgba(0,0,0,0.92) 6px); animation:scanMask 1.2s linear infinite; cursor:pointer; transition:opacity .5s ease;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ avatarClick }}">{{ aboutLabel }}</span>
     </div>
   </div>
 
   <!-- Footer hint -->
   <footer ref="{{ setFooterEl }}" style="position:absolute; bottom:0; left:0; right:0; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px; z-index:16; pointer-events:none; font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff; mix-blend-mode:difference; opacity:0;">
     <span ref="{{ setUpdatedEl }}" style="justify-self:start;">Last updated 2026</span>
-    <span ref="{{ setScrollEl }}" style="justify-self:center; transition:opacity .5s ease;">Scroll ↕</span>
+    <div ref="{{ setScrollEl }}" style="justify-self:center; display:flex; align-items:center; gap:8px; transition:opacity .5s ease;">
+      <button ref="{{ setArrowLeftBtn }}" onClick="{{ selLeft }}" data-clickable="" aria-label="Rotate ring toward top-left" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
+        <div ref="{{ setArrowLeftInner }}" style="width:100%; height:100%; position:relative; transform-style:preserve-3d;"></div>
+      </button>
+      <span>Scroll</span>
+      <button ref="{{ setArrowRightBtn }}" onClick="{{ selRight }}" data-clickable="" aria-label="Rotate ring toward bottom-right" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
+        <div ref="{{ setArrowRightInner }}" style="width:100%; height:100%; position:relative; transform-style:preserve-3d;"></div>
+      </button>
+    </div>
     <span style="justify-self:end;">Brooklyn, NY &nbsp;•&nbsp; <span ref="{{ setHrEl }}">{{ estHours }}</span><span style="animation:colonBlink 1s steps(1,end) infinite;">:</span><span ref="{{ setMinEl }}">{{ estMinutes }}</span> EST</span>
   </footer>
 
   <!-- Hover caption (flat text, scramble-in on hover, above the footer) -->
   <sc-if value="{{ hasHover }}" hint-placeholder-val="{{ false }}">
-    <div ref="{{ setCaption }}" style="position:absolute; left:0; right:0; bottom:74px; z-index:16; display:flex; flex-direction:column; align-items:center; gap:{{ hoverGap }}; pointer-events:none; mix-blend-mode:difference; animation:spiralFadeIn .2s ease both;">
+    <div ref="{{ setCaption }}" style="position:absolute; left:0; right:0; bottom:74px; z-index:16; display:flex; flex-direction:column; align-items:flex-start; padding-left:16px; gap:{{ hoverGap }}; pointer-events:none; mix-blend-mode:difference; animation:spiralFadeIn .2s ease both;">
       <span ref="{{ setCompanyEl }}" style="font-family:{{ eyebrowFam }}; font-weight:{{ eyebrowWeight }}; font-size:{{ eyebrowSize }}; letter-spacing:{{ eyebrowSpacing }}; text-transform:{{ eyebrowCase }}; color:#ffffff;">{{ hover.company }}</span>
       <span ref="{{ setTitleEl }}" style="font-family:{{ hoverFam }}; font-weight:{{ hoverWeight }}; font-size:{{ hoverSize }}; line-height:1; letter-spacing:{{ hoverSpacing }}; text-transform:{{ hoverCase }}; color:#f2f2f5;">{{ hover.title }}</span>
     </div>
@@ -148,7 +165,7 @@
   {{ overlayEl }}
 
   <!-- About page (sits below the shared chrome: header, footer, scanlines + vignette all render over it) -->
-  <div ref="{{ setAboutEl }}" style="position:absolute; inset:0; z-index:3; opacity:0; pointer-events:none; overflow-y:auto; transition:opacity .7s ease; background:#000000;">
+  <div ref="{{ setAboutEl }}" style="position:absolute; inset:0; z-index:3; opacity:0; pointer-events:none; overflow-y:auto; transition:opacity .7s ease; background:transparent;">
     <div style="position:sticky; top:0; height:100vh; margin-bottom:-100vh; z-index:5; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(0,0,0,0.17) 0px, rgba(0,0,0,0.17) 3px, transparent 3px, transparent 6px); animation:scanMove 1.2s linear infinite;">
       <div style="position:absolute; left:0; right:0; top:0; height:2px; background:linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.12) 50%, rgba(255,255,255,0)); filter:blur(.6px); box-shadow:0 0 8px rgba(255,255,255,.12); animation:crtSweep 7s linear infinite;"></div>
     </div>
@@ -159,7 +176,7 @@
       </div>
       <p ref="{{ setBioEl }}" style="width:100%; max-width:{{ aboutBioMax }}; margin:{{ aboutBioTop }} 0 0; font-family:{{ aboutBioFam }}; font-weight:{{ aboutBioWeight }}; font-size:{{ aboutBioSize }}; line-height:{{ aboutBioLH }}; letter-spacing:{{ aboutBioSpacing }}; text-transform:{{ aboutBioCase }}; color:#f2f2f5; text-align:justify; text-wrap:pretty;">I&rsquo;m an autodidactic product designer based in Brooklyn with roots planted in Korea and the Rocky Mountains (read Colorado).<br><br>Past companies and clients include:</p>
       <div ref="{{ setMarqueeEl }}" style="width:100vw; margin:34px 0 0 calc(50% - 50vw); overflow:hidden; -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%); mask-image:linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);">
-        <div style="display:flex; width:max-content; animation:marquee 40s linear infinite;">
+        <div style="display:flex; width:max-content; animation:marquee 70s linear infinite;">
           <div style="display:flex; align-items:center; gap:78px; padding-right:78px; flex:0 0 auto;">
             <img src="./assets/logos/lime.svg" alt="Lime" draggable="false" style="height:42px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
             <img src="./assets/logos/pinterest.svg" alt="Pinterest" draggable="false" style="height:46px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
@@ -167,7 +184,7 @@
             <img src="./assets/logos/uber.svg" alt="Uber" draggable="false" style="height:36px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
             <img src="./assets/logos/nerdwallet.svg" alt="NerdWallet" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
             <img src="./assets/logos/calm.svg" alt="Calm" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
-            <img src="./assets/logos/ouster.png" alt="Ouster" draggable="false" style="height:72px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <div role="img" aria-label="Ouster" draggable="false" style="height:72px; width:110px; opacity:.8; background:#ffffff; -webkit-mask:url(./assets/logos/ouster.png) center/contain no-repeat; mask:url(./assets/logos/ouster.png) center/contain no-repeat;"></div>
           </div>
           <div aria-hidden="true" style="display:flex; align-items:center; gap:78px; padding-right:78px; flex:0 0 auto;">
             <img src="./assets/logos/lime.svg" alt="" draggable="false" style="height:42px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
@@ -176,7 +193,25 @@
             <img src="./assets/logos/uber.svg" alt="" draggable="false" style="height:36px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
             <img src="./assets/logos/nerdwallet.svg" alt="" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
             <img src="./assets/logos/calm.svg" alt="" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
-            <img src="./assets/logos/ouster.png" alt="" draggable="false" style="height:72px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <div role="img" aria-label="" draggable="false" style="height:72px; width:110px; opacity:.8; background:#ffffff; -webkit-mask:url(./assets/logos/ouster.png) center/contain no-repeat; mask:url(./assets/logos/ouster.png) center/contain no-repeat;"></div>
+          </div>
+          <div aria-hidden="true" style="display:flex; align-items:center; gap:78px; padding-right:78px; flex:0 0 auto;">
+            <img src="./assets/logos/lime.svg" alt="" draggable="false" style="height:42px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/pinterest.svg" alt="" draggable="false" style="height:46px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/doordash.svg" alt="" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/uber.svg" alt="" draggable="false" style="height:36px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/nerdwallet.svg" alt="" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/calm.svg" alt="" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <div role="img" aria-label="" draggable="false" style="height:72px; width:110px; opacity:.8; background:#ffffff; -webkit-mask:url(./assets/logos/ouster.png) center/contain no-repeat; mask:url(./assets/logos/ouster.png) center/contain no-repeat;"></div>
+          </div>
+          <div aria-hidden="true" style="display:flex; align-items:center; gap:78px; padding-right:78px; flex:0 0 auto;">
+            <img src="./assets/logos/lime.svg" alt="" draggable="false" style="height:42px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/pinterest.svg" alt="" draggable="false" style="height:46px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/doordash.svg" alt="" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/uber.svg" alt="" draggable="false" style="height:36px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/nerdwallet.svg" alt="" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <img src="./assets/logos/calm.svg" alt="" draggable="false" style="height:34px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
+            <div role="img" aria-label="" draggable="false" style="height:72px; width:110px; opacity:.8; background:#ffffff; -webkit-mask:url(./assets/logos/ouster.png) center/contain no-repeat; mask:url(./assets/logos/ouster.png) center/contain no-repeat;"></div>
           </div>
         </div>
       </div>
@@ -185,16 +220,16 @@
   </div>
 
   <!-- Boot loader: black + scanlines, centred count-up, melts out on complete -->
-  <div ref="{{ setLoader }}" style="position:absolute; inset:0; z-index:40; background:#000000; display:flex; align-items:center; justify-content:center; pointer-events:none;">
+  <div ref="{{ setLoader }}" style="position:absolute; inset:0; z-index:40; background:transparent; display:flex; align-items:center; justify-content:center; pointer-events:none;">
     <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(128,128,128,0.06) 0px, rgba(128,128,128,0.06) 3px, transparent 3px, transparent 6px); animation:scanMove 1.2s linear infinite;"></div>
     <span ref="{{ setLoaderPct }}" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff;">0%</span>
   </div>
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;autoSpinSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:0,&quot;max&quot;:26,&quot;step&quot;:1,&quot;unit&quot;:&quot;°/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;spiralWidth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.6,&quot;max&quot;:1.15,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#8aa0ff&quot;,&quot;options&quot;:[&quot;#8aa0ff&quot;,&quot;#e0a86b&quot;,&quot;#8fd3b8&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Style&quot;},&quot;slurScale&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:120,&quot;min&quot;:0,&quot;max&quot;:120,&quot;step&quot;:5,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;slurSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.45,&quot;min&quot;:0.15,&quot;max&quot;:1.6,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;gooStrength&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:4.4,&quot;min&quot;:0.5,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;gooThresh&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:35,&quot;min&quot;:6,&quot;max&quot;:40,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;headerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:16,&quot;max&quot;:72,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1.5,&quot;min&quot;:-3,&quot;max&quot;:12,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;lowercase&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;footerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:8,&quot;max&quot;:28,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-0.4,&quot;min&quot;:-1,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;UPPERCASE&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;eyebrowFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:400,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:8,&quot;max&quot;:32,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-0.5,&quot;min&quot;:-1,&quot;max&quot;:10,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;UPPERCASE&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;hoverFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:300,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:115,&quot;min&quot;:20,&quot;max&quot;:160,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-4,&quot;min&quot;:-4,&quot;max&quot;:10,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;lowercase&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverGap&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-40,&quot;min&quot;:-60,&quot;max&quot;:24,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;aboutBioSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:20,&quot;max&quot;:64,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioLineHeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.9,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1,&quot;min&quot;:-3,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioWeight&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;300&quot;,&quot;options&quot;:[&quot;300&quot;,&quot;400&quot;,&quot;500&quot;,&quot;700&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;As typed&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutImgW&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:452,&quot;min&quot;:300,&quot;max&quot;:760,&quot;step&quot;:10,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;autoSpinSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:0,&quot;max&quot;:26,&quot;step&quot;:1,&quot;unit&quot;:&quot;°/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;spiralWidth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.6,&quot;max&quot;:1.15,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#8aa0ff&quot;,&quot;options&quot;:[&quot;#8aa0ff&quot;,&quot;#e0a86b&quot;,&quot;#8fd3b8&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Style&quot;},&quot;slurScale&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:120,&quot;min&quot;:0,&quot;max&quot;:120,&quot;step&quot;:5,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;slurSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.45,&quot;min&quot;:0.15,&quot;max&quot;:1.6,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;gooStrength&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.3,&quot;min&quot;:0.5,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;gooThresh&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:35,&quot;min&quot;:6,&quot;max&quot;:40,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;headerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:16,&quot;max&quot;:72,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1.5,&quot;min&quot;:-3,&quot;max&quot;:12,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;lowercase&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;footerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:8,&quot;max&quot;:28,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-0.4,&quot;min&quot;:-1,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;UPPERCASE&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;eyebrowFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:400,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:8,&quot;max&quot;:32,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-0.5,&quot;min&quot;:-1,&quot;max&quot;:10,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;UPPERCASE&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;hoverFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:300,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:104,&quot;min&quot;:20,&quot;max&quot;:160,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-4,&quot;min&quot;:-4,&quot;max&quot;:10,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;lowercase&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverGap&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-52,&quot;min&quot;:-60,&quot;max&quot;:24,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;aboutBioSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:20,&quot;max&quot;:64,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioLineHeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.9,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1,&quot;min&quot;:-3,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioWeight&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;300&quot;,&quot;options&quot;:[&quot;300&quot;,&quot;400&quot;,&quot;500&quot;,&quot;700&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;As typed&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutImgW&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:452,&quot;min&quot;:300,&quot;max&quot;:760,&quot;step&quot;:10,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;}}">
 class Component extends DCLogic {
-  state = { hovered: null, selected: null };
+  state = { hovered: null, selected: null, spinSel: 'right' };
   cardEls = [];   // must exist before ref callbacks fire (they run before componentDidMount)
   videoEls = new Set();   // all mounted <video> faces, for autoplay recovery
 
@@ -202,9 +237,10 @@ class Component extends DCLogic {
   PER_TURN = 6;
   Y_STEP = 118;
   ANG = 36;
-  FROM = -24;
-  TO = 24;
-  TILT = 8;
+  FROM = 0;
+  TO = 5;   // single tilted ring (Saturn-style): one instance of each of the 6 mocks
+  TILT = 1;
+  ROLL = -18;   // diagonal roll of the whole ring (top-left high → bottom-right low, steeper on exit)
 
   // Radius so the spiral spans from the header logo to the "Site" link.
   radius() {
@@ -246,6 +282,12 @@ class Component extends DCLogic {
   // Reveal the About page: spiral + "Scroll" hint fade out, content fades in.
   openAbout() {
     this._aboutOpen = true;
+    // Fade the label out now; swap "about"->"exit" and fade it back in timed with the About page reveal.
+    if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '0';
+    if (this.profileImg) this.profileImg.style.opacity = '0';
+    if (this.profileWrap) this.profileWrap.style.opacity = '0';
+    setTimeout(() => { if (this._aboutOpen && this.profileWrap) this.profileWrap.style.display = 'none'; }, 520);
+    setTimeout(() => { if (this._aboutOpen) { this.setState({ aboutOpen: true }); if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '1'; } }, 800);
     // Longer fade of the spiral + Scroll hint, then the empty page holds ~1s before the About page goo-reveals in.
     if (this.sceneEl) { this.sceneEl.style.transition = 'opacity .8s ease'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
     if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .8s ease'; this.scrollEl.style.opacity = '0'; }
@@ -264,6 +306,8 @@ class Component extends DCLogic {
   }
   closeAbout(instant) {
     this._aboutOpen = false;
+    if (instant) { this.setState({ aboutOpen: false }); if (this.profileWrap) { this.profileWrap.style.display = ''; this.profileWrap.style.opacity = ''; } if (this.profileImg) this.profileImg.style.opacity = ''; }
+    else { if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '0'; if (this.profileWrap) { this.profileWrap.style.display = ''; this.profileWrap.style.opacity = '0'; } setTimeout(() => { if (!this._aboutOpen) { this.setState({ aboutOpen: false }); if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '1'; if (this.profileImg) this.profileImg.style.opacity = '1'; if (this.profileWrap) this.profileWrap.style.opacity = '1'; if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .5s ease'; this.scrollEl.style.opacity = ''; } } }, 500); }
     clearTimeout(this._aboutTimer);
     cancelAnimationFrame(this._revRaf);
     if (this.aboutInner) this.aboutInner.style.filter = '';
@@ -272,8 +316,8 @@ class Component extends DCLogic {
     if (this.marqueeEl) { this.marqueeEl.style.filter = ''; this.marqueeEl.style.opacity = ''; }
     if (this.reachEl) { this.reachEl.style.filter = ''; this.reachEl.style.opacity = ''; }
     if (this.aboutEl) { this.aboutEl.style.transition = 'opacity .3s ease'; this.aboutEl.style.opacity = '0'; this.aboutEl.style.pointerEvents = 'none'; this.aboutEl.scrollTop = 0; }
-    if (this.scrollEl) this.scrollEl.style.opacity = '';
-    if (this.sceneEl) this.sceneEl.style.pointerEvents = '';
+    if (instant && this.scrollEl) this.scrollEl.style.opacity = '';
+    if (this.sceneEl) { this.sceneEl.style.pointerEvents = ''; if (!instant) { this.sceneEl.style.transition = 'none'; this.sceneEl.style.opacity = '0'; void this.sceneEl.offsetHeight; clearTimeout(this._sceneReveal); this._sceneReveal = setTimeout(() => { if (!this._aboutOpen && this.sceneEl) { this.sceneEl.style.transition = 'opacity 1s ease'; this.sceneEl.style.opacity = '1'; } }, 450); } }
   }
 
   // Crop the portrait 10% narrower and taller than its natural aspect (object-fit:cover — no warp).
@@ -288,6 +332,7 @@ class Component extends DCLogic {
   componentDidMount() {
     this.spin = 0;
     this.dragMomentum = 0;
+    this.spinDir = 1;             // ring direction: +1 = default (enter top-left->bottom-right, right arrow), -1 = inverse (left arrow)
     this.dragging = false;
     this.last = performance.now();
     this.tick = this.tick.bind(this);
@@ -370,8 +415,32 @@ class Component extends DCLogic {
   }
 
   // Boot intro: count 0→100 over the loader, then melt it out and reveal the scene.
+  // Build an extruded 3D chrome arrow by stacking N masked slabs along Z (front/back faces bright, interior rim dark).
+  _buildArrow(el, dir) {
+    if (!el || el._built) return;
+    el._built = true;
+    // Bold lined arrow (right-angle head + diagonal shaft), 24-grid. Left = ↖ (mirror X), right = ↘ (flip Y).
+    const base = "M5 5 h14 v14 h-3.5 V10.9 l-9.1 9.1 -2.5 -2.5 9.1 -9.1 H5 z";
+    const g = dir === 'left' ? "scale(-1,1) translate(-24,0)" : "scale(1,-1) translate(0,-24)";
+    const svg = "%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cg%20transform='" + encodeURIComponent(g) + "'%3E%3Cpath%20d='" + encodeURIComponent(base) + "'%20fill='%23000'/%3E%3C/g%3E%3C/svg%3E";
+    const mask = "url(\"data:image/svg+xml," + svg + "\") center/contain no-repeat";
+    const chrome = 'linear-gradient(97deg, #f8fbfe 0%, #b9c3cf 18%, #474e58 36%, #edf2f8 51%, #767f8b 65%, #2b3038 81%, #dde5ef 100%)';
+    const N = 26, DEPTH = 24;                    // solid thickness without over-foreshortening
+    for (let i = 0; i < N; i++) {
+      const t = i / (N - 1);                     // 0 = front face, 1 = back face
+      const z = (t - 0.5) * DEPTH;
+      const edge = 1 - Math.abs(t - 0.5) * 2;    // 1 at mid-depth (rim), 0 at the faces
+      const b = (1.12 - edge * 0.82).toFixed(3); // bright faces, near-black extruded rim
+      const s = document.createElement('span');
+      s.style.cssText = 'position:absolute; inset:0; -webkit-mask:' + mask + '; mask:' + mask + '; background:' + chrome + '; transform:translateZ(' + z.toFixed(2) + 'px); filter:brightness(' + b + ');';
+      el.appendChild(s);
+    }
+    el.style.filter = 'drop-shadow(0 1px 2px rgba(0,0,0,.5))';
+  }
+
   runLoader() {
     const pctEl = this.loaderPctEl, loader = this.loaderEl;
+    this._booting = true;
     const chrome = [this.headerEl, this.footerEl, this.avatarEl].filter(Boolean);
     const scene = this.sceneEl;
     chrome.forEach(el => { el.style.opacity = '0'; el.style.filter = ''; });
@@ -429,8 +498,9 @@ class Component extends DCLogic {
         const foot = [this.footerEl].filter(Boolean);
         foot.forEach(el => { el.style.opacity = ''; });
         this.meltRevealMany(foot, () => {
-          // 4) spiral fades in (opacity only) over 1s
+          // 4) spiral fades in (opacity only) over 1s — enable device hovers once it's fully in
           if (this.sceneEl) { this.sceneEl.style.transition = 'opacity 1s ease'; this.sceneEl.style.opacity = '1'; }
+          setTimeout(() => { this._booting = false; }, 1000);
         });
       });
     });
@@ -443,7 +513,7 @@ class Component extends DCLogic {
     if (!els.length || !blur) { els.forEach(el => { el.style.filter = ''; }); if (onDone) onDone(); return; }
     cancelAnimationFrame(this._revRaf);
     els.forEach(el => { el.style.opacity = ''; el.style.filter = 'url(#gooReveal)'; });
-    const start = (this.props.gooStrength ?? 3.4) + 4.6;
+    const start = (this.props.gooStrength ?? 2.3) + 4.6;
     const t0 = performance.now(); dur = dur || 520;
     const stepFn = (t) => {
       const k = Math.min(1, (t - t0) / dur);
@@ -457,6 +527,7 @@ class Component extends DCLogic {
     this._revRaf = requestAnimationFrame(stepFn);
   }
   setRoot = (el) => { this.rootEl = el; };
+  setSquareCanvas = (el) => { this.squareCanvas = el; };
   componentWillUnmount() { cancelAnimationFrame(this.raf); clearInterval(this._clockTimer); window.removeEventListener('resize', this._onResize); clearTimeout(this._sweepTimer); clearInterval(this._playTimer); window.removeEventListener('pointerdown', this._playAll); window.removeEventListener('focus', this._playAll); document.removeEventListener('visibilitychange', this._playAll); document.removeEventListener('visibilitychange', this._onVis); if (this._io) this._io.disconnect(); }
 
   // Inverse of the reveal: caption melts into goo and dissolves, then unmounts via onDone.
@@ -466,7 +537,7 @@ class Component extends DCLogic {
     el.style.filter = 'url(#gooReveal)';
     if (!blur) { el.style.filter = ''; if (onDone) onDone(); return; }
     cancelAnimationFrame(this._revRaf);
-    const end = (this.props.gooStrength ?? 3.4) + 4.6;
+    const end = (this.props.gooStrength ?? 2.3) + 4.6;
     const t0 = performance.now(), dur = 520;
     const from = parseFloat(blur.getAttribute('stdDeviation')) || 0.01;
     const stepFn = (t) => {
@@ -481,31 +552,127 @@ class Component extends DCLogic {
   }
 
   // One-shot reveal: the caption comes in gooey and resolves sharp (à la "Hey, I'm Artem").
-  meltReveal(el) {
+  meltReveal(el, blur, filterId, dur, rafKey) {
     if (!el) return;
-    const blur = this.gooRevealBlurEl;
-    el.style.opacity = '';                 // clear any leftover fade from a melt-away
-    el.style.filter = 'url(#gooReveal)';
+    blur = blur || this.gooRevealBlurEl;
+    filterId = filterId || 'gooReveal';
+    dur = dur || 1250;
+    rafKey = rafKey || '_revRaf';
+    el.style.opacity = '';
+    el.style.filter = 'url(#' + filterId + ')';
     if (!blur) { el.style.filter = ''; return; }
-    cancelAnimationFrame(this._revRaf);
-    const start = (this.props.gooStrength ?? 3.4) + 4.6;   // begin much gooier
-    const t0 = performance.now(), dur = 1250;
+    cancelAnimationFrame(this[rafKey]);
+    const start = (this.props.gooStrength ?? 2.3) + 4.6;
+    const t0 = performance.now();
     const stepFn = (t) => {
       const k = Math.min(1, (t - t0) / dur);
-      const eased = 1 - Math.pow(1 - k, 4);   // hold the goo longer, resolve late
+      const eased = 1 - Math.pow(1 - k, 4);
       const v = start * (1 - eased) + 0.01 * eased;
       blur.setAttribute('stdDeviation', v.toFixed(2));
-      if (k < 1) this._revRaf = requestAnimationFrame(stepFn);
+      if (k < 1) this[rafKey] = requestAnimationFrame(stepFn);
       else el.style.filter = '';
     };
     blur.setAttribute('stdDeviation', start.toFixed(2));
-    this._revRaf = requestAnimationFrame(stepFn);
+    this[rafKey] = requestAnimationFrame(stepFn);
+  }
+
+  // Staggered caption reveal: the eyebrow (company) resolves first, then the title.
+  revealCaption() {
+    clearTimeout(this._capUnmount);
+    this._capMelting = false;
+    [this.companyEl, this.titleEl].forEach(el => { if (el) el.style.transition = 'none'; });
+    if (this.titleEl) this.titleEl.style.opacity = '0';
+    if (this.companyEl) { this.companyEl.style.filter = ''; this.companyEl.style.opacity = '1'; this._companyText = this.companyEl.textContent; this.scrambleIn(this.companyEl, this._companyText, 700); }
+    clearTimeout(this._capStagger);
+    this._capStagger = setTimeout(() => {
+      if (this.titleEl) { this.titleEl.style.opacity = ''; this.meltReveal(this.titleEl, this.gooRevealBlurEl2, 'gooReveal2', 2600, '_revRaf2'); }
+    }, 360);
+  }
+
+  // Scramble-in: cycle random glyphs, resolving left-to-right into the final text.
+  scrambleIn(el, finalText, dur) {
+    if (!el) return;
+    cancelAnimationFrame(this._scrRaf);
+    const text = finalText || '';
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#*';
+    const t0 = performance.now();
+    const stepFn = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      const resolved = Math.floor(k * text.length);
+      let out = '';
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (i < resolved || c === ' ') out += c;
+        else out += chars[(Math.random() * chars.length) | 0];
+      }
+      el.textContent = out;
+      if (k < 1) this._scrRaf = requestAnimationFrame(stepFn);
+      else el.textContent = text;
+    };
+    this._scrRaf = requestAnimationFrame(stepFn);
+  }
+
+  // Scramble-out: dissolve resolved text back into random glyphs, unresolving left-to-right, then fade.
+  scrambleOut(el, dur) {
+    if (!el) return;
+    cancelAnimationFrame(this._scrRaf);
+    const text = this._companyText || el.textContent || '';
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#*';
+    const t0 = performance.now();
+    const stepFn = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      const resolved = Math.floor((1 - k) * text.length);
+      let out = '';
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (i < resolved || c === ' ') out += c;
+        else out += chars[(Math.random() * chars.length) | 0];
+      }
+      el.textContent = out;
+      el.style.opacity = String(Math.min(1, (1 - k) / 0.3));
+      if (k < 1) this._scrRaf = requestAnimationFrame(stepFn);
+      else el.style.opacity = '0';
+    };
+    this._scrRaf = requestAnimationFrame(stepFn);
+  }
+
+  // On hover-off: cancel any in-flight melt and dissolve both lines back into goo (blur up + fade).
+  hideCaption() {
+    clearTimeout(this._capStagger);
+    if (this._scrRaf) cancelAnimationFrame(this._scrRaf);
+    if (this._revRaf) cancelAnimationFrame(this._revRaf);
+    if (this._revRaf2) cancelAnimationFrame(this._revRaf2);
+    this._capMelting = true;                           // keep the caption mounted through the melt-out
+    if (this.companyEl) { this.companyEl.style.transition = 'none'; this.companyEl.style.filter = ''; this.scrambleOut(this.companyEl, 240); }
+    this.meltAwayCaption(this.titleEl, this.gooRevealBlurEl2, 'gooReveal2', 230, '_revRaf2');
+    clearTimeout(this._capUnmount);
+    this._capUnmount = setTimeout(() => { this._capMelting = false; this._retainHov = null; this.forceUpdate(); }, 380);
+  }
+
+  // Reverse of meltReveal: sharp -> goo. Opacity holds while it dissolves, only dropping at the very end.
+  meltAwayCaption(el, blur, filterId, dur, rafKey) {
+    if (!el || !blur) return;
+    el.style.transition = 'none';
+    el.style.opacity = '';
+    el.style.filter = 'url(#' + filterId + ')';
+    cancelAnimationFrame(this[rafKey]);
+    const end = (this.props.gooStrength ?? 2.3) + 4.6;
+    const t0 = performance.now();
+    const stepFn = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      const eased = 1 - Math.pow(1 - k, 3);
+      blur.setAttribute('stdDeviation', (0.01 * (1 - eased) + end * eased).toFixed(2));
+      el.style.opacity = String(Math.min(1, (1 - k) / 0.25));   // hold at 1, fade only in the last quarter
+      if (k < 1) this[rafKey] = requestAnimationFrame(stepFn);
+      else { el.style.filter = ''; el.style.opacity = '0'; }
+    };
+    this[rafKey] = requestAnimationFrame(stepFn);
   }
 
   animateMelt(el, on) {
     if (!el) return;
     const blur = this.gooBlurEl;
-    const target = on ? (this.props.gooStrength ?? 3.4) : 0.01;
+    const target = on ? (this.props.gooStrength ?? 2.3) : 0.01;
     if (on) el.style.filter = 'url(#goo)';
     if (!blur) { if (!on) el.style.filter = ''; return; }
     cancelAnimationFrame(this._gooRaf);
@@ -569,30 +736,52 @@ class Component extends DCLogic {
     const auto = this.props.autoSpinSpeed ?? 8;
     const paused = this.state.selected != null || (this.state.hovered != null && !this.dragging);
     if (!paused && !this.dragging) {
-      this.spin += auto * dt;
+      this.spin += auto * (this.spinDir || 1) * dt;
       this.spin += this.dragMomentum * dt;
     }
     this.dragMomentum *= Math.pow(0.9, dt * 60);
     if (Math.abs(this.dragMomentum) < 0.02) this.dragMomentum = 0;
 
+    // Selected arrow spins around its own long (diagonal) axis — dolphin-style — at the ring's angular speed.
+    const dSpin = this._lastSpin == null ? 0 : (this.spin - this._lastSpin);
+    this._lastSpin = this.spin;
+    const GAIN = 2.5;
+    const sel = this.state.spinSel;
+    const TILT = '';                              // face-on (original look)
+    const k = Math.min(1, dt * 7);                // ease-back rate for the idle arrow
+    const wrap = (a) => ((a + 180) % 360 + 360) % 360 - 180;   // shortest path to 0 (< 1 full turn)
+    // selected arrow spins; unselected takes the SHORTEST route back to its rest position (angle 0)
+    if (sel === 'left') { this._angL = (this._angL || 0) + dSpin * GAIN; this._angR = wrap(this._angR || 0) * (1 - k); }
+    else { this._angR = (this._angR || 0) + dSpin * GAIN; this._angL = wrap(this._angL || 0) * (1 - k); }
+    if (this.arrowLeftInner) this.arrowLeftInner.style.transform = TILT + 'rotate3d(1,1,0,' + this._angL.toFixed(2) + 'deg)';
+    if (this.arrowRightInner) this.arrowRightInner.style.transform = TILT + 'rotate3d(1,1,0,' + this._angR.toFixed(2) + 'deg)';
+    if (this.arrowLeftBtn) this.arrowLeftBtn.style.opacity = sel === 'left' ? '1' : '0.3';
+    if (this.arrowRightBtn) this.arrowRightBtn.style.opacity = sel === 'right' ? '1' : '0.3';
+
     const rad = Math.PI / 180;
-    const R = this.radius();
-    const P = 2100;                       // must match perspective in template
+    const R = this.radius() * 1.22;   // wider ring → more spread / breathing room
+    const P = 2500;                       // larger → gentler foreshortening (camera further back)
+    const GSCALE = 0.91;                  // global device shrink → devices sit a bit further back
     const cosT = Math.cos(this.TILT * rad), sinT = Math.sin(this.TILT * rad);
     const turnH = this.PER_TURN * this.Y_STEP;
-    const driftY = this.mod((this.spin / 360) * turnH, turnH);
-    // Vertical offset so the front-facing card lands centred, nudged slightly up.
-    const offset = (R * sinT) * P / (P - R * cosT) - window.innerHeight * 0.075;
-    if (this.helixEl) {
-      this.helixEl.style.transform =
-        `translate(-50%,-50%) translateY(${offset.toFixed(1)}px) rotateX(${this.TILT}deg) translateY(${driftY.toFixed(2)}px) rotateY(${this.spin.toFixed(2)}deg)`;
-    }
-    // Horizontal fade tied to the header: appear as the left edge reaches "J",
-    // disappear as the card centre reaches "Site" (before any back face shows).
+    const cosR = Math.cos(this.ROLL * rad), sinR = Math.sin(this.ROLL * rad);
+    // The RING lives in a plane that is pitched (TILT) and rolled (ROLL) so the PATH is a
+    // diagonal ellipse. But each device is only translated/scaled and given a rotateY turn
+    // under its own centred perspective — so it STANDS UPRIGHT (no roll/pitch) while it
+    // rotates in 3D as it travels the ellipse.
+    if (this.helixEl) this.helixEl.style.transform = 'translate(-50%,-50%)';
+    const ringPt = (th) => {
+      const x0 = R * Math.sin(th), z0 = R * Math.cos(th);          // th=0 → front (0,0,R)
+      const y1 = -z0 * sinT, z1 = z0 * cosT, x1 = x0;              // pitch about X
+      const x2 = x1 * cosR - y1 * sinR, y2 = x1 * sinR + y1 * cosR, z2 = z1;   // roll about Z
+      const sc = P / (P - z2);
+      return { dx: x2 * sc, dy: -y2 * sc, sc, z2 };
+    };
+    const cFront = ringPt(0);
+    const ox = -cFront.dx, oy = -cFront.dy - window.innerHeight * 0.02;   // keep the front device centred
+
     const vw = window.innerWidth, cx = vw / 2;
-    const SITE = vw - 70;
     const hovered = this.state.hovered;
-    const hoveredEl = (hovered != null) ? this.cardEls[hovered - this.FROM] : null;
     // Ease the slur/dim in and out instead of snapping on.
     if (this.slurProg == null) this.slurProg = 0;
     if (hovered != null) this.slurProg += (1 - this.slurProg) * Math.min(1, dt * 9);
@@ -603,14 +792,10 @@ class Component extends DCLogic {
     const slurScaleMax = this.props.slurScale ?? 55;
     if (this.slurDispEl) this.slurDispEl.setAttribute('scale', (slurScaleMax * this.slurProg).toFixed(2));
     if (this.slurGrainEl) this.slurGrainEl.setAttribute('values', '0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 ' + (0.26 * this.slurProg).toFixed(3) + ' 0');
-    // Exempt the hovered card by INDEX (ref objects are recreated on re-render,
-    // so an object reference would go stale during the leave/ease-out).
+    // Exempt the hovered card by INDEX (ref objects are recreated on re-render).
     const exemptIdx = (hovered != null) ? hoveredIdx : (this._lastHovIdx != null ? this._lastHovIdx : -1);
     const slurActive = this.slurProg > 0.002;
     // Warm-band lazy loading: attach a clip's src only when it's near the front, detach when deep back-facing to free decoder RAM.
-    // Attach/detach each clip's <src> so only a FEW decoders are ever alive at once.
-    // Browsers cap concurrent hardware video decoders; excess <video>s throw MEDIA_ERR_DECODE
-    // and never paint. Detaching src (removeAttribute + load) releases the decoder back to the pool.
     const setWarm = (v, warm) => {
       if (!v) return;
       if (warm) {
@@ -629,23 +814,23 @@ class Component extends DCLogic {
       const e = this.cardEls[k];
       if (!e || !e.el) continue;
       if (e.vid === undefined) e.vid = e.el.querySelector('video');
-      const th = (e.a + this.spin) * rad;
+      const phi = e.a + this.spin;          // device turn angle (deg)
+      const th = phi * rad;
       const c = Math.cos(th);
-      if (c <= 0.22) { e.el.style.visibility = 'hidden'; continue; }
-      const er = e.rad || R;
-      const scale = P / (P - er * c * cosT);
+      if (c <= 0.08) { e.el.style.visibility = 'hidden'; continue; }
+      const p = ringPt(th);
+      const dx = p.dx + ox, dy = p.dy + oy;
+      const isHov = (k === hoveredIdx);
+      e.el.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${(p.sc * GSCALE).toFixed(3)})`;
+      e.el.style.zIndex = isHov ? '5000' : String(1000 + Math.round(p.z2));
+      const inner = e.el.firstElementChild;
+      if (inner) inner.style.transform = `translate(-50%,-50%) rotateY(${phi.toFixed(2)}deg)`;
+      // Fade across the front arc — asymmetric: the incoming (top-left) device reveals a touch
+      // later, the outgoing (bottom-right) device hides a touch sooner.
       const sinth = Math.sin(th);
-      const screenX = cx + er * sinth * scale;
-      let op;
-      if (sinth < 0) {
-        // left / incoming: reveal quickly only once the front face turns toward us
-        op = Math.min(1, Math.max(0, (c - 0.34) / 0.2));
-      } else {
-        // right / outgoing: hold until the card centre reaches "Site", before the back shows
-        op = Math.min(1, Math.max(0, (SITE - screenX) / 130));
-      }
-      // Ensure the device is fully faded before its front face turns away (no back showing).
-      op *= Math.min(1, Math.max(0, (c - 0.22) / 0.16));
+      const edge = 0.30;
+      const span = (sinth < 0) ? 0.20 : 0.13;   // outgoing (steeper path) fades over a tighter arc so it matches the incoming timing
+      let op = Math.min(1, Math.max(0, (c - edge) / span));
       if (slurActive && k !== exemptIdx) {
         op *= (1 - 0.7 * this.slurProg);       // eases 1 → 0.3
         e.el.style.filter = 'url(#slurbt)';    // scale ramps via slurProg
@@ -690,7 +875,7 @@ class Component extends DCLogic {
     const accent = this.props.accentColor ?? '#8aa0ff';
     const slurScale = this.props.slurScale ?? 55;
     const slurDur = (this.props.slurSpeed ?? 0.5) + 's';
-    const gooStrength = this.props.gooStrength ?? 3.4;
+    const gooStrength = this.props.gooStrength ?? 2.3;
     const gooThresh = this.props.gooThresh ?? 20;
 
     // Per-region type controls (font / weight / size / spacing / capitalization)
@@ -714,10 +899,10 @@ class Component extends DCLogic {
     const footerCase = cap(this.props.footerCase);
     const hoverFam = fam(this.props.hoverFont, 'PP Neue Montreal');
     const hoverWeight = this.props.hoverWeight ?? 400;
-    const hoverSize = (this.props.hoverSize ?? 38) + 'px';
+    const hoverSize = (this.props.hoverSize ?? 33) + 'px';
     const hoverSpacing = (this.props.hoverSpacing ?? -0.3) + 'px';
     const hoverCase = cap(this.props.hoverCase);
-    const hoverGap = (this.props.hoverGap ?? 2) + 'px';
+    const hoverGap = (this.props.hoverGap ?? -11) + 'px';
     const eyebrowFam = fam(this.props.eyebrowFont, 'PP Neue Montreal');
     const eyebrowWeight = this.props.eyebrowWeight ?? 400;
     const eyebrowSize = (this.props.eyebrowSize ?? 11) + 'px';
@@ -746,7 +931,8 @@ class Component extends DCLogic {
     // Reveal the caption once per distinct mock — keying on identity (not slot index) stops re-goo flicker as the spiral drifts under a still cursor.
     if (hovKey !== this._lastRevealKey) {
       this._lastRevealKey = hovKey;
-      if (hovKey != null) requestAnimationFrame(() => this.meltReveal(this.captionEl));
+      if (hovKey != null) requestAnimationFrame(() => this.revealCaption());
+      else this.hideCaption();
     }
 
     const PHONE_W = 204, TABLET_W = 400;   // iPad large; extra arc gives it the room
@@ -755,7 +941,7 @@ class Component extends DCLogic {
     for (let i = this.FROM; i <= this.TO; i++) {
       const base = mocks[this.mod(i, this.PER_TURN)];
       const isTablet = base.o === 'landscape';
-      const y = i * this.Y_STEP;
+      const y = 0;   // single row: no vertical stacking (one tilted ring of devices)
       const a = this.slotAngle(i);
       const W = isTablet ? TABLET_W : PHONE_W;
       const DEVICE_W = W;   // render at full width; spacing comes from the arc layout
@@ -843,28 +1029,29 @@ class Component extends DCLogic {
       const body = h('div', { style: {
         position: 'relative', width: DEVICE_W + 'px', aspectRatio: isTablet ? '1.4' : '0.4997',
         transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
+        transform: isHov ? 'scale(1.1)' : 'scale(1)',
+        transition: 'transform .35s cubic-bezier(.22,.61,.36,1)',
       } }, parts);
 
       cards.push({
         key: i,
         body,
         ref: (el) => { this.cardEls[idx] = el ? { el, a, isTablet, W, rad: cardR } : null; },
-        onEnter: () => this.setState({ hovered: i }),
+        onEnter: () => { if (this._booting) return; this.setState({ hovered: i }); },
         onLeave: () => this.setState(s => (s.hovered === i ? { hovered: null } : null)),
-        onOpen: () => this.setState({ selected: base, hovered: null }),
+        onOpen: () => {},
         style: {
           position: 'absolute', top: 0, left: 0, width: '1px', height: '1px',
-          transform: `translateY(${y}px) rotateY(${a}deg) translateZ(${cardR}px)`,
-          transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
+          transform: 'none',   // billboard position/scale driven per-frame in tick()
+          perspective: '1200px',   // gives the inner rotateY its 3D turn (origin at device centre)
           '--f': 1,
           zIndex: isHov ? 30 : 1,
         },
         innerStyle: {
           position: 'absolute', left: 0, top: 0, width: W + 'px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transform: `translate(-50%,-50%) scale(${scv})`,
+          transform: `translate(-50%,-50%) scale(${scv})`,   // tick() sets rotateY + hover scale
           transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
-          transition: 'transform .35s ease',
           cursor: 'pointer',
         },
         cardScan: {
@@ -879,6 +1066,8 @@ class Component extends DCLogic {
 
     const selected = this.state.selected;
     const hov = hovered != null ? mocks[this.mod(hovered, this.PER_TURN)] : null;
+    if (hov) this._retainHov = hov;                    // remember for the melt-out (element must stay mounted)
+    const shownHov = hov || (this._capMelting ? this._retainHov : null);
     const H = React.createElement;
     // Shared type treatments — single source for the eyebrow + title styles used
     // by BOTH the hover caption and the case-study overlay below (size set per use).
@@ -926,6 +1115,7 @@ class Component extends DCLogic {
       setSweep: (el) => { this.sweepEl = el; },
       setGoo: (el) => { this.gooBlurEl = el; },
       setGooReveal: (el) => { this.gooRevealBlurEl = el; },
+      setGooReveal2: (el) => { this.gooRevealBlurEl2 = el; },
       setCaption: (el) => { this.captionEl = el; },
       setSlurDisp: (el) => { this.slurDispEl = el; },
       setSlurGrain: (el) => { this.slurGrainEl = el; },
@@ -935,9 +1125,18 @@ class Component extends DCLogic {
       setHeaderEl: (el) => { this.headerEl = el; },
       setFooterEl: (el) => { this.footerEl = el; },
       setAvatarEl: (el) => { this.avatarEl = el; },
+      setAboutLabelEl: (el) => { this.aboutLabelEl = el; },
+      setProfileImg: (el) => { this.profileImg = el; },
+      setProfileWrap: (el) => { this.profileWrap = el; },
       setLoader: (el) => { this.loaderEl = el; },
       setLoaderPct: (el) => { this.loaderPctEl = el; },
       setScrollEl: (el) => { this.scrollEl = el; },
+      setArrowLeftBtn: (el) => { this.arrowLeftBtn = el; },
+      setArrowRightBtn: (el) => { this.arrowRightBtn = el; },
+      setArrowLeftInner: (el) => { this.arrowLeftInner = el; this._buildArrow(el, 'left'); },
+      setArrowRightInner: (el) => { this.arrowRightInner = el; this._buildArrow(el, 'right'); },
+      selLeft: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } this.spinDir = -1; this.setState({ spinSel: 'left' }); },
+      selRight: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } this.spinDir = 1; this.setState({ spinSel: 'right' }); },
       setAboutEl: (el) => { this.aboutEl = el; },
       setAboutInner: (el) => { this.aboutInner = el; },
       setBioEl: (el) => { this.bioEl = el; },
@@ -949,6 +1148,10 @@ class Component extends DCLogic {
       setMinEl: (el) => { this.minEl = el; },
       setUpdatedEl: (el) => { this.updatedEl = el; this._startFooterCycle && this._startFooterCycle(); },
       goAbout: () => { this.openAbout(); },
+      avatarClick: () => { if (this._aboutOpen) { this.spin = 0; this.dragMomentum = 0; this.closeAbout(); this.setState({ selected: null, hovered: null }); } else { this.openAbout(); } },
+      aboutOpen: !!this.state.aboutOpen,
+      aboutClosed: !this.state.aboutOpen,
+      aboutLabel: this.state.aboutOpen ? 'Exit' : 'About',
       goHome: () => { this.spin = 0; this.dragMomentum = 0; this.closeAbout(true); this.setState({ selected: null, hovered: null }); this.runLoader(); },
       contact: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } window.location.href = 'mailto:jason.jinulim@gmail.com'; },
       setCompanyEl: (el) => { this.companyEl = el; },
@@ -962,10 +1165,10 @@ class Component extends DCLogic {
       hoverFam, hoverWeight, hoverSize, hoverSpacing, hoverCase, hoverGap,
       eyebrowFam, eyebrowWeight, eyebrowSize, eyebrowSpacing, eyebrowCase,
       aboutBioFam, aboutBioWeight, aboutBioSize, aboutBioLH, aboutBioSpacing, aboutBioCase, aboutImgW, aboutBioMax, aboutBioTop,
-      hasHover: hov != null,
+      hasHover: shownHov != null,
       captionShown: this.state.captionShown,
       disp: this._displayHover || {},
-      hover: hov ? { company: hov.company + '\u2002\u2002\u2022\u2002\u2002Case study coming soon', title: hov.title } : {},
+      hover: shownHov ? { company: shownHov.company + '\u2002\u2002\u2022\u2002\u2002Coming soon', title: shownHov.title } : {},
       setHelix: (el) => { this.helixEl = el; },
       onDown: (e) => { if (e.target && e.target.closest && e.target.closest('a, h1, [data-clickable]')) return; this.dragging = true; this.lastX = e.clientX; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} if (e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grabbing'; },
       onMove: (e) => { if (!this.dragging) return; const dx = e.clientX - this.lastX; this.lastX = e.clientX; this.spin += dx * 0.28; this.dragMomentum = dx * 12; },
