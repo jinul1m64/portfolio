@@ -656,23 +656,24 @@ class Component extends DCLogic {
       e.el.style.setProperty('--f', op.toFixed(3));
       if (op > 0.04) cand.push({ e, slot: this.FROM + k, k, op });
     }
-    // Keep only the N most-prominent clips decoding; detach every other card's source.
+    // Choose which few clips decode. Browsers (Safari especially) cap concurrent decoders,
+    // so keep the number small AND sticky: retain already-warm, still-visible cards first
+    // (so a clip never flips back to its poster mid-screen), then fill leftover slots with
+    // the most-prominent newcomers. The center card has the highest op, so it's always retained.
     cand.sort((a, b) => b.op - a.op);
-    const MAXDEC = 8;
+    const MAXDEC = 5;
     const warmSet = new Set();
-    const active = [];
-    for (let i = 0; i < cand.length && i < MAXDEC; i++) {
-      const it = cand[i];
-      setWarm(it.e.vid, true);
-      warmSet.add(it.slot);
-      if (it.op > 0.12) active.push(String(it.slot));
-    }
+    const pick = (it) => { setWarm(it.e.vid, true); warmSet.add(it.slot); };
+    for (const it of cand) { if (warmSet.size >= MAXDEC) break; if (it.e.vid && it.e.vid.getAttribute('src')) pick(it); }
+    for (const it of cand) { if (warmSet.size >= MAXDEC) break; if (!warmSet.has(it.slot)) pick(it); }
     for (let k = 0; k < this.cardEls.length; k++) {
       const e = this.cardEls[k];
       if (!e || !e.el) continue;
       if (e.vid === undefined) e.vid = e.el.querySelector('video');
       if (!warmSet.has(this.FROM + k)) setWarm(e.vid, false);
     }
+    const active = [];
+    for (const it of cand) { if (warmSet.has(it.slot) && it.op > 0.10) active.push(String(it.slot)); }
     this._activeSlots = new Set(active);
     this._visDirty = false;
     if (this._applyVideoPlayback) this._applyVideoPlayback();
