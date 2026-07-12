@@ -388,7 +388,7 @@ class Component extends DCLogic {
     loader.style.opacity = '1';
     cancelAnimationFrame(this._loadRaf);
     const t0 = performance.now();
-    const MINDUR = 1400, MAXDUR = 9000;   // min visible loader; hard cap so a slow file can't hang the intro
+    const MINDUR = 1400, MAXDUR = 6000;   // min visible loader; hard cap so a slow file can't hang the intro
     let shownPct = 0;
     const step = (t) => {
       const el = t - t0;
@@ -402,7 +402,7 @@ class Component extends DCLogic {
       const target = Math.round(Math.min(timeFrac, 0.06 + 0.94 * loadFrac) * 100);
       if (target > shownPct) shownPct = target;               // monotonic — never counts backward
       pctEl.textContent = shownPct + '%';
-      const ready = reps.length >= 4 && reps.every(v => v.readyState >= 3);
+      const ready = reps.length >= 1 && reps.every(v => v.readyState >= 3);
       if ((ready && el >= MINDUR) || el > MAXDUR) { pctEl.textContent = '100%'; setTimeout(() => this.finishLoader(), 220); }
       else this._loadRaf = requestAnimationFrame(step);
     };
@@ -654,18 +654,23 @@ class Component extends DCLogic {
       }
       e.el.style.visibility = op < 0.012 ? 'hidden' : 'visible';
       e.el.style.setProperty('--f', op.toFixed(3));
-      if (op > 0.04) cand.push({ e, slot: this.FROM + k, k, op });
+      if (op > 0.04) cand.push({ e, slot: this.FROM + k, k, op, c });
     }
-    // Choose which few clips decode. Browsers (Safari especially) cap concurrent decoders,
-    // so keep the number small AND sticky: retain already-warm, still-visible cards first
-    // (so a clip never flips back to its poster mid-screen), then fill leftover slots with
-    // the most-prominent newcomers. The center card has the highest op, so it's always retained.
-    cand.sort((a, b) => b.op - a.op);
-    const MAXDEC = 5;
+    // Choose which clips decode. Aim to cover the whole visible arc; if the browser's
+    // concurrent-decoder limit is lower, excess videos hit 'error' and gracefully fall back
+    // to their poster (see the video ref), freeing the slot. Rank by how FRONT-FACING each
+    // card is (c = cos of its angle, peaks dead-center) so warming tracks rotation smoothly.
+    // Skip cards in post-error cooldown so a decodable card takes the budget instead.
+    const MAXDEC = 14, WARM_BONUS = 0.04, tnow = performance.now();
+    const scored = cand.map((it) => ({ it, score: it.c + ((it.e.vid && it.e.vid.getAttribute('src')) ? WARM_BONUS : 0) }));
+    scored.sort((a, b) => b.score - a.score);
     const warmSet = new Set();
-    const pick = (it) => { setWarm(it.e.vid, true); warmSet.add(it.slot); };
-    for (const it of cand) { if (warmSet.size >= MAXDEC) break; if (it.e.vid && it.e.vid.getAttribute('src')) pick(it); }
-    for (const it of cand) { if (warmSet.size >= MAXDEC) break; if (!warmSet.has(it.slot)) pick(it); }
+    let filled = 0;
+    for (let i = 0; i < scored.length && filled < MAXDEC; i++) {
+      const it = scored[i].it, v = it.e.vid;
+      if (v && v._decErr && tnow - v._decErr < 5000) continue;
+      setWarm(v, true); warmSet.add(it.slot); filled++;
+    }
     for (let k = 0; k < this.cardEls.length; k++) {
       const e = this.cardEls[k];
       if (!e || !e.el) continue;
@@ -673,7 +678,7 @@ class Component extends DCLogic {
       if (!warmSet.has(this.FROM + k)) setWarm(e.vid, false);
     }
     const active = [];
-    for (const it of cand) { if (warmSet.has(it.slot) && it.op > 0.10) active.push(String(it.slot)); }
+    for (const it of cand) { if (warmSet.has(it.slot) && it.op > 0.06) active.push(String(it.slot)); }
     this._activeSlots = new Set(active);
     this._visDirty = false;
     if (this._applyVideoPlayback) this._applyVideoPlayback();
@@ -773,7 +778,11 @@ class Component extends DCLogic {
               if (!v._posterWired) { v._posterWired = true; const pos = () => (v.parentNode && v.parentNode.firstChild !== v ? v.parentNode.firstChild : null);
                 const hide = () => { const p = pos(); if (p && p.tagName === 'IMG') { p.style.transition = 'opacity .25s ease'; p.style.opacity = '0'; } };
                 const showP = () => { const p = pos(); if (p && p.tagName === 'IMG') p.style.opacity = '1'; };
-                v.addEventListener('playing', hide); v.addEventListener('timeupdate', () => { if (!v.paused && v.currentTime > 0) hide(); }); v.addEventListener('pause', showP); }
+                v.addEventListener('playing', hide); v.addEventListener('timeupdate', () => { if (!v.paused && v.currentTime > 0) hide(); }); v.addEventListener('pause', showP);
+                // Graceful decoder-limit fallback: if the browser can't decode this clip, free the
+                // decoder and show the poster instead of a broken/black frame. A cooldown stops the
+                // selector from immediately re-attaching it, so a decodable card gets the slot.
+                v.addEventListener('error', () => { v._decErr = performance.now(); try { v.removeAttribute('src'); v.load(); } catch (e) {} v._loaded = false; showP(); }); }
               this._applyVideoPlayback && this._applyVideoPlayback(); } },
             style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: fit, display: 'block' } }),
         ]);
