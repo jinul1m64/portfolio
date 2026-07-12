@@ -388,7 +388,7 @@ class Component extends DCLogic {
     loader.style.opacity = '1';
     cancelAnimationFrame(this._loadRaf);
     const t0 = performance.now();
-    const MINDUR = 1400, MAXDUR = 14000;   // min visible loader; hard cap so a slow file can't hang the intro
+    const MINDUR = 1400, MAXDUR = 9000;   // min visible loader; hard cap so a slow file can't hang the intro
     let shownPct = 0;
     const step = (t) => {
       const el = t - t0;
@@ -397,12 +397,12 @@ class Component extends DCLogic {
       [...(this.videoEls || [])].forEach(v => { const s = v.getAttribute('src') || v.currentSrc || ''; if (!s) return; if (!bySrc[s] || v.readyState > bySrc[s].readyState) bySrc[s] = v; });
       const reps = Object.values(bySrc);
       if (!this._kicked && reps.length) { this._kicked = true; reps.forEach(v => { try { v.preload = 'auto'; v.load(); } catch (e) {} }); }
-      const loadFrac = reps.length ? reps.reduce((a, v) => a + Math.min(1, v.readyState / 4), 0) / reps.length : 0;
+      const loadFrac = reps.length ? reps.reduce((a, v) => a + Math.min(1, v.readyState / 3), 0) / reps.length : 0;
       const timeFrac = Math.min(1, el / MINDUR);
       const target = Math.round(Math.min(timeFrac, 0.06 + 0.94 * loadFrac) * 100);
       if (target > shownPct) shownPct = target;               // monotonic — never counts backward
       pctEl.textContent = shownPct + '%';
-      const ready = reps.length >= 4 && reps.every(v => v.readyState >= 4);
+      const ready = reps.length >= 4 && reps.every(v => v.readyState >= 3);
       if ((ready && el >= MINDUR) || el > MAXDUR) { pctEl.textContent = '100%'; setTimeout(() => this.finishLoader(), 220); }
       else this._loadRaf = requestAnimationFrame(step);
     };
@@ -411,6 +411,8 @@ class Component extends DCLogic {
 
   finishLoader() {
     const pctEl = this.loaderPctEl, loader = this.loaderEl;
+    // Kick playback the instant the loader clears so on-screen mocks show clips, not posters.
+    if (this._applyVideoPlayback) this._applyVideoPlayback();
     // 1) percentage melts into goo and dissolves
     this.meltAway(pctEl, () => {
       // percentage is gone — keep it hidden so it can't flash back before the loader is removed
@@ -742,7 +744,12 @@ class Component extends DCLogic {
           showPoster ? h('img', { key: 'poster', src: base.img, alt: '', draggable: false, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: fit, display: 'block' } }) : null,
           h('video', { key: 'vid', autoPlay: true, loop: true, muted: true, playsInline: true, preload: 'auto', draggable: false,
             src: base.video, 'data-slot': String(i), 'data-vsrc': base.video, 'data-tablet': base.o === 'landscape' ? '1' : '0',
-            ref: (v) => { if (v) { v.defaultMuted = true; v.muted = true; v.setAttribute('muted', ''); v.loop = true; v.dataset.slot = String(i); v.dataset.vsrc = base.video; v.dataset.tablet = base.o === 'landscape' ? '1' : '0'; this.videoEls.add(v); this._applyVideoPlayback && this._applyVideoPlayback(); } },
+            ref: (v) => { if (v) { v.defaultMuted = true; v.muted = true; v.setAttribute('muted', ''); v.loop = true; v.dataset.slot = String(i); v.dataset.vsrc = base.video; v.dataset.tablet = base.o === 'landscape' ? '1' : '0'; this.videoEls.add(v);
+              if (!v._posterWired) { v._posterWired = true; const pos = () => (v.parentNode && v.parentNode.firstChild !== v ? v.parentNode.firstChild : null);
+                const hide = () => { const p = pos(); if (p && p.tagName === 'IMG') { p.style.transition = 'opacity .25s ease'; p.style.opacity = '0'; } };
+                const showP = () => { const p = pos(); if (p && p.tagName === 'IMG') p.style.opacity = '1'; };
+                v.addEventListener('playing', hide); v.addEventListener('timeupdate', () => { if (!v.paused && v.currentTime > 0) hide(); }); v.addEventListener('pause', showP); }
+              this._applyVideoPlayback && this._applyVideoPlayback(); } },
             style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: fit, display: 'block' } }),
         ]);
       };
