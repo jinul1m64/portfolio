@@ -320,13 +320,25 @@ class Component extends DCLogic {
     if (this.sceneEl) { this.sceneEl.style.pointerEvents = ''; if (!instant) { this.sceneEl.style.transition = 'none'; this.sceneEl.style.opacity = '0'; void this.sceneEl.offsetHeight; clearTimeout(this._sceneReveal); this._sceneReveal = setTimeout(() => { if (!this._aboutOpen && this.sceneEl) { this.sceneEl.style.transition = 'opacity 1s ease'; this.sceneEl.style.opacity = '1'; } }, 450); } }
   }
 
-  // Crop the portrait 10% narrower and taller than its natural aspect (object-fit:cover — no warp).
+  // Snap the portrait frame to the background crosshair lattice (the "+" marks sit at 128px multiples
+  // from screen center): widen the width OUT to the nearest crosshair columns, and pull the height UP to
+  // the crosshair row its bottom currently overshoots. object-fit:cover crops without warping.
   _sizeMoi() {
     const img = this.moiImg, wrap = this.moiWrap;
     if (!img || !wrap || !img.naturalWidth) return;
-    const w = wrap.clientWidth || parseFloat(getComputedStyle(wrap).width) || img.naturalWidth;
-    const h = w * 1.415;   // fixed frame ratio (matches the prior framing regardless of the photo's own aspect)
-    wrap.style.height = Math.round(h) + 'px';
+    const CELL = 128;
+    const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+    const rect = wrap.getBoundingClientRect();
+    // width: half-width lands on a crosshair column at CELL*k — round up (widen).
+    const kW = Math.max(1, Math.ceil((rect.width / 2) / CELL));
+    const W = 2 * CELL * kW;
+    wrap.style.width = Math.round(W) + 'px';
+    // height: pull the bottom up to the nearest crosshair row (cy + CELL*m) at/below current bottom.
+    const curBottom = rect.top + W * 1.415;            // bottom at the old ratio, using the snapped width
+    const m = Math.floor((curBottom - cy) / CELL) - 1;   // the crosshair row BEFORE the one it overshoots
+    let H = (cy + CELL * m) - rect.top;
+    if (H < CELL * 3) H = CELL * 3;                     // guard against a collapsed frame
+    wrap.style.height = Math.round(H) + 'px';
   }
 
   componentDidMount() {
@@ -338,7 +350,7 @@ class Component extends DCLogic {
     this.tick = this.tick.bind(this);
     this._running = true;
     this.raf = requestAnimationFrame(this.tick);
-    this._onResize = () => this.forceUpdate();
+    this._onResize = () => { this.forceUpdate(); this._sizeMoi && this._sizeMoi(); };
     window.addEventListener('resize', this._onResize);
     // Randomised CRT sweep: fires at uneven, infrequent intervals.
     this._runSweep = () => {
