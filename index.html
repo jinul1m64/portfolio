@@ -56,13 +56,13 @@
   <svg width="0" height="0" style="position:absolute; width:0; height:0; pointer-events:none;" aria-hidden="true">
     <filter id="slurbt" x="-30%" y="-6%" width="160%" height="112%" color-interpolation-filters="sRGB">
       <feTurbulence type="fractalNoise" baseFrequency="0 0.07" numOctaves="1" seed="2" result="n0">
-        <animate attributeName="seed" values="2;11;5;14;7;1;9;3" dur="{{ slurDur }}" calcMode="discrete" repeatCount="indefinite"></animate>
+        <animate attributeName="seed" values="2;11;5;14;7;1;9;3" dur="0.5s" calcMode="discrete" repeatCount="indefinite"></animate>
         <animate attributeName="baseFrequency" values="0 0.05; 0 0.13; 0 0.07" dur="1.8s" repeatCount="indefinite"></animate>
       </feTurbulence>
       <feComponentTransfer in="n0" result="n">
         <feFuncB type="discrete" tableValues="0.5"></feFuncB>
       </feComponentTransfer>
-      <feDisplacementMap in="SourceGraphic" in2="n" scale="{{ slurScale }}" ref="{{ setSlurDisp }}" xChannelSelector="R" yChannelSelector="B" result="disp"></feDisplacementMap>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="0" ref="{{ setSlurDisp }}" xChannelSelector="R" yChannelSelector="B" result="disp"></feDisplacementMap>
       <feColorMatrix in="disp" type="saturate" values="0" result="gray"></feColorMatrix>
       <!-- Grainy pixelation: chunky animated noise, clipped to the device, blended over -->
       <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="4" stitchTiles="stitch" result="gn">
@@ -74,11 +74,11 @@
     </filter>
     <filter id="goo" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGoo }}" result="blur"></feGaussianBlur>
-      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 {{ gooThresh }} -9"></feColorMatrix>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"></feColorMatrix>
     </filter>
     <filter id="gooReveal" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal }}" result="blur"></feGaussianBlur>
-      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 {{ gooThresh }} -9"></feColorMatrix>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"></feColorMatrix>
     </filter>
   </svg>
 
@@ -392,11 +392,11 @@ class Component extends DCLogic {
     let shownPct = 0;
     const step = (t) => {
       const el = t - t0;
-      // One representative <video> per unique clip; force-load each and gate on ALL of them being ready, so every device is buffered before reveal (not just the ones on screen at spin 0).
+      // One representative warmed <video> per unique clip; gate on all four being ready.
       const bySrc = {};
-      [...(this.videoEls || [])].forEach(v => { const s = v.getAttribute('src') || v.currentSrc || ''; if (!s) return; if (!bySrc[s] || v.readyState > bySrc[s].readyState) bySrc[s] = v; });
+      [...(this.videoEls || [])].forEach(v => { if (!v.getAttribute('src')) return; const s = v.dataset.vsrc || v.currentSrc || ''; if (!s) return; if (!bySrc[s] || v.readyState > bySrc[s].readyState) bySrc[s] = v; });
       const reps = Object.values(bySrc);
-      if (!this._kicked && reps.length) { this._kicked = true; reps.forEach(v => { try { v.preload = 'auto'; v.load(); } catch (e) {} }); }
+      reps.forEach(v => { if (!v._kicked) { v._kicked = true; try { v.preload = 'auto'; v.load(); } catch (e) {} } });
       const loadFrac = reps.length ? reps.reduce((a, v) => a + Math.min(1, v.readyState / 3), 0) / reps.length : 0;
       const timeFrac = Math.min(1, el / MINDUR);
       const target = Math.round(Math.min(timeFrac, 0.06 + 0.94 * loadFrac) * 100);
@@ -608,22 +608,30 @@ class Component extends DCLogic {
     const exemptIdx = (hovered != null) ? hoveredIdx : (this._lastHovIdx != null ? this._lastHovIdx : -1);
     const slurActive = this.slurProg > 0.002;
     // Warm-band lazy loading: attach a clip's src only when it's near the front, detach when deep back-facing to free decoder RAM.
-    const markVid = (e, shown, warm) => {
-      if (e.vid === undefined) e.vid = e.el.querySelector('video');
-      const v = e.vid; if (!v) return;
-      // Load each clip only ONCE (kept resident). Re-entry never re-loads, so a heavy clip like Ouster resumes from buffer instantly instead of re-buffering to black.
-      if (warm) { if (!v._everLoaded) { v._everLoaded = true; try { v.load(); } catch (e) {} } v._loaded = true; }
-      else { if (v._loaded !== false) { v.pause(); v._loaded = false; } }
-      if (v._shown !== shown) { v._shown = shown; this._visDirty = true; }
+    // Attach/detach each clip's <src> so only a FEW decoders are ever alive at once.
+    // Browsers cap concurrent hardware video decoders; excess <video>s throw MEDIA_ERR_DECODE
+    // and never paint. Detaching src (removeAttribute + load) releases the decoder back to the pool.
+    const setWarm = (v, warm) => {
+      if (!v) return;
+      if (warm) {
+        if (!v.getAttribute('src')) { v.setAttribute('src', v.dataset.vsrc); try { v.load(); } catch (e) {} }
+        v._loaded = true;
+      } else if (v.getAttribute('src')) {
+        try { v.pause(); } catch (e) {}
+        v.removeAttribute('src'); try { v.load(); } catch (e) {}
+        v._loaded = false;
+        const p = (v.parentNode && v.parentNode.firstChild !== v) ? v.parentNode.firstChild : null;
+        if (p && p.tagName === 'IMG') p.style.opacity = '1';   // bring the poster back while cold
+      }
     };
-    const prom = [];   // on-screen prominence per card, for choosing which few clips decode
+    const cand = [];   // visible cards ranked by prominence, to pick which few decode
     for (let k = 0; k < this.cardEls.length; k++) {
       const e = this.cardEls[k];
       if (!e || !e.el) continue;
+      if (e.vid === undefined) e.vid = e.el.querySelector('video');
       const th = (e.a + this.spin) * rad;
       const c = Math.cos(th);
-      // Deep back-facing (c<=0.10): cold, drop the source. Between 0.10 and 0.22: hidden but kept warm as a pre-load buffer.
-      if (c <= 0.22) { e.el.style.visibility = 'hidden'; markVid(e, false, c > 0.10); continue; }
+      if (c <= 0.22) { e.el.style.visibility = 'hidden'; continue; }
       const er = e.rad || R;
       const scale = P / (P - er * c * cosT);
       const sinth = Math.sin(th);
@@ -646,12 +654,28 @@ class Component extends DCLogic {
       }
       e.el.style.visibility = op < 0.012 ? 'hidden' : 'visible';
       e.el.style.setProperty('--f', op.toFixed(3));
-      markVid(e, op > 0.06, true);
-      if (op > 0.12) prom.push(this.FROM + k);
+      if (op > 0.04) cand.push({ e, slot: this.FROM + k, k, op });
     }
-    // Play only devices actually on screen (plus the ones fading in from the left / out to the right); everything further out is paused. Fewer concurrent decoders = far less RAM/GPU, and the 4 clips are cached so re-entry is instant (no buffering flash).
-    this._activeSlots = new Set(prom.map(String));
-    if (this._applyVideoPlayback) { this._visDirty = false; this._applyVideoPlayback(); }
+    // Keep only the N most-prominent clips decoding; detach every other card's source.
+    cand.sort((a, b) => b.op - a.op);
+    const MAXDEC = 8;
+    const warmSet = new Set();
+    const active = [];
+    for (let i = 0; i < cand.length && i < MAXDEC; i++) {
+      const it = cand[i];
+      setWarm(it.e.vid, true);
+      warmSet.add(it.slot);
+      if (it.op > 0.12) active.push(String(it.slot));
+    }
+    for (let k = 0; k < this.cardEls.length; k++) {
+      const e = this.cardEls[k];
+      if (!e || !e.el) continue;
+      if (e.vid === undefined) e.vid = e.el.querySelector('video');
+      if (!warmSet.has(this.FROM + k)) setWarm(e.vid, false);
+    }
+    this._activeSlots = new Set(active);
+    this._visDirty = false;
+    if (this._applyVideoPlayback) this._applyVideoPlayback();
     if (this._running) this.raf = requestAnimationFrame(this.tick);
   }
 
@@ -742,8 +766,8 @@ class Component extends DCLogic {
         const showPoster = true;
         return h('div', { key: 'face', style: Object.assign({}, style, { position: style.position || 'relative', overflow: 'hidden', background: '#000' }) }, [
           showPoster ? h('img', { key: 'poster', src: base.img, alt: '', draggable: false, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: fit, display: 'block' } }) : null,
-          h('video', { key: 'vid', autoPlay: true, loop: true, muted: true, playsInline: true, preload: 'auto', draggable: false,
-            src: base.video, 'data-slot': String(i), 'data-vsrc': base.video, 'data-tablet': base.o === 'landscape' ? '1' : '0',
+          h('video', { key: 'vid', loop: true, muted: true, playsInline: true, preload: 'none', draggable: false,
+            'data-slot': String(i), 'data-vsrc': base.video, 'data-tablet': base.o === 'landscape' ? '1' : '0',
             ref: (v) => { if (v) { v.defaultMuted = true; v.muted = true; v.setAttribute('muted', ''); v.loop = true; v.dataset.slot = String(i); v.dataset.vsrc = base.video; v.dataset.tablet = base.o === 'landscape' ? '1' : '0'; this.videoEls.add(v);
               if (!v._posterWired) { v._posterWired = true; const pos = () => (v.parentNode && v.parentNode.firstChild !== v ? v.parentNode.firstChild : null);
                 const hide = () => { const p = pos(); if (p && p.tagName === 'IMG') { p.style.transition = 'opacity .25s ease'; p.style.opacity = '0'; } };
