@@ -48,6 +48,11 @@
   @keyframes colonBlink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
   @keyframes marquee { from { transform: translateX(-50%); } to { transform: translateX(0); } }
   @keyframes chromeSpinX { from { transform: rotateX(0deg); } to { transform: rotateX(360deg); } }
+  /* Mobile breakpoint: drop the contact button, minimap, and footer meta; flush the About toggle to the right */
+  @media (max-width: 640px) {
+    .m-hide-mobile { display: none !important; }
+    .m-avatar { justify-content: flex-end !important; padding-right: 16px; }
+  }
 </style>
 </helmet>
 
@@ -77,9 +82,9 @@
       <feComposite in="grain" in2="gray" operator="in" result="grainClipped"></feComposite>
       <feBlend in="gray" in2="grainClipped" mode="overlay"></feBlend>
     </filter>
-    <filter id="goo" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+    <filter id="goo" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGoo }}" result="blur"></feGaussianBlur>
-      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"></feColorMatrix>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 12 -3.5"></feColorMatrix>
     </filter>
     <filter id="gooReveal" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal }}" result="blur"></feGaussianBlur>
@@ -96,7 +101,7 @@
     <div ref="{{ setHelix }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); will-change:transform;">
       <sc-for list="{{ cards }}" as="card" hint-placeholder-count="0">
         <div ref="{{ card.ref }}" style="{{ card.style }}">
-          <div style="{{ card.innerStyle }}" onMouseEnter="{{ card.onEnter }}" onMouseLeave="{{ card.onLeave }}" onClick="{{ card.onOpen }}">
+          <div style="{{ card.innerStyle }}" data-href="{{ card.href }}" onMouseEnter="{{ card.onEnter }}" onMouseLeave="{{ card.onLeave }}" onClick="{{ card.onOpen }}">
             {{ card.body }}
             <div style="{{ card.cardScan }}"></div>
           </div>
@@ -109,7 +114,7 @@
   <div style="position:absolute; inset:0; z-index:8; pointer-events:none; background:radial-gradient(115% 95% at 50% 50%, rgba(0,0,0,0) 42%, rgba(0,0,0,.72) 100%);"></div>
 
   <!-- CRT scanline overlay + occasional bright sweep line (hidden on hover) -->
-  <div style="{{ scanStyle }}">
+  <div ref="{{ setScanEl }}" style="{{ scanStyle }}">
     <div ref="{{ setSweep }}" style="position:absolute; left:0; right:0; top:0; height:2px; background:linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.1) 50%, rgba(255,255,255,0)); filter:blur(.6px); box-shadow:0 0 8px rgba(255,255,255,.12); opacity:0; will-change:transform;"></div>
   </div>
 
@@ -122,13 +127,13 @@
     <div style="pointer-events:auto;">
       <h1 style="margin:0; font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; cursor:pointer;" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goHome }}">Jason Lim</h1>
     </div>
-    <nav style="pointer-events:auto; display:flex; gap:26px; align-items:center;">
+    <nav class="m-hide-mobile" style="pointer-events:auto; display:flex; gap:26px; align-items:center;">
       <a href="mailto:jason.jinulim@gmail.com" style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ececf0;" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ contact }}">Contact</a>
     </nav>
   </header>
 
   <!-- Center avatar (kept out of the header's difference blend so the photo stays true colour) -->
-  <div ref="{{ setAvatarEl }}" style="position:absolute; top:0px; left:0; right:0; z-index:16; display:flex; justify-content:center; pointer-events:none; opacity:0;">
+  <div ref="{{ setAvatarEl }}" class="m-avatar" style="position:absolute; top:0px; left:0; right:0; z-index:16; display:flex; justify-content:center; pointer-events:none; opacity:0;">
     <div style="position:relative; display:flex; align-items:center; gap:12px;">
       <div ref="{{ setProfileWrap }}" style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer; transition:opacity .5s ease;" data-clickable="true" onClick="{{ avatarClick }}">
         <img ref="{{ setProfileImg }}" src="./assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block; transition:opacity .5s ease;" />
@@ -140,7 +145,7 @@
 
   <!-- Footer hint -->
   <footer ref="{{ setFooterEl }}" style="position:absolute; bottom:0; left:0; right:0; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px; z-index:16; pointer-events:none; font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff; mix-blend-mode:difference; opacity:0;">
-    <span ref="{{ setUpdatedEl }}" style="justify-self:start;">Last updated 2026</span>
+    <span ref="{{ setUpdatedEl }}" class="m-hide-mobile" style="justify-self:start;">Last updated 2026</span>
     <div ref="{{ setScrollEl }}" style="justify-self:center; display:flex; align-items:center; gap:8px; transition:opacity .5s ease;">
       <button ref="{{ setArrowLeftBtn }}" onClick="{{ selLeft }}" data-clickable="" aria-label="Rotate ring toward top-left" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
         <div ref="{{ setArrowLeftInner }}" style="width:100%; height:100%; position:relative; transform-style:preserve-3d;"></div>
@@ -150,26 +155,26 @@
         <div ref="{{ setArrowRightInner }}" style="width:100%; height:100%; position:relative; transform-style:preserve-3d;"></div>
       </button>
     </div>
-    <span style="justify-self:end;">Brooklyn, NY &nbsp;•&nbsp; <span ref="{{ setHrEl }}">{{ estHours }}</span><span style="animation:colonBlink 1s steps(1,end) infinite;">:</span><span ref="{{ setMinEl }}">{{ estMinutes }}</span> EST</span>
+    <span class="m-hide-mobile" style="justify-self:end;">Brooklyn, NY &nbsp;•&nbsp; <span ref="{{ setHrEl }}">{{ estHours }}</span><span style="animation:colonBlink 1s steps(1,end) infinite;">:</span><span ref="{{ setMinEl }}">{{ estMinutes }}</span> EST</span>
   </footer>
 
   <!-- Ring minimap (top-right HUD): faint tilted orbit (masked inside the window), small upright poster-devices, dark base + window-clipped bright layer -->
-  <div ref="{{ setMiniWrap }}" style="position:absolute; top:84px; right:2px; width:150px; height:104px; z-index:11; pointer-events:none; opacity:0; transition:opacity .8s ease; transform:scale(1.25); transform-origin:100% 0;">
-    <div style="position:absolute; left:80px; top:77px; width:62px; height:48px; transform:translate(-50%,-50%); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); background:rgba(10,11,14,0.35);"></div>
+  <div ref="{{ setMiniWrap }}" class="m-hide-mobile" style="position:absolute; top:84px; right:30px; width:150px; height:104px; z-index:11; pointer-events:none; opacity:0; transition:opacity .8s ease; transform:scale(1.25); transform-origin:100% 0;">
+    <div style="position:absolute; left:72px; top:77px; width:63px; height:48px; transform:translate(-50%,-50%); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); background:rgba(10,11,14,0.35);"></div>
     <svg width="150" height="104" style="position:absolute; inset:0; overflow:visible;">
       <g ref="{{ setMiniRing }}"></g>
-      <path d="M80 74.2 V79.8 M77.2 77 H82.8" stroke="rgba(255,255,255,0.42)" stroke-width="0.8"></path>
+      <path d="M72 74.2 V79.8 M69.2 77 H74.8" stroke="rgba(255,255,255,0.42)" stroke-width="0.8"></path>
     </svg>
     <div ref="{{ setMiniDevices }}" style="position:absolute; inset:0; filter:brightness(0.22);"></div>
-    <div ref="{{ setMiniDevicesBright }}" style="position:absolute; inset:0; clip-path:inset(53px 39px 3px 49px); -webkit-clip-path:inset(53px 39px 3px 49px);"></div>
-    <div ref="{{ setMiniWindow }}" style="position:absolute; left:80px; top:77px; width:62px; height:48px; transform:translate(-50%,-50%); border:0.5px solid rgba(255,255,255,0.6); border-radius:0;"></div>
+    <div ref="{{ setMiniDevicesBright }}" style="position:absolute; inset:0; clip-path:inset(53px 46.5px 3px 40.5px); -webkit-clip-path:inset(53px 46.5px 3px 40.5px);"></div>
+    <div ref="{{ setMiniWindow }}" style="position:absolute; left:72px; top:77px; width:63px; height:48px; transform:translate(-50%,-50%); border:0.5px solid rgba(255,255,255,0.6); border-radius:0;"></div>
   </div>
 
   <!-- Hover caption (flat text, scramble-in on hover, above the footer) -->
   <sc-if value="{{ hasHover }}" hint-placeholder-val="{{ false }}">
     <div ref="{{ setCaption }}" style="position:absolute; left:0; right:0; bottom:74px; z-index:16; display:flex; flex-direction:column; align-items:flex-start; padding-left:16px; gap:{{ hoverGap }}; pointer-events:none; mix-blend-mode:difference; animation:spiralFadeIn .2s ease both;">
-      <span ref="{{ setCompanyEl }}" style="font-family:{{ eyebrowFam }}; font-weight:{{ eyebrowWeight }}; font-size:{{ eyebrowSize }}; letter-spacing:{{ eyebrowSpacing }}; text-transform:{{ eyebrowCase }}; color:#ffffff;">{{ hover.company }}</span>
-      <span ref="{{ setTitleEl }}" style="font-family:{{ hoverFam }}; font-weight:{{ hoverWeight }}; font-size:{{ hoverSize }}; line-height:1; letter-spacing:{{ hoverSpacing }}; text-transform:{{ hoverCase }}; color:#f2f2f5;">{{ hover.title }}</span>
+      <span ref="{{ setCompanyEl }}" style="font-family:{{ eyebrowFam }}; font-weight:{{ eyebrowWeight }}; font-size:{{ eyebrowSize }}; letter-spacing:{{ eyebrowSpacing }}; text-transform:{{ eyebrowCase }}; color:#ffffff; opacity:0;">{{ hover.company }}</span>
+      <span ref="{{ setTitleEl }}" style="font-family:{{ hoverFam }}; font-weight:{{ hoverWeight }}; font-size:{{ hoverSize }}; line-height:1; letter-spacing:{{ hoverSpacing }}; text-transform:{{ hoverCase }}; color:#f2f2f5; opacity:0;">{{ hover.title }}</span>
     </div>
   </sc-if>
 
@@ -178,13 +183,12 @@
 
   <!-- About page (sits below the shared chrome: header, footer, scanlines + vignette all render over it) -->
   <div ref="{{ setAboutEl }}" style="position:absolute; inset:0; z-index:3; opacity:0; pointer-events:none; overflow-y:auto; transition:opacity .7s ease; background:transparent;">
-    <div style="position:sticky; top:0; height:100vh; margin-bottom:-100vh; z-index:5; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(0,0,0,0.17) 0px, rgba(0,0,0,0.17) 3px, transparent 3px, transparent 6px); animation:scanMove 1.2s linear infinite;">
+    <div style="position:sticky; top:0; height:100vh; margin-bottom:-100vh; z-index:5; pointer-events:none; overflow:hidden;">
       <div style="position:absolute; left:0; right:0; top:0; height:2px; background:linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.12) 50%, rgba(255,255,255,0)); filter:blur(.6px); box-shadow:0 0 8px rgba(255,255,255,.12); animation:crtSweep 7s linear infinite;"></div>
     </div>
     <div ref="{{ setAboutInner }}" style="box-sizing:border-box; padding:0 48px 150px; display:flex; flex-direction:column; align-items:center;">
       <div ref="{{ setMoiWrap }}" style="position:relative; width:{{ aboutImgW }}; max-width:100%; flex:0 0 auto; overflow:hidden;">
         <img ref="{{ setMoiImg }}" alt="Jason Lim" draggable="false" style="width:100%; height:100%; object-fit:cover; object-position:50% 100%; display:block;" />
-        <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(128,128,128,0.07) 0px, rgba(128,128,128,0.07) 3px, transparent 3px, transparent 6px);"></div>
       </div>
       <p ref="{{ setBioEl }}" style="width:100%; max-width:{{ aboutBioMax }}; margin:{{ aboutBioTop }} 0 0; font-family:{{ aboutBioFam }}; font-weight:{{ aboutBioWeight }}; font-size:{{ aboutBioSize }}; line-height:{{ aboutBioLH }}; letter-spacing:{{ aboutBioSpacing }}; text-transform:{{ aboutBioCase }}; color:#f2f2f5; text-align:justify; text-wrap:pretty;">I&rsquo;m an autodidactic product designer based in Brooklyn with roots planted in Korea and the Rocky Mountains (read Colorado).<br><br>Past companies and clients include:</p>
       <div ref="{{ setMarqueeEl }}" style="width:100vw; margin:34px 0 0 calc(50% - 50vw); overflow:hidden; -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%); mask-image:linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);">
@@ -267,11 +271,11 @@ class Component extends DCLogic {
     // Resolve to a bundled blob URL (standalone export) when available, else the live URL.
     const R = (id, url) => (typeof window !== 'undefined' && window.__resources && window.__resources[id]) || url;
     return [
-      { img: R('m0', B+'65b5721a80c184325a8fea91_rewards-2.png'), video: './assets/video/rewards.mp4', title: 'Dasher Rewards', company: 'DoorDash', href: 'https://jasonlim.design/#mobilization', blurb: 'A tiered recognition program that rewards Dashers for consistency and milestones — turning everyday deliveries into visible progress.', o: 'portrait' },
+      { img: R('m0', B+'65b5721a80c184325a8fea91_rewards-2.png'), video: './assets/video/rewards.mp4', title: 'Dasher Rewards', company: 'DoorDash', href: './work/dasher-rewards.dc.html', blurb: 'A tiered recognition program that rewards Dashers for consistency and milestones — turning everyday deliveries into visible progress.', o: 'portrait' },
       { img: R('m5', B+'65b041af6127d88b289d5fba_nw-1.png'), title: 'Homescreen Redesign', company: 'NerdWallet', href: 'https://jasonlim.design/#nw', blurb: 'A refreshed home surface that centers each member\u2019s most relevant financial next step.', o: 'portrait' },
       { img: R('m2', B+'65b0054f1a6aab36d00e14e5_ratings-1.png'), title: 'Dasher Ratings', company: 'DoorDash', href: 'https://jasonlim.design/#ratings', blurb: 'A clearer, fairer ratings system that helps Dashers understand their standing and what actually moves it.', o: 'portrait' },
       { img: R('m3', B+'65b005b8069fd5247b08aab1_sp-1.png'), video: './assets/video/mobilization.mp4', title: 'Dasher Mobilization', company: 'DoorDash', href: 'https://jasonlim.design/#promo', blurb: 'Promotional surfaces that mobilize Dashers toward high-demand windows without pressure or clutter.', o: 'portrait' },
-      { img: R('m4', './assets/ouster-fleet.png'), video: './assets/video/ouster.mp4', title: 'Fleet Management', company: 'Ouster', href: 'https://jasonlim.design/#ouster', blurb: 'A web tool for monitoring, configuring, and interpreting fleets of lidar sensors at scale.', o: 'landscape' },
+      { img: R('m4', './assets/ouster-fleet.png'), video: './assets/video/ouster.mp4', title: 'Fleet Management', company: 'Ouster', href: './work/ouster.dc.html', blurb: 'A web tool for monitoring, configuring, and interpreting fleets of lidar sensors at scale.', o: 'landscape' },
       { img: R('m1', './assets/chat-poster.png'), video: './assets/video/in-app-chat.mp4', title: 'In-app Chat', company: 'DoorDash', href: 'https://jasonlim.design/#chat', blurb: 'Real-time messaging that connects Dashers, customers, and support in one calm, legible thread during an active delivery.', o: 'portrait' },
     ];
   }
@@ -289,6 +293,37 @@ class Component extends DCLogic {
     let cum = 0;
     for (let s = 0; s < slot; s++) cum += gap(s);
     return 360 * Math.floor(i / P) + cum;
+  }
+
+  // Click a device → fade out the ring, minimap, footer + scroll hint (like the scroll disappearing), then open the case study.
+  openCase(href) {
+    if (this._booting) return;
+    this._booting = true;
+    const dest = href || './case-study.dc.html';
+    // The clicked device's scaled body wrapper (outer .el → inner rotateY div → body).
+    const dev = this._downDevice;
+    const body = dev && dev.firstElementChild;
+    // Step 2: once the device has popped, fade the ring, minimap, scanlines/sweep and
+    // footer, then navigate so the case study starts its own reveal.
+    const fadeChrome = () => {
+      if (this.sceneEl) { this.sceneEl.style.transition = 'opacity .6s ease'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
+      if (this.miniWrap) { this.miniWrap.style.transition = 'opacity .6s ease'; this.miniWrap.style.opacity = '0'; }
+      if (this.scanEl) { this.scanEl.style.transition = 'opacity .6s ease'; this.scanEl.style.opacity = '0'; }
+      if (this.footerEl) { this.footerEl.style.transition = 'opacity .6s ease'; this.footerEl.style.opacity = '0'; }
+      if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .6s ease'; this.scrollEl.style.opacity = '0'; }
+      // Hold on just the gridded background + header for 300ms before the next screen loads.
+      setTimeout(() => { window.location.href = dest; }, 600 + 300);
+    };
+    // Step 1: slowly scale the device down, then back up — using the exact same easing and
+    // scale values as the hover transition (1.1 hovered → 1.0 → 1.1).
+    if (body) {
+      body.style.transition = 'transform .24s cubic-bezier(.22,.61,.36,1)';
+      body.style.transform = 'scale(1)';
+      setTimeout(() => { body.style.transform = 'scale(1.1)'; }, 240);
+      setTimeout(fadeChrome, 500);
+    } else {
+      fadeChrome();
+    }
   }
 
   // Reveal the About page: spiral + "Scroll" hint fade out, content fades in.
@@ -551,9 +586,9 @@ class Component extends DCLogic {
     if (!g || g._built) return;
     g._built = true;
     const NS = 'http://www.w3.org/2000/svg';
-    const CX = 75, CY = 52, AX = 64, AY = 23, rad = Math.PI / 180, TLT = 18 * rad;
+    const CX = 75, CY = 52, AX = 92, AY = 23, rad = Math.PI / 180, TLT = 18 * rad;
     const c = Math.cos(TLT), s = Math.sin(TLT);
-    const RCX = 80, RCY = 77, RW = 62, RH = 48;
+    const RCX = 72, RCY = 77, RW = 63, RH = 48;
     const rL = RCX - RW / 2, rR = RCX + RW / 2, rT = RCY - RH / 2, rB = RCY + RH / 2;
     const N = 32, SZ = 1.8;
     for (let k = 0; k < N; k++) {
@@ -599,7 +634,7 @@ class Component extends DCLogic {
   // (same standing-upright behaviour as the big ring). Dark + bright layers get identical transforms.
   _tickMini() {
     if (!this._miniMarks) return;
-    const CX = 75, CY = 52, AX = 64, AY = 23, rad = Math.PI / 180;
+    const CX = 75, CY = 52, AX = 92, AY = 23, rad = Math.PI / 180;
     const TLT = 18 * rad, cosTlt = Math.cos(TLT), sinTlt = Math.sin(TLT);
     for (const m of this._miniMarks) {
       const phi = (m.a + this.spin) * rad;
@@ -639,7 +674,6 @@ class Component extends DCLogic {
     this._revRaf = requestAnimationFrame(stepFn);
   }
   setRoot = (el) => { this.rootEl = el; };
-  setSquareCanvas = (el) => { this.squareCanvas = el; };
   componentWillUnmount() { cancelAnimationFrame(this.raf); clearInterval(this._clockTimer); window.removeEventListener('resize', this._onResize); clearTimeout(this._sweepTimer); clearInterval(this._playTimer); window.removeEventListener('pointerdown', this._playAll); window.removeEventListener('focus', this._playAll); document.removeEventListener('visibilitychange', this._playAll); document.removeEventListener('visibilitychange', this._onVis); if (this._io) this._io.disconnect(); }
 
   // Inverse of the reveal: caption melts into goo and dissolves, then unmounts via onDone.
@@ -697,7 +731,7 @@ class Component extends DCLogic {
     if (this.companyEl) { this.companyEl.style.filter = ''; this.companyEl.style.opacity = '1'; this._companyText = this.companyEl.textContent; this.scrambleIn(this.companyEl, this._companyText, 700); }
     clearTimeout(this._capStagger);
     this._capStagger = setTimeout(() => {
-      if (this.titleEl) { this.titleEl.style.opacity = ''; this.meltReveal(this.titleEl, this.gooRevealBlurEl2, 'gooReveal2', 2600, '_revRaf2'); }
+      if (this.titleEl) { this.titleEl.style.opacity = '1'; this.meltReveal(this.titleEl, this.gooRevealBlurEl2, 'gooReveal2', 2600, '_revRaf2'); }
     }, 360);
   }
 
@@ -784,7 +818,7 @@ class Component extends DCLogic {
   animateMelt(el, on) {
     if (!el) return;
     const blur = this.gooBlurEl;
-    const target = on ? (this.props.gooStrength ?? 2.3) : 0.01;
+    const target = on ? 3.2 : 0.01;
     if (on) el.style.filter = 'url(#goo)';
     if (!blur) { if (!on) el.style.filter = ''; return; }
     cancelAnimationFrame(this._gooRaf);
@@ -1001,15 +1035,15 @@ class Component extends DCLogic {
     const fam = (v, d) => FONTS[v] || FONTS[d];
     const cap = (v) => CAPS[v] || 'none';
     const headerFam = fam(this.props.headerFont, 'PP Neue Montreal');
-    const headerWeight = this.props.headerWeight ?? 400;
-    const headerSize = (this.props.headerSize ?? 34) + 'px';
-    const headerSpacing = (this.props.headerSpacing ?? -0.5) + 'px';
-    const headerCase = cap(this.props.headerCase);
+    const headerWeight = this.props.headerWeight ?? 350;
+    const headerSize = (this.props.headerSize ?? 40) + 'px';
+    const headerSpacing = (this.props.headerSpacing ?? -1.5) + 'px';
+    const headerCase = cap(this.props.headerCase ?? 'lowercase');
     const footerFam = fam(this.props.footerFont, 'PP Neue Montreal');
-    const footerWeight = this.props.footerWeight ?? 400;
-    const footerSize = (this.props.footerSize ?? 10) + 'px';
-    const footerSpacing = (this.props.footerSpacing ?? 2.2) + 'px';
-    const footerCase = cap(this.props.footerCase);
+    const footerWeight = this.props.footerWeight ?? 350;
+    const footerSize = (this.props.footerSize ?? 20) + 'px';
+    const footerSpacing = (this.props.footerSpacing ?? -0.4) + 'px';
+    const footerCase = cap(this.props.footerCase ?? 'UPPERCASE');
     const hoverFam = fam(this.props.hoverFont, 'PP Neue Montreal');
     const hoverWeight = this.props.hoverWeight ?? 400;
     const hoverSize = (this.props.hoverSize ?? 33) + 'px';
@@ -1042,10 +1076,16 @@ class Component extends DCLogic {
       if (this._applyVideoPlayback) this._applyVideoPlayback();
     }
     // Reveal the caption once per distinct mock — keying on identity (not slot index) stops re-goo flicker as the spiral drifts under a still cursor.
-    if (hovKey !== this._lastRevealKey) {
-      this._lastRevealKey = hovKey;
-      if (hovKey != null) requestAnimationFrame(() => this.revealCaption());
-      else this.hideCaption();
+    // Debounced: rapid hovered null<->value oscillations (the ring settling under a still cursor) coalesce to the final state instead of thrashing the reveal/hide.
+    if (hovKey !== this._pendingRevealKey) {
+      this._pendingRevealKey = hovKey;
+      clearTimeout(this._revealDebounce);
+      this._revealDebounce = setTimeout(() => {
+        if (this._pendingRevealKey === this._lastRevealKey) return;
+        this._lastRevealKey = this._pendingRevealKey;
+        if (this._pendingRevealKey != null) this.revealCaption();
+        else this.hideCaption();
+      }, 110);
     }
 
     const PHONE_W = 204, TABLET_W = 400;   // iPad large; extra arc gives it the room
@@ -1152,7 +1192,8 @@ class Component extends DCLogic {
         ref: (el) => { this.cardEls[idx] = el ? { el, a, isTablet, W, rad: cardR } : null; },
         onEnter: () => { if (this._booting) return; this.setState({ hovered: i }); },
         onLeave: () => this.setState(s => (s.hovered === i ? { hovered: null } : null)),
-        onOpen: () => {},
+        onOpen: () => { if (!/^https?:/i.test(base.href || '')) this.openCase(base.href); },
+        href: base.href,
         style: {
           position: 'absolute', top: 0, left: 0, width: '1px', height: '1px',
           transform: 'none',   // billboard position/scale driven per-frame in tick()
@@ -1203,7 +1244,7 @@ class Component extends DCLogic {
             H('p', { style: { margin: '0 0 18px', fontSize: '11px', color: accent, ...eyebrowStyle } }, selected.company),
             H('h2', { style: { margin: '0 0 22px', fontSize: '52px', ...titleStyle } }, selected.title),
             H('p', { style: { margin: '0 0 34px', fontSize: '16px', lineHeight: 1.6, color: '#b8bcc8', maxWidth: '38ch' } }, selected.blurb),
-            H('a', { href: selected.href, target: '_blank', rel: 'noopener', onMouseEnter: (e) => this.animateMelt(e.currentTarget, true), onMouseLeave: (e) => this.animateMelt(e.currentTarget, false), style: { display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', color: '#fff', border: '1px solid rgba(255,255,255,.22)', padding: '13px 22px', borderRadius: '999px' } }, 'View case study ↗')
+            H('a', { href: selected.href, target: '_self', rel: 'noopener', onClick: (e) => { e.preventDefault(); window.location.href = selected.href; }, onMouseEnter: (e) => this.animateMelt(e.currentTarget, true), onMouseLeave: (e) => this.animateMelt(e.currentTarget, false), style: { display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', color: '#fff', border: '1px solid rgba(255,255,255,.22)', padding: '13px 22px', borderRadius: '999px' } }, 'View case study ↗')
           ),
           H('button', { onClick: close, style: { position: 'absolute', top: '-18px', right: '-18px', width: '44px', height: '44px', borderRadius: '999px', border: '1px solid rgba(255,255,255,.16)', background: 'rgba(20,22,28,.9)', color: '#ececf0', fontSize: '20px', lineHeight: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, '×')
         )
@@ -1226,6 +1267,7 @@ class Component extends DCLogic {
         animation: 'scanMove 1.2s linear infinite',
       },
       setSweep: (el) => { this.sweepEl = el; },
+      setScanEl: (el) => { this.scanEl = el; },
       setGoo: (el) => { this.gooBlurEl = el; },
       setGooReveal: (el) => { this.gooRevealBlurEl = el; },
       setGooReveal2: (el) => { this.gooRevealBlurEl2 = el; },
@@ -1279,18 +1321,16 @@ class Component extends DCLogic {
       eyebrowFam, eyebrowWeight, eyebrowSize, eyebrowSpacing, eyebrowCase,
       aboutBioFam, aboutBioWeight, aboutBioSize, aboutBioLH, aboutBioSpacing, aboutBioCase, aboutImgW, aboutBioMax, aboutBioTop,
       hasHover: shownHov != null,
-      captionShown: this.state.captionShown,
-      disp: this._displayHover || {},
-      hover: shownHov ? { company: shownHov.company + '\u2002\u2002\u2022\u2002\u2002Coming soon', title: shownHov.title } : {},
+      hover: shownHov ? { company: shownHov.company + (/^https?:/i.test(shownHov.href || '') ? '\u2002\u2002\u2022\u2002\u2002Coming soon' : ''), title: shownHov.title } : {},
       setHelix: (el) => { this.helixEl = el; },
       setMiniWrap: (el) => { this.miniWrap = el; },
       setMiniRing: (el) => { this.miniRing = el; this._buildMiniRing && this._buildMiniRing(); },
       setMiniDevices: (el) => { this.miniDevices = el; this._buildMiniDevices && this._buildMiniDevices(); },
       setMiniDevicesBright: (el) => { this.miniDevicesBright = el; this._buildMiniDevices && this._buildMiniDevices(); },
       setMiniWindow: (el) => { this.miniWindow = el; },
-      onDown: (e) => { if (e.target && e.target.closest && e.target.closest('a, h1, [data-clickable]')) return; this.dragging = true; this.lastX = e.clientX; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} if (e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grabbing'; },
-      onMove: (e) => { if (!this.dragging) return; const dx = e.clientX - this.lastX; this.lastX = e.clientX; this.spin += dx * 0.28; this.dragMomentum = dx * 12; },
-      onUp: (e) => { this.dragging = false; if (e && e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grab'; },
+      onDown: (e) => { if (e.target && e.target.closest && e.target.closest('a, h1, [data-clickable]')) return; this._downDevice = (e.target && e.target.closest && e.target.closest('[data-href]')) || null; this._dragDist = 0; this.dragging = true; this.lastX = e.clientX; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} if (e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grabbing'; },
+      onMove: (e) => { if (!this.dragging) return; const dx = e.clientX - this.lastX; this.lastX = e.clientX; this._dragDist = (this._dragDist || 0) + Math.abs(dx); this.spin += dx * 0.28; this.dragMomentum = dx * 12; },
+      onUp: (e) => { const wasTap = this.dragging && (this._dragDist || 0) < 6; this.dragging = false; if (e && e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grab'; if (wasTap && this._downDevice) { const href = this._downDevice.getAttribute('data-href'); if (href && !/^https?:/i.test(href)) this.openCase(href); } this._downDevice = null; },
       onWheel: (e) => { this.dragMomentum += e.deltaY * 0.5; },
     };
   }

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal Book'), url('../assets/fonts/extra3.woff2') format('woff2'); font-weight: 350; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal'), local('PP Neue Montreal Regular'), url('../assets/fonts/extra4.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal Medium'), url('../assets/fonts/extra1.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal SemiBold'), url('../assets/fonts/extra5.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal Bold'), url('../assets/fonts/extra2.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0a0b0e; }
+  a { color: #ececf0; text-decoration: none; transition: filter .26s ease, opacity .26s ease; }
+  a:hover { color: #ffffff; }
+  ::selection { background: #8aa0ff; color: #0a0b0e; }
+  @keyframes pageEntryFade { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes scanMove { from { background-position: 0 0; } to { background-position: 0 60px; } }
+  @keyframes crtSweep { 0% { transform: translateY(-14vh); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(112vh); opacity: 0; } }
+  @keyframes scanMask { from { -webkit-mask-position: 0 0; mask-position: 0 0; } to { -webkit-mask-position: 0 6px; mask-position: 0 6px; } }
+  @media (max-width: 640px) { .m-hide-mobile { display: none !important; } }
+</style>
+</helmet>
+
+<div style="position:relative; min-height:100vh; background:#000000; font-family:'PP Neue Montreal'; color:#ececf0; font-weight:300; text-transform:uppercase; font-size:32px; line-height:1;">
+
+  <!-- Entry cover: starts opaque (page colour) and fades out via CSS on load, so any white
+       navigation frame or content repaint during load is never visible. JS-independent. -->
+  <div style="position:fixed; inset:0; z-index:50; pointer-events:none; background:#0a0b0e; opacity:1; animation:pageEntryFade .5s ease forwards;"></div>
+
+  <!-- Gridded background (fixed lattice behind everything) -->
+  <div style="position:fixed; inset:0; z-index:0; pointer-events:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.16)' stroke-width='1'/%3E%3C/svg%3E&quot;), linear-gradient(to right, rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.08) 1px, transparent 1px); background-size:128px 128px, 128px 128px, 128px 128px; background-position:50% 50%, calc(50% + 64px) calc(50% + 64px), calc(50% + 64px) calc(50% + 64px); -webkit-mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%); mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%);"></div>
+
+  <!-- Subtle darkened vignette -->
+  <div style="position:fixed; inset:0; z-index:8; pointer-events:none; background:radial-gradient(115% 95% at 50% 50%, rgba(0,0,0,0) 42%, rgba(0,0,0,.72) 100%);"></div>
+
+  <!-- Progressive-blur header backdrop (matches index: strong blur at the top edge, unblurs inward) -->
+  <div style="position:fixed; top:0; left:0; right:0; height:172px; z-index:6; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to bottom,rgba(10,11,14,.72),rgba(10,11,14,0));"></div>
+
+  <!-- SVG goo filters: header hover melt (#goo) + entrance reveals for title (#gooReveal) and content (#gooReveal2) -->
+  <svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+    <filter id="goo" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGoo }}" result="blur"></feGaussianBlur>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 12 -3.5"></feColorMatrix>
+    </filter>
+    <filter id="gooReveal" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal }}" result="blur"></feGaussianBlur>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 32 -14"></feColorMatrix>
+    </filter>
+    <filter id="gooReveal2" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal2 }}" result="blur"></feGaussianBlur>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"></feColorMatrix>
+    </filter>
+    <filter id="gooReveal3" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal3 }}" result="blur"></feGaussianBlur>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"></feColorMatrix>
+    </filter>
+    <filter id="gooHover" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooHover }}" result="blur"></feGaussianBlur>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -8"></feColorMatrix>
+    </filter>
+    <filter id="gooHoverTitle" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooHoverTitle }}" result="blur"></feGaussianBlur>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 15 -4"></feColorMatrix>
+    </filter>
+  </svg>
+
+  <!-- Persistent header (copied from the index screen: melt-on-hover) -->
+  <header style="position:fixed; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:16; pointer-events:none; mix-blend-mode:difference;">
+    <div style="pointer-events:auto;">
+      <h1 style="margin:0; font-family:'PP Neue Montreal'; font-weight:350; font-size:40px; line-height:.94; letter-spacing:-1.5px; text-transform:lowercase; cursor:pointer;" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goHome }}">Jason Lim</h1>
+    </div>
+    <nav class="m-hide-mobile" style="pointer-events:auto; display:flex; gap:26px; align-items:center;">
+      <a href="mailto:jason.jinulim@gmail.com" style="font-family:'PP Neue Montreal'; font-weight:350; font-size:40px; line-height:.94; letter-spacing:-1.5px; text-transform:lowercase; color:#ececf0;" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}">Contact</a>
+    </nav>
+  </header>
+
+  <!-- Center avatar + About toggle (kept out of the header's difference blend so the photo stays true colour) -->
+  <div class="m-avatar" style="position:fixed; top:0px; left:0; right:0; z-index:16; display:flex; justify-content:center; pointer-events:none;">
+    <div style="position:relative; display:flex; align-items:center; gap:12px;">
+      <div style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer;" data-clickable="true" onClick="{{ goAbout }}">
+        <img src="../assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block;" />
+        <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(128,128,128,0.06) 0px, rgba(128,128,128,0.06) 3px, transparent 3px, transparent 6px); animation:scanMove 1.2s linear infinite;"></div>
+      </div>
+      <span style="font-family:'PP Neue Montreal'; font-weight:350; font-size:40px; letter-spacing:-1.5px; text-transform:lowercase; color:#ffffff; pointer-events:auto; -webkit-mask-image:repeating-linear-gradient(to bottom, #000 0px, #000 3px, rgba(0,0,0,0.92) 3px, rgba(0,0,0,0.92) 6px); mask-image:repeating-linear-gradient(to bottom, #000 0px, #000 3px, rgba(0,0,0,0.92) 3px, rgba(0,0,0,0.92) 6px); animation:scanMask 1.2s linear infinite; cursor:pointer;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goAbout }}">About</span>
+    </div>
+  </div>
+
+  <!-- Case study content (template — swap the image-slots + copy per project) -->
+  <main style="position:relative; margin:0; padding:322px 0 0;">
+
+    <!-- Intro: company + logo, then title (flush left to where the header text starts, 16px) -->
+    <div ref="{{ setIntro }}" style="padding:0 16px;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <img ref="{{ setLogo }}" src="../assets/logos/ouster.png" alt="" draggable="false" style="height:30px; width:auto; display:block; filter:brightness(0) invert(1); opacity:0; transition:opacity .5s ease;" />
+        <span ref="{{ setCompany }}" style="font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ececf0; opacity:0;">Ouster</span>
+      </div>
+      <div style="display:grid; grid-template-columns:calc(50vw + 112px) calc(50vw - 144px); gap:0; align-items:end;">
+        <h2 ref="{{ setTitle }}" style="align-self:start; margin:10px 0 0; max-width:calc(50vw - 16px); font-weight:300; font-size:clamp(48px,8vw,104px); line-height:0.9; letter-spacing:-4px; text-transform:none; text-wrap:balance; opacity:0;">Fleet Management</h2>
+        <div ref="{{ setContext }}" style="align-self:start; transform:translateY(0); opacity:0;">
+          <p style="margin:0 0 10px; font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ececf0;">Context</p>
+          <p style="margin:0; font-size:15px; line-height:1.3; letter-spacing:0; text-transform:none; color:#c6cad4;">Ouster is a lidar technology company that develops high-resolution sensors used to help vehicles and machines perceive the world around them. At the time of this project, Ouster was exploring how software could make its lidar data more actionable for customers.<br><br>I partnered with the team to define a software experience for fleet operators responsible for monitoring driver safety and investigating on-road incidents. The opportunity was to transform complex 3D sensor data into a workflow that enabled safety teams to quickly understand what happened, identify contributing factors, and take action.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two-column: sticky left copy + scrolling image panels.
+         Columns (full-bleed): [16px margin] [text] [40px gap] [mocks] [16px margin].
+         mocks start ≈ where the avatar image begins (50% − 76px) and end at the header's right edge (vw − 16px). -->
+    <div ref="{{ setContent }}" style="display:grid; grid-template-columns:16px calc(33% - 56px) 40px calc(67% - 16px) 16px; margin-top:120px;">
+      <div ref="{{ setStickyText }}" style="grid-column:2; position:sticky; top:92px; align-self:start;">
+        <p ref="{{ setBio }}" style="margin:-0.52em 0 0; width:100%; font-size:18px; line-height:1.6; letter-spacing:0; text-transform:none; color:#c6cad4; opacity:0;">My work focused on designing tools for replaying and analyzing 3D lidar captures, enabling fleet operators and safety teams to navigate incidents from multiple perspectives, inspect environmental conditions, and reconstruct the sequence of events leading up to a safety issue. I also designed annotation and markup capabilities that supported note-taking, collaboration, and documentation throughout the investigation process.</p>
+      </div>
+
+      <div ref="{{ setMocks }}" style="grid-column:4; display:flex; flex-direction:column; gap:24px; opacity:0; transition:opacity 1.7s ease;">
+
+        <!-- Panel 1: web mock -->
+        <div style="background:#161616; display:flex; align-items:center; justify-content:center; padding:48px;">
+          <video src="../assets/work/ouster/rotation.mp4" autoplay loop muted playsinline style="display:block; width:100%; height:auto; border-top:4px solid #000; border-bottom:12px solid #000;"></video>
+        </div>
+
+        <!-- Panel 2: web mock -->
+        <div style="background:#161616; display:flex; align-items:center; justify-content:center; padding:48px;">
+          <video src="../assets/work/ouster/notes.mp4" autoplay loop muted playsinline style="display:block; width:100%; height:auto; border-top:4px solid #000; border-bottom:12px solid #000;"></video>
+        </div>
+
+        <!-- Panel 3: web mock -->
+        <div style="background:#161616; display:flex; align-items:center; justify-content:center; padding:48px;">
+          <video src="../assets/work/ouster/view-mode.mp4" autoplay loop muted playsinline style="display:block; width:100%; height:auto; border-top:4px solid #000; border-bottom:12px solid #000;"></video>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Next project -->
+    <div ref="{{ setNext }}" style="text-align:center; padding:24vh 0 22vh; opacity:0;">
+      <a href="#" style="display:inline-block; color:#ececf0;" onMouseEnter="{{ meltInBig }}" onMouseLeave="{{ meltOutBig }}">
+        <span ref="{{ setNextEyebrow }}" style="display:block; font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ffffff;">Next project</span>
+        <span ref="{{ setNextTitle }}" style="display:block; margin-top:12px; font-weight:300; font-size:clamp(48px,8vw,104px); line-height:1.0; letter-spacing:-4px; text-transform:none; color:#ffffff;">Title of the case study goes here</span>
+      </a>
+    </div>
+
+  </main>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    this._layout();
+    this._onResize = () => this._layout();
+    window.addEventListener('resize', this._onResize);
+    // While the left text is pinned it sits above the header blur (sharp); once it releases and scrolls
+    // up under the header it drops below the blur (blurs), matching the mocks.
+    this._onScroll = () => {
+      const el = this.stickyTextEl; if (!el) return;
+      const pinned = el.getBoundingClientRect().top >= 91;   // sticky top is 92px
+      el.style.zIndex = pinned ? '7' : '';
+    };
+    window.addEventListener('scroll', this._onScroll, { passive: true });
+    this._onScroll();
+    this._enter();
+    this._watchContent();
+    this._watchNext();
+    this._keepPlaying();
+  }
+
+  // Entrance stagger: company scrambles + title goos in (like the index hover), then the context
+  // goos in right after. The content section (bio + mocks) reveals only once it scrolls into view.
+  // Mock videos loop forever: some browsers pause them when they scroll out of view or
+  // after decode hiccups — nudge them back into play whenever they pause or end.
+  _keepPlaying() {
+    const vids = this.el ? this.el.querySelectorAll('video') : document.querySelectorAll('video');
+    vids.forEach((v) => {
+      const resume = () => { const p = v.play(); if (p && p.catch) p.catch(() => {}); };
+      v.addEventListener('pause', resume);
+      v.addEventListener('ended', resume);
+    });
+  }
+
+  _enter() {
+    if (this.logoEl) this.logoEl.style.opacity = '1';
+    if (this.companyEl) { this.companyEl.style.opacity = '1'; this.scrambleIn(this.companyEl, this.companyEl.textContent, 700); }
+    if (this.titleEl) this.meltReveal(this.titleEl, this.gooRevealEl, 'gooReveal', 2000, 13);
+    setTimeout(() => {
+      if (this.contextEl) this.meltReveal(this.contextEl, this.gooReveal2El, 'gooReveal2', 1100, 5);
+    }, 400);
+  }
+
+  // Reveal the content section (bio goos in, mocks fade in) the first time it enters the viewport.
+  _watchContent() {
+    const el = this.contentEl;
+    if (!el) return;
+    if (!('IntersectionObserver' in window)) { this._revealContent(); return; }
+    this._contentIO = new IntersectionObserver((ents) => {
+      if (ents[0].isIntersecting) { this._revealContent(); this._contentIO.disconnect(); }
+    }, { threshold: 0, rootMargin: '0px 0px -30% 0px' });
+    this._contentIO.observe(el);
+  }
+  _revealContent() {
+    if (this._contentRevealed) return;
+    this._contentRevealed = true;
+    if (this.bioEl) this.meltReveal(this.bioEl, this.gooReveal3El, 'gooReveal3', 1500, 4);
+    if (this.mocksEl) this.mocksEl.style.opacity = '1';
+  }
+
+  // Reveal the "Next project" link the first time it scrolls into view.
+  _watchNext() {
+    // Reveal only once the page is scrolled to the very bottom, then wait 200ms.
+    this._onNextScroll = () => {
+      if (this._nextRevealed || this._nextArmed) return;
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      if (atBottom) {
+        this._nextArmed = true;
+        window.removeEventListener('scroll', this._onNextScroll);
+        setTimeout(() => this._revealNext(), 200);
+      }
+    };
+    window.addEventListener('scroll', this._onNextScroll, { passive: true });
+    this._onNextScroll();
+  }
+  _revealNext() {
+    if (this._nextRevealed) return;
+    this._nextRevealed = true;
+    if (this.nextEyebrowEl) this.meltReveal(this.nextEyebrowEl, this.gooReveal2El, 'gooReveal2', 1200, 4);
+    if (this.nextEl) { this.nextEl.style.opacity = '1'; }
+    if (this.nextTitleEl) this.meltReveal(this.nextTitleEl, this.gooRevealEl, 'gooReveal', 1800, 11);
+  }
+
+  // Gooey reveal: ramp the filter's blur from a heavy blob down to sharp (quartic ease-out).
+  meltReveal(el, blurEl, filterId, dur, start) {
+    if (!el) return;
+    start = start || 6.5; dur = dur || 1500;
+    if (!blurEl) { el.style.opacity = '1'; return; }
+    // Prime the blur to its heavy start value and commit it while the element is STILL
+    // invisible, then flip opacity on the next frame — so the element never paints a sharp
+    // frame with the filter's old (near-zero) stdDeviation.
+    blurEl.setAttribute('stdDeviation', start.toFixed(2));
+    el.style.filter = `url(#${filterId})`;
+    void el.getBoundingClientRect();
+    requestAnimationFrame(() => {
+      el.style.opacity = '1';
+      const t0 = performance.now();
+      const step = (t) => {
+        const k = Math.min(1, (t - t0) / dur);
+        const eased = 1 - Math.pow(1 - k, 4);
+        const v = start * (1 - eased) + 0.01 * eased;
+        blurEl.setAttribute('stdDeviation', v.toFixed(2));
+        if (k < 1) requestAnimationFrame(step);
+        else el.style.filter = '';
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  // Scramble-in: cycle random glyphs, resolving left-to-right into the final text (matches the index eyebrow).
+  scrambleIn(el, finalText, dur) {
+    if (!el) return;
+    cancelAnimationFrame(this._scrRaf);
+    const text = finalText || '';
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#*';
+    const t0 = performance.now();
+    const stepFn = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      const resolved = Math.floor(k * text.length);
+      let out = '';
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (i < resolved || c === ' ') out += c;
+        else out += chars[(Math.random() * chars.length) | 0];
+      }
+      el.textContent = out;
+      if (k < 1) this._scrRaf = requestAnimationFrame(stepFn);
+      else el.textContent = text;
+    };
+    this._scrRaf = requestAnimationFrame(stepFn);
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this._onResize); window.removeEventListener('scroll', this._onScroll); if (this._contentIO) this._contentIO.disconnect(); window.removeEventListener('scroll', this._onNextScroll); }
+
+  // Snap the content section to the fixed background grid:
+  //  • top lands on the nearest horizontal crosshair row (ih/2 + 128k), ~120px below the intro
+  //  • the text/mocks divider lands on the nearest vertical grid line (vw/2 + 64 + 128k) near 1/3 width;
+  //    text ends 40px before it, mocks span from it to the header's right edge (vw − 16).
+  _layout() {
+    const intro = this.introEl, content = this.contentEl;
+    if (!intro || !content) return;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    // vertical divider — snap to a crosshair column (vw/2 + 128k), where the crosshairs sit
+    const lineBase = vw / 2;
+    const lineX = lineBase + 128 * Math.round((vw / 3 - lineBase) / 128);
+    const textW = Math.max(180, (lineX - 40) - 16);
+    const mockW = Math.max(200, (vw - 16) - lineX);
+    content.style.gridTemplateColumns = `16px ${textW}px 40px ${mockW}px 16px`;
+    // Pin the Context block's TOP to the Title's BOTTOM (+6px), regardless of copy length.
+    if (this.titleEl && this.contextEl) {
+      const th = this.titleEl.getBoundingClientRect().height;
+      this.contextEl.style.transform = 'translateY(' + Math.round(th + 16) + 'px)';
+    }
+    // horizontal snap of the section top (measured at the current scroll position)
+    const introBottom = intro.getBoundingClientRect().bottom + window.scrollY;
+    // Keep a CONSTANT gap between the Context paragraph and the content no matter how
+    // long the Context copy is: measure the Context block's real (translated) bottom and
+    // place the content a fixed distance below it, rather than snapping to the row lattice.
+    const ctxBottom = this.contextEl ? this.contextEl.getBoundingClientRect().bottom + window.scrollY : introBottom;
+    const GAP = 230;
+    content.style.marginTop = Math.max(80, Math.round(ctxBottom - introBottom + GAP)) + 'px';
+  }
+
+  // Header melt-on-hover — matches the index screen: ramp the shared #goo blur up on enter, down on leave.
+  animateMelt(el, on, strength, blurEl, filterId, keepFilter) {
+    if (!el) return;
+    const blur = blurEl || this.gooEl;
+    filterId = filterId || 'goo';
+    const target = on ? (strength || 2.3) : 0.01;
+    if (on && !keepFilter) el.style.filter = `url(#${filterId})`;
+    if (!blur) { if (!on) el.style.filter = ''; return; }
+    cancelAnimationFrame(blur._gooRaf);
+    const from = parseFloat(blur.getAttribute('stdDeviation')) || 0;
+    const dur = on ? 440 : 240;
+    const t0 = performance.now();
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      const eased = on ? (1 - Math.pow(1 - k, 3)) : k;
+      const v = from + (target - from) * eased;
+      blur.setAttribute('stdDeviation', v.toFixed(2));
+      if (k < 1) blur._gooRaf = requestAnimationFrame(step);
+      else if (!on && !keepFilter) el.style.filter = '';
+    };
+    blur._gooRaf = requestAnimationFrame(step);
+  }
+  renderVals() {
+    return {
+      setGoo: (el) => { this.gooEl = el; },
+      setGooReveal: (el) => { this.gooRevealEl = el; },
+      setGooReveal2: (el) => { this.gooReveal2El = el; },
+      setGooReveal3: (el) => { this.gooReveal3El = el; },
+      setGooHover: (el) => { this.gooHoverEl = el; },
+      setGooHoverTitle: (el) => { this.gooHoverTitleEl = el; },
+      setLogo: (el) => { this.logoEl = el; },
+      setCompany: (el) => { this.companyEl = el; },
+      setTitle: (el) => { this.titleEl = el; },
+      setContext: (el) => { this.contextEl = el; },
+      setBio: (el) => { this.bioEl = el; },
+      setMocks: (el) => { this.mocksEl = el; },
+      setIntro: (el) => { this.introEl = el; if (el) this._layout && this._layout(); },
+      setContent: (el) => { this.contentEl = el; if (el) this._layout && this._layout(); },
+      setStickyText: (el) => { this.stickyTextEl = el; },
+      meltIn: (e) => this.animateMelt(e.currentTarget, true, 3.2),
+      meltOut: (e) => this.animateMelt(e.currentTarget, false, 3.2),
+      meltInBig: () => { this.animateMelt(this.nextEyebrowEl, true, 2.1, this.gooHoverEl, 'gooHover'); this.animateMelt(this.nextTitleEl, true, 7, this.gooHoverTitleEl, 'gooHoverTitle'); },
+      meltOutBig: () => { this.animateMelt(this.nextEyebrowEl, false, 2.1, this.gooHoverEl, 'gooHover'); this.animateMelt(this.nextTitleEl, false, 7, this.gooHoverTitleEl, 'gooHoverTitle'); },
+      setNext: (el) => { this.nextEl = el; },
+      setNextEyebrow: (el) => { this.nextEyebrowEl = el; },
+      setNextTitle: (el) => { this.nextTitleEl = el; },
+      goHome: () => { window.location.href = '../index.html'; },
+      goAbout: () => { window.location.href = '../index.html'; },
+    };
+  }
+}
+
+</script>
+</body>
+</html>
