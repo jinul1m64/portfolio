@@ -54,12 +54,22 @@
     .m-avatar { justify-content: flex-end !important; padding-right: 16px; }
   }
 </style>
+<script>
+  /* Deep-link into About (from a case study): force the shared chrome (header, footer, avatar)
+     visible on the very first paint so the header never fades from opacity:0 — it looks persisted
+     across the whole site. No black cover (the ring/scene default to opacity:0, so nothing flashes). */
+  (function(){ try { if ((location.hash || '').indexOf('#about') === 0) {
+    var s = document.createElement('style'); s.id = '__aboutChromeShow';
+    s.textContent = 'header,footer,[class~="m-avatar"]{opacity:1!important}';
+    (document.head || document.documentElement).appendChild(s);
+  } } catch(e){} })();
+</script>
 </helmet>
 
 <div ref="{{ setRoot }}" style="position: fixed; inset: 0; background: #000000; font-family: PP Neue Montreal; color: #ececf0; overflow: hidden; cursor: grab; user-select: none; font-weight: 300; text-transform: uppercase; font-size: 32px; line-height: 1" onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" onPointerLeave="{{ onUp }}" onWheel="{{ onWheel }}">
 
   <!-- Gridded background (haoqi-style): faint fixed lattice behind everything -->
-  <div style="position:absolute; inset:0; z-index:0; pointer-events:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3C/svg%3E&quot;), linear-gradient(to right, rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.045) 1px, transparent 1px); background-size:128px 128px, 128px 128px, 128px 128px; background-position:50% 50%, calc(50% + 64px) calc(50% + 64px), calc(50% + 64px) calc(50% + 64px); -webkit-mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%); mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%);"></div>
+  <div style="position:absolute; inset:0; z-index:0; pointer-events:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.14)' stroke-width='1'/%3E%3C/svg%3E&quot;), linear-gradient(to right, rgba(255,255,255,.065) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.065) 1px, transparent 1px); background-size:128px 128px, 128px 128px, 128px 128px; background-position:50% 50%, calc(50% + 64px) calc(50% + 64px), calc(50% + 64px) calc(50% + 64px); -webkit-mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%); mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%);"></div>
 
   <!-- Cursor "soft light": a brighter copy of the grid revealed only under a radial gradient that follows the pointer (à la stitch.withgoogle.com) -->
   <!-- "Slurbt"-style glitch: stepped horizontal tear + RGB split (applied to non-hovered devices) -->
@@ -134,7 +144,7 @@
 
   <!-- Center avatar (kept out of the header's difference blend so the photo stays true colour) -->
   <div ref="{{ setAvatarEl }}" class="m-avatar" style="position:absolute; top:0px; left:0; right:0; z-index:16; display:flex; justify-content:center; pointer-events:none; opacity:0;">
-    <div style="position:relative; display:flex; align-items:center; gap:12px;">
+    <div style="position:relative; height:52px; display:flex; align-items:center; gap:12px;">
       <div ref="{{ setProfileWrap }}" style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer; transition:opacity .5s ease;" data-clickable="true" onClick="{{ avatarClick }}">
         <img ref="{{ setProfileImg }}" src="./assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block; transition:opacity .5s ease;" />
         <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(128,128,128,0.06) 0px, rgba(128,128,128,0.06) 3px, transparent 3px, transparent 6px); animation:scanMove 1.2s linear infinite;"></div>
@@ -182,7 +192,7 @@
   {{ overlayEl }}
 
   <!-- About page (sits below the shared chrome: header, footer, scanlines + vignette all render over it) -->
-  <div ref="{{ setAboutEl }}" style="position:absolute; inset:0; z-index:3; opacity:0; pointer-events:none; overflow-y:auto; transition:opacity .7s ease; background:transparent;">
+  <div ref="{{ setAboutEl }}" style="position:absolute; inset:0; z-index:3; opacity:0; pointer-events:none; overflow-y:auto; scrollbar-gutter:stable both-edges; transition:opacity .7s ease; background:transparent;">
     <div style="position:sticky; top:0; height:100vh; margin-bottom:-100vh; z-index:5; pointer-events:none; overflow:hidden;">
       <div style="position:absolute; left:0; right:0; top:0; height:2px; background:linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.12) 50%, rgba(255,255,255,0)); filter:blur(.6px); box-shadow:0 0 8px rgba(255,255,255,.12); animation:crtSweep 7s linear infinite;"></div>
     </div>
@@ -271,12 +281,12 @@ class Component extends DCLogic {
     // Resolve to a bundled blob URL (standalone export) when available, else the live URL.
     const R = (id, url) => (typeof window !== 'undefined' && window.__resources && window.__resources[id]) || url;
     return [
-      { img: R('m0', B+'65b5721a80c184325a8fea91_rewards-2.png'), video: './assets/video/rewards.mp4', title: 'Dasher Rewards', company: 'DoorDash', href: './work/dasher-rewards.dc.html', blurb: 'A tiered recognition program that rewards Dashers for consistency and milestones — turning everyday deliveries into visible progress.', o: 'portrait' },
+      { img: R('m0', B+'65b5721a80c184325a8fea91_rewards-2.png'), video: './assets/video/rewards.webm', title: 'dasher rewards', company: 'DoorDash', href: './work/dasher-rewards.dc.html', blurb: 'A tiered recognition program that rewards Dashers for consistency and milestones — turning everyday deliveries into visible progress.', o: 'portrait' },
       { img: R('m5', B+'65b041af6127d88b289d5fba_nw-1.png'), title: 'Homescreen Redesign', company: 'NerdWallet', href: 'https://jasonlim.design/#nw', blurb: 'A refreshed home surface that centers each member\u2019s most relevant financial next step.', o: 'portrait' },
       { img: R('m2', B+'65b0054f1a6aab36d00e14e5_ratings-1.png'), title: 'Dasher Ratings', company: 'DoorDash', href: 'https://jasonlim.design/#ratings', blurb: 'A clearer, fairer ratings system that helps Dashers understand their standing and what actually moves it.', o: 'portrait' },
-      { img: R('m3', B+'65b005b8069fd5247b08aab1_sp-1.png'), video: './assets/video/mobilization.mp4', title: 'Dasher Mobilization', company: 'DoorDash', href: 'https://jasonlim.design/#promo', blurb: 'Promotional surfaces that mobilize Dashers toward high-demand windows without pressure or clutter.', o: 'portrait' },
-      { img: R('m4', './assets/ouster-fleet.png'), video: './assets/video/ouster.mp4', title: 'Fleet Management', company: 'Ouster', href: './work/ouster.dc.html', blurb: 'A web tool for monitoring, configuring, and interpreting fleets of lidar sensors at scale.', o: 'landscape' },
-      { img: R('m1', './assets/chat-poster.png'), video: './assets/video/in-app-chat.mp4', title: 'In-app Chat', company: 'DoorDash', href: 'https://jasonlim.design/#chat', blurb: 'Real-time messaging that connects Dashers, customers, and support in one calm, legible thread during an active delivery.', o: 'portrait' },
+      { img: R('m3', B+'65b005b8069fd5247b08aab1_sp-1.png'), video: './assets/video/mobilization.webm', title: 'dasher mobilization', company: 'DoorDash', href: './work/mobilization.dc.html', blurb: 'Promotional surfaces that mobilize Dashers toward high-demand windows without pressure or clutter.', o: 'portrait' },
+      { img: R('m4', './assets/ouster-fleet.png'), video: './assets/video/ouster.webm', title: 'fleet management', company: 'Ouster', href: './work/ouster.dc.html', blurb: 'A web tool for monitoring, configuring, and interpreting fleets of lidar sensors at scale.', o: 'landscape' },
+      { img: R('m1', './assets/chat-poster.png'), video: './assets/video/in-app-chat.webm', title: 'in-app chat', company: 'DoorDash', href: './work/in-app-chat.dc.html', blurb: 'Real-time messaging that connects Dashers, customers, and support in one calm, legible thread during an active delivery.', o: 'portrait' },
     ];
   }
 
@@ -329,6 +339,7 @@ class Component extends DCLogic {
   // Reveal the About page: spiral + "Scroll" hint fade out, content fades in.
   openAbout() {
     this._aboutOpen = true;
+    this._aboutReturn = null;   // normal About (from the ring) always Exits back to the ring
     // Fade the label out now; swap "about"->"exit" and fade it back in timed with the About page reveal.
     if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '0';
     if (this.profileImg) this.profileImg.style.opacity = '0';
@@ -355,7 +366,7 @@ class Component extends DCLogic {
   closeAbout(instant) {
     this._aboutOpen = false;
     if (instant) { this.setState({ aboutOpen: false }); if (this.profileWrap) { this.profileWrap.style.display = ''; this.profileWrap.style.opacity = ''; } if (this.profileImg) this.profileImg.style.opacity = ''; }
-    else { if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '0'; if (this.profileWrap) { this.profileWrap.style.display = ''; this.profileWrap.style.opacity = '0'; } setTimeout(() => { if (!this._aboutOpen) { this.setState({ aboutOpen: false }); if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '1'; if (this.profileImg) this.profileImg.style.opacity = '1'; if (this.profileWrap) this.profileWrap.style.opacity = '1'; if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .5s ease'; this.scrollEl.style.opacity = ''; } } }, 500); }
+    else { if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '0'; if (this.profileWrap) { this.profileWrap.style.opacity = '0'; } setTimeout(() => { if (!this._aboutOpen) { this.setState({ aboutOpen: false }); if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '1'; if (this.profileImg) this.profileImg.style.opacity = '1'; if (this.profileWrap) { this.profileWrap.style.display = ''; this.profileWrap.style.opacity = '1'; } if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .5s ease'; this.scrollEl.style.opacity = ''; } } }, 500); }
     clearTimeout(this._aboutTimer);
     cancelAnimationFrame(this._revRaf);
     if (this.aboutInner) this.aboutInner.style.filter = '';
@@ -388,6 +399,48 @@ class Component extends DCLogic {
     let H = (cy + CELL * m) - rect.top;
     if (H < CELL * 3) H = CELL * 3;                     // guard against a collapsed frame
     wrap.style.height = Math.round(H) + 'px';
+  }
+
+  // Open About straight away (no loader, no ring) when deep-linked from a case study.
+  // Reuses the same About goo-reveal; Exit (avatarClick) routes back to the referring case study.
+  openAboutDeep() {
+    this._booting = false;
+    this._aboutOpen = true;
+    const loader = this.loaderEl;
+    if (loader) { loader.style.display = 'none'; loader.style.visibility = 'hidden'; loader.style.opacity = '0'; }
+    [this.headerEl, this.footerEl, this.avatarEl].filter(Boolean).forEach(el => { el.style.opacity = '1'; el.style.filter = ''; });
+    if (this.sceneEl) { this.sceneEl.style.transition = 'none'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
+    if (this.miniWrap) { this.miniWrap.style.transition = 'none'; this.miniWrap.style.opacity = '0'; }
+    if (this.scrollEl) { this.scrollEl.style.opacity = '0'; }
+    if (this.profileWrap) { this.profileWrap.style.display = 'none'; }
+    if (this.profileImg) { this.profileImg.style.opacity = '0'; }
+    this.setState({ aboutOpen: true });
+    if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '1';
+    // Reveal the About content exactly like openAbout (from the index): portrait plain 1s fade,
+    // bio/marquee/reach goo-reveal 0.3s after. Chrome is already up and stays put.
+    if (this.aboutEl) { this.aboutEl.style.pointerEvents = 'auto'; this.aboutEl.style.transition = 'none'; this.aboutEl.style.opacity = '1'; }
+    // Hide the content synchronously (before the browser paints) so no text flashes pre-reveal.
+    if (this.moiWrap) { this.moiWrap.style.transition = 'none'; this.moiWrap.style.opacity = '0'; }
+    if (this.bioEl) this.bioEl.style.opacity = '0';
+    if (this.marqueeEl) this.marqueeEl.style.opacity = '0';
+    if (this.reachEl) this.reachEl.style.opacity = '0';
+    clearTimeout(this._aboutTimer);
+    this._aboutTimer = setTimeout(() => {
+      if (!this._aboutOpen || !this.aboutEl) return;
+      if (this.moiWrap) { const w = this.moiWrap; w.style.filter = ''; w.style.transition = 'none'; w.style.opacity = '0'; void w.offsetHeight; w.style.transition = 'opacity 1s ease'; requestAnimationFrame(() => { if (this.moiWrap) this.moiWrap.style.opacity = '1'; }); }
+      this._aboutTimer = setTimeout(() => { if (this._aboutOpen) this.meltRevealMany([this.bioEl, this.marqueeEl, this.reachEl], null, 1150); }, 300);
+    }, 60);
+  }
+
+  // Exit About back to the case study we came from: fade About out (header + grid persist), then navigate.
+  _exitAboutToCase() {
+    const dest = this._aboutReturn;
+    this._aboutReturn = null;
+    this._aboutOpen = false;
+    if (!dest) { this.closeAbout(); this.setState({ selected: null, hovered: null }); this.runLoader(); return; }
+    if (this.aboutEl) { this.aboutEl.style.transition = 'opacity .6s ease'; this.aboutEl.style.opacity = '0'; this.aboutEl.style.pointerEvents = 'none'; }
+    if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '0';
+    setTimeout(() => { window.location.href = dest; }, 640);
   }
 
   componentDidMount() {
@@ -463,7 +516,40 @@ class Component extends DCLogic {
       this._io.observe(this.rootEl);
     }
 
-    this.runLoader();
+    // Deep-link: arriving from a case study's About link opens About directly (no loader / ring),
+    // and Exit returns to that case study instead of revealing the ring.
+    this._aboutReturn = null;
+    let _deepAbout = false;
+    try {
+      const h = (location.hash || '').replace('#', '');
+      if (h.indexOf('about') === 0) { _deepAbout = true; this._aboutReturn = sessionStorage.getItem('aboutReturn') || null; sessionStorage.removeItem('aboutReturn'); }
+    } catch (e) {}
+    if (_deepAbout) this.openAboutDeep(); else this.runLoader();
+    // Failsafe: never let the deep-link cover strand as a black screen.
+    setTimeout(() => { const c = document.getElementById('__aboutCover'); if (c && c.parentNode) c.parentNode.removeChild(c); }, 2000);
+    // Snap the About text block to the 128px grid: width = an even multiple of 128 (256×k) so both
+    // edges land on vertical meridian lines symmetric about centre. Recompute on resize.
+    this._snapAboutW = () => {
+      const avail = document.documentElement.clientWidth - 96;   // aboutInner has 48px side padding
+      let w = 768;
+      while (w > avail) w -= 256;
+      if (w < 256) w = Math.min(avail, 256);
+      document.documentElement.style.setProperty('--aboutW', w + 'px');
+    };
+    this._snapAboutW();
+    window.addEventListener('resize', this._snapAboutW);
+    // Large monitors only: drop the ring minimap two grid rows lower and snap its crosshair to a
+    // horizontal meridian line. Smaller breakpoints keep the current top:84px placement untouched.
+    this._snapMini = () => {
+      if (!this.miniWrap) return;
+      const halfY = document.documentElement.clientHeight / 2, cross = 77 * 1.25;   // 77 in-box × the wrap's scale(1.25) from its top edge
+      let lineY = ((halfY % 128) + 128) % 128;            // topmost horizontal meridian line
+      while (lineY < 96) lineY += 128;                    // keep it clear of the 52px header
+      if (document.documentElement.clientWidth >= 1800) lineY += 128;   // large screens: one row lower; smaller keep the higher line
+      this.miniWrap.style.top = (lineY - cross) + 'px';
+    };
+    this._snapMini();
+    window.addEventListener('resize', this._snapMini);
 
     // Keep the EST clock current — update HH / MM every second via direct DOM (renderVals isn't called per frame).
     this._tickClock = () => {
@@ -501,6 +587,7 @@ class Component extends DCLogic {
   }
 
   runLoader() {
+    { const c = document.getElementById('__aboutCover'); if (c && c.parentNode) c.parentNode.removeChild(c); }
     const pctEl = this.loaderPctEl, loader = this.loaderEl;
     this._booting = true;
     const chrome = [this.headerEl, this.footerEl, this.avatarEl].filter(Boolean);
@@ -1062,8 +1149,8 @@ class Component extends DCLogic {
     const aboutBioLH = this.props.aboutBioLineHeight ?? 1;
     const aboutBioSpacing = (this.props.aboutBioSpacing ?? -1) + 'px';
     const aboutBioCase = cap(this.props.aboutBioCase);
-    const aboutImgW = (this.props.aboutImgW ?? 452) + 'px';
-    const aboutBioMax = '720px';
+    const aboutImgW = (this.props.aboutImgW ?? 512) + 'px';
+    const aboutBioMax = 'var(--aboutW, 768px)';
     const aboutBioTop = '52px';
     const mocks = this.mocks;
     const hovered = this.state.hovered;
@@ -1303,11 +1390,11 @@ class Component extends DCLogic {
       setMinEl: (el) => { this.minEl = el; },
       setUpdatedEl: (el) => { this.updatedEl = el; this._startFooterCycle && this._startFooterCycle(); },
       goAbout: () => { this.openAbout(); },
-      avatarClick: () => { if (this._aboutOpen) { this.spin = 0; this.dragMomentum = 0; this.closeAbout(); this.setState({ selected: null, hovered: null }); } else { this.openAbout(); } },
+      avatarClick: () => { if (this._aboutOpen && this._aboutReturn) { this._exitAboutToCase(); return; } if (this._aboutOpen) { this.spin = 0; this.dragMomentum = 0; this.closeAbout(); this.setState({ selected: null, hovered: null }); } else { this.openAbout(); } },
       aboutOpen: !!this.state.aboutOpen,
       aboutClosed: !this.state.aboutOpen,
       aboutLabel: this.state.aboutOpen ? 'Exit' : 'About',
-      goHome: () => { this.spin = 0; this.dragMomentum = 0; this.closeAbout(true); this.setState({ selected: null, hovered: null }); this.runLoader(); },
+      goHome: () => { this._aboutReturn = null; this.spin = 0; this.dragMomentum = 0; this.closeAbout(true); this.setState({ selected: null, hovered: null }); this.runLoader(); },
       contact: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } window.location.href = 'mailto:jason.jinulim@gmail.com'; },
       setCompanyEl: (el) => { this.companyEl = el; },
       setTitleEl: (el) => { this.titleEl = el; },
