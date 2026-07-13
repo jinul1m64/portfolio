@@ -92,7 +92,7 @@
   </div>
 
   <!-- Case study content (template — swap the image-slots + copy per project) -->
-  <main style="position:relative; margin:0; padding:322px 0 0;">
+  <main ref="{{ setMain }}" style="position:relative; margin:0; padding:322px 0 0;">
 
     <!-- Intro: company + logo, then title (flush left to where the header text starts, 16px) -->
     <div ref="{{ setIntro }}" style="padding:0 16px;">
@@ -100,11 +100,11 @@
         <img ref="{{ setLogo }}" src="../assets/logos/doordash.svg" alt="" draggable="false" style="height:22px; width:auto; display:block; filter:brightness(0) invert(1); opacity:0; transition:opacity .5s ease;" />
         <span ref="{{ setCompany }}" style="font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ececf0; opacity:0;">Company</span>
       </div>
-      <div style="display:grid; grid-template-columns:calc(50vw + 112px) calc(50vw - 144px); gap:0; align-items:end;">
-        <h2 ref="{{ setTitle }}" style="align-self:start; margin:10px 0 0; max-width:calc(50vw - 16px); font-weight:300; font-size:clamp(48px,8vw,104px); line-height:0.9; letter-spacing:-4px; text-transform:none; text-wrap:balance; opacity:0;">Title of the case study goes here</h2>
+      <div style="display:grid; grid-template-columns:calc(var(--hw, 50vw) + 112px) calc(var(--hw, 50vw) - 144px); gap:0; align-items:end;">
+        <h2 ref="{{ setTitle }}" style="align-self:start; margin:10px 0 0; max-width:calc(var(--hw, 50vw) - 16px); font-weight:300; font-size:clamp(48px,8vw,104px); line-height:0.9; letter-spacing:-4px; text-transform:none; text-wrap:balance; opacity:0;">Title of the case study goes here</h2>
         <div ref="{{ setContext }}" style="align-self:start; transform:translateY(0); opacity:0;">
           <p style="margin:0 0 10px; font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ececf0;">Context</p>
-          <p style="margin:0; font-size:15px; line-height:1.3; letter-spacing:0; text-transform:none; color:#c6cad4;">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+          <p style="margin:0; font-size:15px; line-height:1.3; letter-spacing:0; text-transform:none; text-align:justify; color:#c6cad4;">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
         </div>
       </div>
     </div>
@@ -112,7 +112,7 @@
     <!-- Two-column: sticky left copy + scrolling image panels.
          Columns (full-bleed): [16px margin] [text] [40px gap] [mocks] [16px margin].
          mocks start ≈ where the avatar image begins (50% − 76px) and end at the header's right edge (vw − 16px). -->
-    <div ref="{{ setContent }}" style="display:grid; grid-template-columns:16px calc(33% - 56px) 40px calc(67% - 16px) 16px; margin-top:120px;">
+    <div ref="{{ setContent }}" style="display:grid; grid-template-columns:16px calc(var(--mockL,33%) - 56px) 40px calc(var(--cw, 100%) - var(--mockL,33%) - 16px) 16px; margin-top:120px;">
       <div ref="{{ setStickyText }}" style="grid-column:2; position:sticky; top:92px; align-self:start;">
         <p ref="{{ setBio }}" style="margin:-0.52em 0 0; width:100%; font-size:18px; line-height:1.6; letter-spacing:0; text-transform:none; color:#c6cad4; opacity:0;">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
       </div>
@@ -160,7 +160,7 @@
 
     <!-- Next project -->
     <div ref="{{ setNext }}" style="text-align:center; padding:24vh 0 22vh; opacity:0;">
-      <a href="#" style="display:inline-block; color:#ececf0;" onMouseEnter="{{ meltInBig }}" onMouseLeave="{{ meltOutBig }}">
+      <a href="#" target="_self" style="display:inline-block; color:#ececf0;" onMouseEnter="{{ meltInBig }}" onMouseLeave="{{ meltOutBig }}" onClick="{{ goNext }}">
         <span ref="{{ setNextEyebrow }}" style="display:block; font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ffffff;">Next project</span>
         <span ref="{{ setNextTitle }}" style="display:block; margin-top:12px; font-weight:300; font-size:clamp(48px,8vw,104px); line-height:1.0; letter-spacing:-4px; text-transform:none; color:#ffffff;">Title of the case study goes here</span>
       </a>
@@ -187,6 +187,7 @@ class Component extends DCLogic {
     window.addEventListener('scroll', this._onScroll, { passive: true });
     this._onScroll();
     this._enter();
+    { const snap = () => { const W = document.documentElement.clientWidth, half = W / 2; document.documentElement.style.setProperty('--cw', W + 'px'); document.documentElement.style.setProperty('--hw', half + 'px'); let line = half + 128 * Math.round((0.33 * W - half) / 128); if (line - 56 < 220) line += 128; document.documentElement.style.setProperty('--mockL', line + 'px'); }; snap(); window.addEventListener('resize', snap); }
     this._watchContent();
     this._watchNext();
   }
@@ -299,7 +300,7 @@ class Component extends DCLogic {
   _layout() {
     const intro = this.introEl, content = this.contentEl;
     if (!intro || !content) return;
-    const vw = window.innerWidth, vh = window.innerHeight;
+    const vw = document.documentElement.clientWidth, vh = window.innerHeight;
     // vertical divider — snap to a crosshair column (vw/2 + 128k), where the crosshairs sit
     const lineBase = vw / 2;
     const lineX = lineBase + 128 * Math.round((vw / 3 - lineBase) / 128);
@@ -367,8 +368,22 @@ class Component extends DCLogic {
       setNext: (el) => { this.nextEl = el; },
       setNextEyebrow: (el) => { this.nextEyebrowEl = el; },
       setNextTitle: (el) => { this.nextTitleEl = el; },
+      setMain: (el) => { this.mainEl = el; },
+      goNext: (e) => {
+        e.preventDefault();
+        if (this._navigating) return; this._navigating = true;
+        const href = e.currentTarget.getAttribute('href');
+        if (!href || href === '#') { this._navigating = false; return; }
+        if (this.mainEl) { this.mainEl.style.transition = 'opacity .6s ease'; this.mainEl.style.opacity = '0'; }
+        setTimeout(() => { window.location.href = href; }, 700);
+      },
       goHome: () => { window.location.href = '../index.html'; },
-      goAbout: () => { window.location.href = '../index.html'; },
+      goAbout: () => {
+        if (this._navigating) return; this._navigating = true;
+        try { sessionStorage.setItem('aboutReturn', location.href.split('#')[0]); } catch (e) {}
+        if (this.mainEl) { this.mainEl.style.transition = 'opacity .32s ease'; this.mainEl.style.opacity = '0'; }
+        setTimeout(() => { window.location.href = '../index.html#about'; }, 300);
+      },
     };
   }
 }

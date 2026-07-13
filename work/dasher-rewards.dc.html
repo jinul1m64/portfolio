@@ -20,6 +20,7 @@
   a:hover { color: #ffffff; }
   ::selection { background: #8aa0ff; color: #0a0b0e; }
   @keyframes pageEntryFade { from { opacity: 1; } to { opacity: 0; } }
+  @media (min-width: 1800px) { .m-mock { max-width: 320px !important; } }
   @keyframes scanMove { from { background-position: 0 0; } to { background-position: 0 60px; } }
   @keyframes crtSweep { 0% { transform: translateY(-14vh); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(112vh); opacity: 0; } }
   @keyframes scanMask { from { -webkit-mask-position: 0 0; mask-position: 0 0; } to { -webkit-mask-position: 0 6px; mask-position: 0 6px; } }
@@ -92,7 +93,7 @@
   </div>
 
   <!-- Case study content (template — swap the image-slots + copy per project) -->
-  <main style="position:relative; margin:0; padding:322px 0 0;">
+  <main ref="{{ setMain }}" style="position:relative; margin:0; padding:322px 0 0;">
 
     <!-- Intro: company + logo, then title (flush left to where the header text starts, 16px) -->
     <div ref="{{ setIntro }}" style="padding:0 16px;">
@@ -100,11 +101,11 @@
         <img ref="{{ setLogo }}" src="../assets/logos/doordash.svg" alt="" draggable="false" style="height:22px; width:auto; display:block; filter:brightness(0) invert(1); opacity:0; transition:opacity .5s ease;" />
         <span ref="{{ setCompany }}" style="font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ececf0; opacity:0;">DoorDash</span>
       </div>
-      <div style="display:grid; grid-template-columns:calc(50vw + 112px) calc(50vw - 144px); gap:0; align-items:end;">
-        <h2 ref="{{ setTitle }}" style="align-self:start; margin:10px 0 0; max-width:calc(50vw - 16px); font-weight:300; font-size:clamp(48px,8vw,104px); line-height:0.9; letter-spacing:-4px; text-transform:none; text-wrap:balance; opacity:0;">Dasher Rewards</h2>
+      <div style="display:grid; grid-template-columns:calc(var(--hw, 50vw) + 112px) calc(var(--hw, 50vw) - 144px); gap:0; align-items:end;">
+        <h2 ref="{{ setTitle }}" style="align-self:start; margin:10px 0 0; max-width:calc(var(--hw, 50vw) - 16px); font-weight:300; font-size:clamp(48px,8vw,104px); line-height:0.9; letter-spacing:-4px; text-transform:none; text-wrap:balance; opacity:0;">dasher rewards</h2>
         <div ref="{{ setContext }}" style="align-self:start; transform:translateY(0); opacity:0;">
           <p style="margin:0 0 10px; font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ececf0;">Context</p>
-          <p style="margin:0; font-size:15px; line-height:1.3; letter-spacing:0; text-transform:none; color:#c6cad4;">DoorDash&rsquo;s delivery network depends on millions of decisions made by Dashers every day. While the platform offered numerous incentives and performance programs, many were fragmented, difficult to discover, and lacked a cohesive experience that helped Dashers understand how their actions translated into rewards.<br><br>Dasher Rewards was an effort to create a unified framework that aligned the needs of Dashers and DoorDash. For Dashers, it provided greater transparency into performance expectations, clearer goals to work toward, and meaningful incentives for delivering high-quality service. For DoorDash, it created a mechanism for encouraging behaviors that improved delivery quality, operational efficiency, and long-term retention across the platform.</p>
+          <p style="margin:0; font-size:15px; line-height:1.3; letter-spacing:0; text-transform:none; text-align:justify; color:#c6cad4;">DoorDash&rsquo;s delivery network depends on millions of decisions made by Dashers every day. While the platform offered numerous incentives and performance programs, many were fragmented, difficult to discover, and lacked a cohesive experience that helped Dashers understand how their actions translated into rewards.<br><br>dasher rewards was an effort to create a unified framework that aligned the needs of Dashers and DoorDash. For Dashers, it provided greater transparency into performance expectations, clearer goals to work toward, and meaningful incentives for delivering high-quality service. For DoorDash, it created a mechanism for encouraging behaviors that improved delivery quality, operational efficiency, and long-term retention across the platform.</p>
         </div>
       </div>
     </div>
@@ -112,7 +113,7 @@
     <!-- Two-column: sticky left copy + scrolling image panels.
          Columns (full-bleed): [16px margin] [text] [40px gap] [mocks] [16px margin].
          mocks start ≈ where the avatar image begins (50% − 76px) and end at the header's right edge (vw − 16px). -->
-    <div ref="{{ setContent }}" style="display:grid; grid-template-columns:16px calc(33% - 56px) 40px calc(67% - 16px) 16px; margin-top:120px;">
+    <div ref="{{ setContent }}" style="display:grid; grid-template-columns:16px calc(var(--mockL,33%) - 56px) 40px calc(var(--cw, 100%) - var(--mockL,33%) - 16px) 16px; margin-top:120px;">
       <div ref="{{ setStickyText }}" style="grid-column:2; position:sticky; top:92px; align-self:start;">
         <p ref="{{ setBio }}" style="margin:-0.52em 0 0; width:100%; font-size:18px; line-height:1.6; letter-spacing:0; text-transform:none; color:#c6cad4; opacity:0;">I led the design of an end-to-end rewards experience that transformed a collection of disconnected incentive programs into a cohesive system. The solution introduced clearer program education, transparent tier requirements, personalized progress tracking, and richer reward experiences. The experience helped Dashers see how their everyday actions on the platform translated into rewards, creating a stronger connection between performance and value.</p>
       </div>
@@ -120,25 +121,25 @@
       <div ref="{{ setMocks }}" style="grid-column:4; display:flex; flex-direction:column; gap:24px; opacity:0; transition:opacity 1.7s ease;">
 
         <!-- Panel: two ratings phones side by side -->
-        <div style="background:#161616; display:flex; align-items:center; justify-content:center; gap:48px; padding:88px 32px;">
-          <div style="position:relative; width:26%; aspect-ratio:375/812;">
+        <div style="background:#161616; display:flex; align-items:center; justify-content:center; gap:72px; padding:88px 32px;">
+          <div class="m-mock" style="position:relative; width:26%; max-width:750px; aspect-ratio:375/812;">
             <img src="../assets/work/dasher-rewards/ratings-new-dasher.png" alt="" draggable="false" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" />
           </div>
-          <div style="position:relative; width:26%; aspect-ratio:375/812;">
+          <div class="m-mock" style="position:relative; width:26%; max-width:750px; aspect-ratio:375/812;">
             <img src="../assets/work/dasher-rewards/ratings-gold.png" alt="" draggable="false" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" />
           </div>
         </div>
 
         <!-- Panel: three tier phones side by side -->
-        <div style="background:#161616; display:flex; align-items:center; justify-content:center; gap:48px; padding:72px 32px;">
-          <div style="position:relative; width:26%; aspect-ratio:374/812;">
-            <video src="../assets/work/dasher-rewards/silver.mp4" autoplay loop muted playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></video>
+        <div style="background:#161616; display:flex; align-items:center; justify-content:center; gap:72px; padding:72px 32px;">
+          <div class="m-mock" style="position:relative; width:26%; max-width:750px; aspect-ratio:374/812;">
+            <video src="../assets/work/dasher-rewards/silver.webm" autoplay loop muted playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></video>
           </div>
-          <div style="position:relative; width:26%; aspect-ratio:374/812;">
-            <video src="../assets/work/dasher-rewards/gold.mp4" autoplay loop muted playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></video>
+          <div class="m-mock" style="position:relative; width:26%; max-width:750px; aspect-ratio:374/812;">
+            <video src="../assets/work/dasher-rewards/gold.webm" autoplay loop muted playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></video>
           </div>
-          <div style="position:relative; width:26%; aspect-ratio:374/812;">
-            <video src="../assets/work/dasher-rewards/platinum.mp4" autoplay loop muted playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></video>
+          <div class="m-mock" style="position:relative; width:26%; max-width:750px; aspect-ratio:374/812;">
+            <video src="../assets/work/dasher-rewards/platinum.webm" autoplay loop muted playsinline style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></video>
           </div>
         </div>
 
@@ -147,9 +148,9 @@
 
     <!-- Next project -->
     <div ref="{{ setNext }}" style="text-align:center; padding:24vh 0 22vh; opacity:0;">
-      <a href="#" style="display:inline-block; color:#ececf0;" onMouseEnter="{{ meltInBig }}" onMouseLeave="{{ meltOutBig }}">
+      <a href="./mobilization.dc.html" target="_self" style="display:inline-block; color:#ececf0;" onMouseEnter="{{ meltInBig }}" onMouseLeave="{{ meltOutBig }}" onClick="{{ goNext }}">
         <span ref="{{ setNextEyebrow }}" style="display:block; font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ffffff;">Next project</span>
-        <span ref="{{ setNextTitle }}" style="display:block; margin-top:12px; font-weight:300; font-size:clamp(48px,8vw,104px); line-height:1.0; letter-spacing:-4px; text-transform:none; color:#ffffff;">Dasher Rewards</span>
+        <span ref="{{ setNextTitle }}" style="display:block; margin-top:12px; font-weight:300; font-size:clamp(48px,8vw,104px); line-height:1.0; letter-spacing:-4px; text-transform:none; color:#ffffff;">dasher mobilization</span>
       </a>
     </div>
 
@@ -174,6 +175,7 @@ class Component extends DCLogic {
     window.addEventListener('scroll', this._onScroll, { passive: true });
     this._onScroll();
     this._enter();
+    { const snap = () => { const W = document.documentElement.clientWidth, half = W / 2; document.documentElement.style.setProperty('--cw', W + 'px'); document.documentElement.style.setProperty('--hw', half + 'px'); let line = half + 128 * Math.round((0.33 * W - half) / 128); if (line - 56 < 220) line += 128; document.documentElement.style.setProperty('--mockL', line + 'px'); }; snap(); window.addEventListener('resize', snap); }
     this._watchContent();
     this._watchNext();
     this._keepPlaying();
@@ -297,7 +299,7 @@ class Component extends DCLogic {
   _layout() {
     const intro = this.introEl, content = this.contentEl;
     if (!intro || !content) return;
-    const vw = window.innerWidth, vh = window.innerHeight;
+    const vw = document.documentElement.clientWidth, vh = window.innerHeight;
     // vertical divider — snap to a crosshair column (vw/2 + 128k), where the crosshairs sit
     const lineBase = vw / 2;
     const lineX = lineBase + 128 * Math.round((vw / 3 - lineBase) / 128);
@@ -365,8 +367,21 @@ class Component extends DCLogic {
       setNext: (el) => { this.nextEl = el; },
       setNextEyebrow: (el) => { this.nextEyebrowEl = el; },
       setNextTitle: (el) => { this.nextTitleEl = el; },
+      setMain: (el) => { this.mainEl = el; },
+      goNext: (e) => {
+        e.preventDefault();
+        if (this._navigating) return; this._navigating = true;
+        const href = e.currentTarget.getAttribute('href');
+        if (this.mainEl) { this.mainEl.style.transition = 'opacity .6s ease'; this.mainEl.style.opacity = '0'; }
+        setTimeout(() => { window.location.href = href; }, 700);
+      },
       goHome: () => { window.location.href = '../index.html'; },
-      goAbout: () => { window.location.href = '../index.html'; },
+      goAbout: () => {
+        if (this._navigating) return; this._navigating = true;
+        try { sessionStorage.setItem('aboutReturn', location.href.split('#')[0]); } catch (e) {}
+        if (this.mainEl) { this.mainEl.style.transition = 'opacity .32s ease'; this.mainEl.style.opacity = '0'; }
+        setTimeout(() => { window.location.href = '../index.html#about'; }, 300);
+      },
     };
   }
 }

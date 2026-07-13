@@ -20,7 +20,7 @@
   a:hover { color: #ffffff; }
   ::selection { background: #8aa0ff; color: #0a0b0e; }
   @keyframes pageEntryFade { from { opacity: 1; } to { opacity: 0; } }
-  @media (min-width: 1800px) { .m-mock { max-width: 960px !important; } .m-oust-panel { padding-top: 128px !important; padding-bottom: 128px !important; } }
+  @media (min-width: 1800px) { .m-mock { max-width: 360px !important; } }
   @keyframes scanMove { from { background-position: 0 0; } to { background-position: 0 60px; } }
   @keyframes crtSweep { 0% { transform: translateY(-14vh); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(112vh); opacity: 0; } }
   @keyframes scanMask { from { -webkit-mask-position: 0 0; mask-position: 0 0; } to { -webkit-mask-position: 0 6px; mask-position: 0 6px; } }
@@ -98,14 +98,14 @@
     <!-- Intro: company + logo, then title (flush left to where the header text starts, 16px) -->
     <div ref="{{ setIntro }}" style="padding:0 16px;">
       <div style="display:flex; align-items:center; gap:12px;">
-        <img ref="{{ setLogo }}" src="../assets/logos/ouster.png" alt="" draggable="false" style="height:30px; width:auto; display:block; filter:brightness(0) invert(1); opacity:0; transition:opacity .5s ease;" />
-        <span ref="{{ setCompany }}" style="font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ececf0; opacity:0;">Ouster</span>
+        <img ref="{{ setLogo }}" src="../assets/logos/doordash.svg" alt="" draggable="false" style="height:22px; width:auto; display:block; filter:brightness(0) invert(1); opacity:0; transition:opacity .5s ease;" />
+        <span ref="{{ setCompany }}" style="font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ececf0; opacity:0;">DoorDash</span>
       </div>
       <div style="display:grid; grid-template-columns:calc(var(--hw, 50vw) + 112px) calc(var(--hw, 50vw) - 144px); gap:0; align-items:end;">
-        <h2 ref="{{ setTitle }}" style="align-self:start; margin:10px 0 0; max-width:calc(var(--hw, 50vw) - 16px); font-weight:300; font-size:clamp(48px,8vw,104px); line-height:0.9; letter-spacing:-4px; text-transform:none; text-wrap:balance; opacity:0;">fleet management</h2>
+        <h2 ref="{{ setTitle }}" style="align-self:start; margin:10px 0 0; max-width:calc(var(--hw, 50vw) - 16px); font-weight:300; font-size:clamp(48px,8vw,104px); line-height:0.9; letter-spacing:-4px; text-transform:none; text-wrap:balance; opacity:0;">in-app chat</h2>
         <div ref="{{ setContext }}" style="align-self:start; transform:translateY(0); opacity:0;">
           <p style="margin:0 0 10px; font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ececf0;">Context</p>
-          <p style="margin:0; font-size:15px; line-height:1.3; letter-spacing:0; text-transform:none; text-align:justify; color:#c6cad4;">Ouster is a lidar technology company that develops high-resolution sensors used to help vehicles and machines perceive the world around them. At the time of this project, Ouster was exploring how software could make its lidar data more actionable for customers.<br><br>I partnered with the team to define a software experience for fleet operators responsible for monitoring driver safety and investigating on-road incidents. The opportunity was to transform complex 3D sensor data into a workflow that enabled safety teams to quickly understand what happened, identify contributing factors, and take action.</p>
+          <p style="margin:0; font-size:15px; line-height:1.3; letter-spacing:0; text-transform:none; text-align:justify; color:#c6cad4;">DoorDash deliveries often require coordination between customers and Dashers, but communication was historically fragmented and dependent on phone calls or text messages outside the app. We saw an opportunity to create a more seamless in-app messaging experience that allowed customers and Dashers to quickly resolve issues, clarify delivery details, and reduce friction throughout the delivery process.</p>
         </div>
       </div>
     </div>
@@ -115,24 +115,19 @@
          mocks start ≈ where the avatar image begins (50% − 76px) and end at the header's right edge (vw − 16px). -->
     <div ref="{{ setContent }}" style="display:grid; grid-template-columns:16px calc(var(--mockL,33%) - 56px) 40px calc(var(--cw, 100%) - var(--mockL,33%) - 16px) 16px; margin-top:120px;">
       <div ref="{{ setStickyText }}" style="grid-column:2; position:sticky; top:92px; align-self:start;">
-        <p ref="{{ setBio }}" style="margin:-0.52em 0 0; width:100%; font-size:18px; line-height:1.6; letter-spacing:0; text-transform:none; color:#c6cad4; opacity:0;">My work focused on designing tools for replaying and analyzing 3D lidar captures, enabling fleet operators and safety teams to navigate incidents from multiple perspectives, inspect environmental conditions, and reconstruct the sequence of events leading up to a safety issue. I also designed annotation and markup capabilities that supported note-taking, collaboration, and documentation throughout the investigation process.</p>
+        <p ref="{{ setBio }}" style="margin:-0.52em 0 0; width:100%; font-size:18px; line-height:1.6; letter-spacing:0; text-transform:none; color:#c6cad4; opacity:0;">I led the design of the end-to-end messaging experience between customers and Dashers, creating a communication system that felt tightly integrated with the delivery journey. The experience surfaced delivery status directly within conversations, making it easier for both parties to maintain context without leaving chat. I also designed glanceable message states and notification touchpoints that made new messages and responses more visible, helping reduce missed communications and improve response times. To support Dashers who are often navigating, driving, or multitasking, I introduced quick-reply actions and voice-friendly shortcuts that enabled faster, safer communication on the go.</p>
       </div>
 
       <div ref="{{ setMocks }}" style="grid-column:4; display:flex; flex-direction:column; gap:24px; opacity:0; transition:opacity 1.7s ease;">
 
-        <!-- Panel 1: web mock -->
-        <div class="m-oust-panel" style="background:#161616; display:flex; align-items:center; justify-content:center; padding:48px;">
-          <video class="m-mock" src="../assets/work/ouster/rotation.webm" autoplay loop muted playsinline style="display:block; width:100%; max-width:1280px; height:auto; border-top:4px solid #000; border-bottom:12px solid #000;"></video>
-        </div>
-
-        <!-- Panel 2: web mock -->
-        <div class="m-oust-panel" style="background:#161616; display:flex; align-items:center; justify-content:center; padding:48px;">
-          <video class="m-mock" src="../assets/work/ouster/notes.webm" autoplay loop muted playsinline style="display:block; width:100%; max-width:1280px; height:auto; border-top:4px solid #000; border-bottom:12px solid #000;"></video>
-        </div>
-
-        <!-- Panel 3: web mock -->
-        <div class="m-oust-panel" style="background:#161616; display:flex; align-items:center; justify-content:center; padding:48px;">
-          <video class="m-mock" src="../assets/work/ouster/view-mode.webm" autoplay loop muted playsinline style="display:block; width:100%; max-width:1280px; height:auto; border-top:4px solid #000; border-bottom:12px solid #000;"></video>
+        <!-- Panel 1: two chat mocks side by side -->
+        <div style="background:#161616; display:flex; align-items:center; justify-content:center; gap:80px; padding:64px 40px;">
+          <div class="m-mock" style="width:42%; max-width:480px; overflow:hidden; line-height:0;">
+            <video src="../assets/work/in-app-chat/comp-1.webm" autoplay loop muted playsinline preload="auto" style="display:block; width:100%; height:auto;"></video>
+          </div>
+          <div class="m-mock" style="width:42%; max-width:480px; overflow:hidden; line-height:0;">
+            <video src="../assets/work/in-app-chat/comp-2.webm" autoplay loop muted playsinline preload="auto" style="display:block; width:100%; height:auto;"></video>
+          </div>
         </div>
 
       </div>
@@ -140,9 +135,9 @@
 
     <!-- Next project -->
     <div ref="{{ setNext }}" style="text-align:center; padding:24vh 0 22vh; opacity:0;">
-      <a href="./in-app-chat.dc.html" target="_self" style="display:inline-block; color:#ececf0;" onMouseEnter="{{ meltInBig }}" onMouseLeave="{{ meltOutBig }}" onClick="{{ goNext }}">
+      <a href="./dasher-rewards.dc.html" target="_self" style="display:inline-block; color:#ececf0;" onMouseEnter="{{ meltInBig }}" onMouseLeave="{{ meltOutBig }}" onClick="{{ goNext }}">
         <span ref="{{ setNextEyebrow }}" style="display:block; font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ffffff;">Next project</span>
-        <span ref="{{ setNextTitle }}" style="display:block; margin-top:12px; font-weight:300; font-size:clamp(48px,8vw,104px); line-height:1.0; letter-spacing:-4px; text-transform:none; color:#ffffff;">in-app chat</span>
+        <span ref="{{ setNextTitle }}" style="display:block; margin-top:12px; font-weight:300; font-size:clamp(48px,8vw,104px); line-height:1.0; letter-spacing:-4px; text-transform:none; color:#ffffff;">dasher rewards</span>
       </a>
     </div>
 
@@ -173,8 +168,6 @@ class Component extends DCLogic {
     this._keepPlaying();
   }
 
-  // Entrance stagger: company scrambles + title goos in (like the index hover), then the context
-  // goos in right after. The content section (bio + mocks) reveals only once it scrolls into view.
   // Mock videos loop forever: some browsers pause them when they scroll out of view or
   // after decode hiccups — nudge them back into play whenever they pause or end.
   _keepPlaying() {
@@ -186,6 +179,8 @@ class Component extends DCLogic {
     });
   }
 
+  // Entrance stagger: company scrambles + title goos in (like the index hover), then the context
+  // goos in right after. The content section (bio + mocks) reveals only once it scrolls into view.
   _enter() {
     if (this.logoEl) this.logoEl.style.opacity = '1';
     if (this.companyEl) { this.companyEl.style.opacity = '1'; this.scrambleIn(this.companyEl, this.companyEl.textContent, 700); }
