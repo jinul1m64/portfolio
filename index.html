@@ -153,6 +153,18 @@
     <span style="justify-self:end;">Brooklyn, NY &nbsp;•&nbsp; <span ref="{{ setHrEl }}">{{ estHours }}</span><span style="animation:colonBlink 1s steps(1,end) infinite;">:</span><span ref="{{ setMinEl }}">{{ estMinutes }}</span> EST</span>
   </footer>
 
+  <!-- Ring minimap (top-right HUD): faint tilted orbit (masked inside the window), small upright poster-devices, dark base + window-clipped bright layer -->
+  <div ref="{{ setMiniWrap }}" style="position:absolute; top:84px; right:2px; width:150px; height:104px; z-index:11; pointer-events:none; opacity:0; transition:opacity .8s ease; transform:scale(1.25); transform-origin:100% 0;">
+    <div style="position:absolute; left:80px; top:77px; width:62px; height:48px; transform:translate(-50%,-50%); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); background:rgba(10,11,14,0.35);"></div>
+    <svg width="150" height="104" style="position:absolute; inset:0; overflow:visible;">
+      <g ref="{{ setMiniRing }}"></g>
+      <path d="M80 74.2 V79.8 M77.2 77 H82.8" stroke="rgba(255,255,255,0.42)" stroke-width="0.8"></path>
+    </svg>
+    <div ref="{{ setMiniDevices }}" style="position:absolute; inset:0; filter:brightness(0.22);"></div>
+    <div ref="{{ setMiniDevicesBright }}" style="position:absolute; inset:0; clip-path:inset(53px 39px 3px 49px); -webkit-clip-path:inset(53px 39px 3px 49px);"></div>
+    <div ref="{{ setMiniWindow }}" style="position:absolute; left:80px; top:77px; width:62px; height:48px; transform:translate(-50%,-50%); border:0.5px solid rgba(255,255,255,0.6); border-radius:0;"></div>
+  </div>
+
   <!-- Hover caption (flat text, scramble-in on hover, above the footer) -->
   <sc-if value="{{ hasHover }}" hint-placeholder-val="{{ false }}">
     <div ref="{{ setCaption }}" style="position:absolute; left:0; right:0; bottom:74px; z-index:16; display:flex; flex-direction:column; align-items:flex-start; padding-left:16px; gap:{{ hoverGap }}; pointer-events:none; mix-blend-mode:difference; animation:spiralFadeIn .2s ease both;">
@@ -290,6 +302,7 @@ class Component extends DCLogic {
     setTimeout(() => { if (this._aboutOpen) { this.setState({ aboutOpen: true }); if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '1'; } }, 800);
     // Longer fade of the spiral + Scroll hint, then the empty page holds ~1s before the About page goo-reveals in.
     if (this.sceneEl) { this.sceneEl.style.transition = 'opacity .8s ease'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
+    if (this.miniWrap) { this.miniWrap.style.opacity = '0'; }
     if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .8s ease'; this.scrollEl.style.opacity = '0'; }
     if (this.aboutEl) { this.aboutEl.style.pointerEvents = 'auto'; this.aboutEl.style.transition = 'none'; this.aboutEl.style.opacity = '0'; }
     clearTimeout(this._aboutTimer);
@@ -318,6 +331,7 @@ class Component extends DCLogic {
     if (this.aboutEl) { this.aboutEl.style.transition = 'opacity .3s ease'; this.aboutEl.style.opacity = '0'; this.aboutEl.style.pointerEvents = 'none'; this.aboutEl.scrollTop = 0; }
     if (instant && this.scrollEl) this.scrollEl.style.opacity = '';
     if (this.sceneEl) { this.sceneEl.style.pointerEvents = ''; if (!instant) { this.sceneEl.style.transition = 'none'; this.sceneEl.style.opacity = '0'; void this.sceneEl.offsetHeight; clearTimeout(this._sceneReveal); this._sceneReveal = setTimeout(() => { if (!this._aboutOpen && this.sceneEl) { this.sceneEl.style.transition = 'opacity 1s ease'; this.sceneEl.style.opacity = '1'; } }, 450); } }
+    if (this.miniWrap) { if (instant) { this.miniWrap.style.opacity = '1'; } else { this.miniWrap.style.transition = 'opacity 1s ease'; clearTimeout(this._miniReveal); this._miniReveal = setTimeout(() => { if (!this._aboutOpen && this.miniWrap) this.miniWrap.style.opacity = '1'; }, 450); } }
   }
 
   // Snap the portrait frame to the background crosshair lattice (the "+" marks sit at 128px multiples
@@ -350,8 +364,9 @@ class Component extends DCLogic {
     this.tick = this.tick.bind(this);
     this._running = true;
     this.raf = requestAnimationFrame(this.tick);
-    this._onResize = () => { this.forceUpdate(); this._sizeMoi && this._sizeMoi(); };
+    this._onResize = () => { this.forceUpdate(); this._sizeMoi && this._sizeMoi(); this._alignMini && this._alignMini(); };
     window.addEventListener('resize', this._onResize);
+    this._alignMini && this._alignMini();
     // Randomised CRT sweep: fires at uneven, infrequent intervals.
     this._runSweep = () => {
       const b = this.sweepEl;
@@ -456,6 +471,7 @@ class Component extends DCLogic {
     const chrome = [this.headerEl, this.footerEl, this.avatarEl].filter(Boolean);
     const scene = this.sceneEl;
     chrome.forEach(el => { el.style.opacity = '0'; el.style.filter = ''; });
+    if (this.miniWrap) { this.miniWrap.style.transition = 'none'; this.miniWrap.style.opacity = '0'; }
     if (scene) { scene.style.transition = 'none'; scene.style.opacity = '0'; }
     if (loader) { loader.style.display = ''; loader.style.visibility = ''; loader.style.transition = 'none'; loader.style.opacity = '1'; }
     if (pctEl) { pctEl.style.opacity = ''; pctEl.style.filter = ''; pctEl.textContent = '0%'; }
@@ -512,10 +528,94 @@ class Component extends DCLogic {
         this.meltRevealMany(foot, () => {
           // 4) spiral fades in (opacity only) over 1s — enable device hovers once it's fully in
           if (this.sceneEl) { this.sceneEl.style.transition = 'opacity 1s ease'; this.sceneEl.style.opacity = '1'; }
+          if (this.miniWrap) { this.miniWrap.style.transition = 'opacity 1s ease'; this.miniWrap.style.opacity = '1'; }
           setTimeout(() => { this._booting = false; }, 1000);
         });
       });
     });
+  }
+
+  // Nudge the minimap up so its inner crosshair lands on the nearest background grid line above it.
+  _alignMini() {
+    if (!this.miniWrap) return;
+    const SPACING = 128, base = window.innerHeight / 2;        // background crosshair rows: ih/2 + 128k
+    const crossOff = 77 * 1.25;                                // crosshair local-y (77) * minimap scale
+    const crossY = 84 + crossOff;                              // current crosshair screen-Y (top:84 baseline)
+    const lineY = base + SPACING * Math.round((crossY - base) / SPACING);   // nearest crosshair row
+    this.miniWrap.style.top = Math.round(lineY - crossOff) + 'px';
+  }
+
+  // Build the orbit as a ring of mini squares (like the footer • bullet). Squares inside the window are darker.
+  _buildMiniRing() {
+    const g = this.miniRing;
+    if (!g || g._built) return;
+    g._built = true;
+    const NS = 'http://www.w3.org/2000/svg';
+    const CX = 75, CY = 52, AX = 64, AY = 23, rad = Math.PI / 180, TLT = 18 * rad;
+    const c = Math.cos(TLT), s = Math.sin(TLT);
+    const RCX = 80, RCY = 77, RW = 62, RH = 48;
+    const rL = RCX - RW / 2, rR = RCX + RW / 2, rT = RCY - RH / 2, rB = RCY + RH / 2;
+    const N = 32, SZ = 1.8;
+    for (let k = 0; k < N; k++) {
+      const t = (k / N) * 2 * Math.PI;
+      const lx = AX * Math.cos(t), ly = AY * Math.sin(t);
+      const x = CX + (lx * c - ly * s), y = CY + (lx * s + ly * c);
+      const inside = (x >= rL && x <= rR && y >= rT && y <= rB);
+      const r = document.createElementNS(NS, 'rect');
+      r.setAttribute('x', (x - SZ / 2).toFixed(2)); r.setAttribute('y', (y - SZ / 2).toFixed(2));
+      r.setAttribute('width', SZ); r.setAttribute('height', SZ);
+      r.setAttribute('fill', inside ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.28)');
+      g.appendChild(r);
+    }
+  }
+
+  // Build the minimap device markers in TWO layers: a dark base (all devices) and a bright copy that the
+  // template clips to the window — so a device straddling the outline reads dark outside / bright inside.
+  _buildMiniDevices() {
+    const dark = this.miniDevices, bright = this.miniDevicesBright;
+    if (!dark || !bright || dark._built) return;
+    dark._built = true;
+    const mocks = this.mocks;
+    this._miniMarks = [];
+    const make = (base, w, h, parent) => {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'position:absolute; left:0; top:0; width:0; height:0; perspective:120px; will-change:transform;';
+      const inner = document.createElement('div');
+      inner.style.cssText = 'position:absolute; left:0; top:0; transform-style:preserve-3d;';
+      const body = document.createElement('div');
+      body.style.cssText = 'position:absolute; width:' + w + 'px; height:' + h + 'px; left:' + (-w / 2) + 'px; top:' + (-h / 2) + 'px; border-radius:3px; border:1px solid rgba(255,255,255,0.55); background-image:url("' + base.img + '"); background-size:cover; background-position:center; box-shadow:0 1px 4px rgba(0,0,0,0.5); transition:transform .35s cubic-bezier(.22,.61,.36,1);';
+      inner.appendChild(body); wrap.appendChild(inner); parent.appendChild(wrap);
+      return { wrap, inner };
+    };
+    for (let i = this.FROM; i <= this.TO; i++) {
+      const base = mocks[this.mod(i, this.PER_TURN)];
+      const land = base.o === 'landscape';
+      const w = land ? 22 : 12, h = land ? 15 : 26;
+      this._miniMarks.push({ i, a: this.slotAngle(i), depth: 0, d: make(base, w, h, dark), b: make(base, w, h, bright) });
+    }
+  }
+
+  // Advance the minimap markers: position on the tilted ellipse, each device UPRIGHT with a rotateY turn
+  // (same standing-upright behaviour as the big ring). Dark + bright layers get identical transforms.
+  _tickMini() {
+    if (!this._miniMarks) return;
+    const CX = 75, CY = 52, AX = 64, AY = 23, rad = Math.PI / 180;
+    const TLT = 18 * rad, cosTlt = Math.cos(TLT), sinTlt = Math.sin(TLT);
+    for (const m of this._miniMarks) {
+      const phi = (m.a + this.spin) * rad;
+      m.depth = Math.cos(phi);                          // +1 = front (near camera)
+      const lx = AX * Math.sin(phi), ly = AY * Math.cos(phi);   // phi=0 -> bottom (front)
+      const sx = CX + (lx * cosTlt - ly * sinTlt);
+      const sy = CY + (lx * sinTlt + ly * cosTlt);
+      const hov = (m.i === this.state.hovered);
+      const s = 0.7 + 0.3 * ((m.depth + 1) / 2);
+      const tf = 'translate(' + sx.toFixed(2) + 'px,' + sy.toFixed(2) + 'px) scale(' + s.toFixed(3) + ')';
+      const rot = 'rotateY(' + ((m.a + this.spin)).toFixed(1) + 'deg)';
+      const z = String(Math.round((m.depth + 1) * 100));
+      const bscale = hov ? 'scale(1.4)' : 'scale(1)';   // hover emphasis eased by the body's CSS transition (matches big ring)
+      m.d.wrap.style.transform = tf; m.d.wrap.style.zIndex = z; m.d.inner.style.transform = rot; m.d.inner.firstChild.style.transform = bscale;
+      m.b.wrap.style.transform = tf; m.b.wrap.style.zIndex = z; m.b.inner.style.transform = rot; m.b.inner.firstChild.style.transform = bscale;
+    }
   }
 
   // Gooey resolve on several elements at once, driving the shared reveal blur.
@@ -752,6 +852,7 @@ class Component extends DCLogic {
       this.spin += this.dragMomentum * dt;
     }
     this.dragMomentum *= Math.pow(0.9, dt * 60);
+    this._tickMini();
     if (Math.abs(this.dragMomentum) < 0.02) this.dragMomentum = 0;
 
     // Selected arrow spins around its own long (diagonal) axis — dolphin-style — at the ring's angular speed.
@@ -1121,7 +1222,7 @@ class Component extends DCLogic {
       scanStyle: {
         position: 'absolute', inset: 0, zIndex: 12, pointerEvents: 'none', overflow: 'hidden',
         opacity: 1,
-        backgroundImage: 'repeating-linear-gradient(to bottom, rgba(128,128,128,0.06) 0px, rgba(128,128,128,0.06) 3px, transparent 3px, transparent 6px)',
+        backgroundImage: 'repeating-linear-gradient(to bottom, rgba(128,128,128,0.09) 0px, rgba(128,128,128,0.09) 3px, transparent 3px, transparent 6px)',
         animation: 'scanMove 1.2s linear infinite',
       },
       setSweep: (el) => { this.sweepEl = el; },
@@ -1182,6 +1283,11 @@ class Component extends DCLogic {
       disp: this._displayHover || {},
       hover: shownHov ? { company: shownHov.company + '\u2002\u2002\u2022\u2002\u2002Coming soon', title: shownHov.title } : {},
       setHelix: (el) => { this.helixEl = el; },
+      setMiniWrap: (el) => { this.miniWrap = el; },
+      setMiniRing: (el) => { this.miniRing = el; this._buildMiniRing && this._buildMiniRing(); },
+      setMiniDevices: (el) => { this.miniDevices = el; this._buildMiniDevices && this._buildMiniDevices(); },
+      setMiniDevicesBright: (el) => { this.miniDevicesBright = el; this._buildMiniDevices && this._buildMiniDevices(); },
+      setMiniWindow: (el) => { this.miniWindow = el; },
       onDown: (e) => { if (e.target && e.target.closest && e.target.closest('a, h1, [data-clickable]')) return; this.dragging = true; this.lastX = e.clientX; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} if (e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grabbing'; },
       onMove: (e) => { if (!this.dragging) return; const dx = e.clientX - this.lastX; this.lastX = e.clientX; this.spin += dx * 0.28; this.dragMomentum = dx * 12; },
       onUp: (e) => { this.dragging = false; if (e && e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grab'; },
