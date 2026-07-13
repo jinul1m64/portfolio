@@ -937,7 +937,7 @@ class Component extends DCLogic {
       e.el.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${(p.sc * GSCALE).toFixed(3)})`;
       e.el.style.zIndex = isHov ? '5000' : String(1000 + Math.round(p.z2));
       const inner = e.el.firstElementChild;
-      if (inner) inner.style.transform = `translate(-50%,-50%) rotateY(${phi.toFixed(2)}deg)`;
+      if (inner) inner.style.transform = `perspective(1200px) translate(-50%,-50%) rotateY(${phi.toFixed(2)}deg)`;
       // Fade across the front arc — asymmetric: the incoming (top-left) device reveals a touch
       // later, the outgoing (bottom-right) device hides a touch sooner.
       const sinth = Math.sin(th);
@@ -1156,14 +1156,14 @@ class Component extends DCLogic {
         style: {
           position: 'absolute', top: 0, left: 0, width: '1px', height: '1px',
           transform: 'none',   // billboard position/scale driven per-frame in tick()
-          perspective: '1200px',   // gives the inner rotateY its 3D turn (origin at device centre)
+          // (perspective moved onto the inner's own transform so this element stays 2D — Safari won't paint SVG filters on a 3D-context element)
           '--f': 1,
           zIndex: isHov ? 30 : 1,
         },
         innerStyle: {
           position: 'absolute', left: 0, top: 0, width: W + 'px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transform: `translate(-50%,-50%) scale(${scv})`,   // tick() sets rotateY + hover scale
+          transform: `perspective(1200px) translate(-50%,-50%) scale(${scv})`,   // tick() sets rotateY + hover scale; perspective() keeps the 3D turn while the outer stays 2D (Safari filter fix)
           transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
           cursor: 'pointer',
         },
@@ -1222,7 +1222,7 @@ class Component extends DCLogic {
       scanStyle: {
         position: 'absolute', inset: 0, zIndex: 12, pointerEvents: 'none', overflow: 'hidden',
         opacity: 1,
-        backgroundImage: 'repeating-linear-gradient(to bottom, rgba(128,128,128,0.09) 0px, rgba(128,128,128,0.09) 3px, transparent 3px, transparent 6px)',
+        backgroundImage: 'repeating-linear-gradient(to bottom, rgba(128,128,128,0.075) 0px, rgba(128,128,128,0.075) 3px, transparent 3px, transparent 6px)',
         animation: 'scanMove 1.2s linear infinite',
       },
       setSweep: (el) => { this.sweepEl = el; },
