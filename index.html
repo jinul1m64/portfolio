@@ -234,7 +234,7 @@
       <button ref="{{ setArrowLeftBtn }}" onClick="{{ selLeft }}" data-clickable="" aria-label="Rotate ring toward top-left" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
         <div ref="{{ setArrowLeftInner }}" style="width:100%; height:100%; position:relative; transform-style:preserve-3d;"></div>
       </button>
-      <span style="font-family:'Doto'; font-size:22px;">Scroll</span>
+      <span style="font-family:'Doto'; font-size:22px; margin-right:-5px;">Scroll</span>
       <button ref="{{ setArrowRightBtn }}" onClick="{{ selRight }}" data-clickable="" aria-label="Rotate ring toward bottom-right" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
         <div ref="{{ setArrowRightInner }}" style="width:100%; height:100%; position:relative; transform-style:preserve-3d;"></div>
       </button>
@@ -1270,7 +1270,7 @@ class Component extends DCLogic {
       this._curSlot = frontSlot;
       const mi = this.mod(frontSlot, this.PER_TURN);
       const m = this.mocks[mi];
-      const num = String(mi + 1).padStart(3, '0');
+      const num = String(this.mod(-mi, this.PER_TURN) + 1).padStart(3, '0');
       if (this.bgCompanyEl) this.scramble(this.bgCompanyEl, (m.company || '').toUpperCase());
       if (this.bgTitleEl) this.scramble(this.bgTitleEl, (m.title || '').toUpperCase());
       if (this.bgNumLEl) this.scramble(this.bgNumLEl, num);
