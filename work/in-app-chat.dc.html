@@ -80,6 +80,7 @@
   @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal Bold'), url('../assets/fonts/extra2.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
   @font-face { font-family: 'Doto'; src: url('../assets/fonts/Doto-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
   * { box-sizing: border-box; }
+  * { cursor: none !important; }
   html, body { margin: 0; height: 100%; background: #0a0b0e; }
   a { color: #ececf0; text-decoration: none; transition: filter .26s ease, opacity .26s ease; }
   a:hover { color: #ffffff; }
@@ -103,7 +104,7 @@
   <div style="position:fixed; inset:0; z-index:0; pointer-events:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.16)' stroke-width='1'/%3E%3C/svg%3E&quot;), linear-gradient(to right, rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.08) 1px, transparent 1px); background-size:128px 128px, 128px 128px, 128px 128px; background-position:50% 50%, calc(50% + 64px) calc(50% + 64px), calc(50% + 64px) calc(50% + 64px); -webkit-mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%); mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%);"></div>
 
   <!-- Subtle darkened vignette -->
-  <div style="position:fixed; inset:0; z-index:8; pointer-events:none; background:radial-gradient(115% 95% at 50% 50%, rgba(0,0,0,0) 42%, rgba(0,0,0,.72) 100%);"></div>
+  <div style="position:fixed; inset:0; z-index:0; pointer-events:none; background:linear-gradient(to right, rgba(0,0,0,.72) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,.72) 100%), radial-gradient(120% 100% at 50% 50%, rgba(0,0,0,0) 36%, rgba(0,0,0,.86) 100%);"></div>
 
   <!-- Progressive-blur header backdrop (matches index: strong blur at the top edge, unblurs inward) -->
   <div style="position:fixed; top:0; left:0; right:0; height:172px; z-index:6; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to bottom,rgba(10,11,14,.72),rgba(10,11,14,0));"></div>
@@ -139,7 +140,7 @@
   <!-- Persistent header (copied from the index screen: melt-on-hover) -->
   <header style="position:fixed; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:16; pointer-events:none; mix-blend-mode:difference;">
     <div style="pointer-events:auto;">
-      <h1 style="margin:0; font-family:'PP Neue Montreal'; font-weight:350; font-size:40px; line-height:.94; letter-spacing:-1.5px; text-transform:lowercase; cursor:pointer;" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goHome }}">Jason Lim</h1>
+      <h1 style="margin:0; font-family:'PP Neue Montreal'; font-weight:350; font-size:40px; line-height:.94; letter-spacing:-1.5px; text-transform:lowercase; cursor:pointer;" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" data-clickable="true" onClick="{{ goHome }}">Jason Lim</h1>
     </div>
     <nav class="m-hide-mobile" style="pointer-events:auto; display:flex; gap:26px; align-items:center;">
       <a href="mailto:jason.jinulim@gmail.com" style="font-family:'PP Neue Montreal'; font-weight:350; font-size:40px; line-height:.94; letter-spacing:-1.5px; text-transform:lowercase; color:#ececf0;" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}">Contact</a>
@@ -149,7 +150,7 @@
   <!-- Center avatar + About toggle (kept out of the header's difference blend so the photo stays true colour) -->
   <div class="m-avatar" style="position:fixed; top:0px; left:0; right:0; z-index:16; display:flex; justify-content:center; pointer-events:none;">
     <div style="position:relative; display:flex; align-items:center; gap:12px;">
-      <div style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer;" data-clickable="true" onClick="{{ goAbout }}">
+      <div style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer; pointer-events:auto;" data-clickable="true" onClick="{{ goAbout }}">
         <img src="../assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block;" />
       </div>
       <span style="font-family:'PP Neue Montreal'; font-weight:350; font-size:40px; letter-spacing:-1.5px; text-transform:lowercase; color:#ececf0; pointer-events:auto; mix-blend-mode:difference; cursor:pointer;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goAbout }}">About</span>
@@ -209,10 +210,47 @@
 
 </div>
 
+  <!-- Custom crosshair cursor + "CLICK TO VIEW" scramble over clickable elements -->
+  <div ref="{{ setCursorBlur }}" class="m-hide-mobile" style="position:fixed; left:0; top:0; z-index:8999; pointer-events:none; mix-blend-mode:difference; opacity:0; will-change:transform; transition:opacity .18s ease, transform .25s cubic-bezier(.22,.61,.36,1);"><div ref="{{ setCursorBlurInner }}" style="position:absolute; left:-26px; top:-26px; width:52px; height:52px; border-radius:0; background:#ffffff; transform:scale(.55); transition:transform .2s cubic-bezier(.22,.61,.36,1);"></div></div>
+  <div ref="{{ setCursorTextBg }}" class="m-hide-mobile" style="position:fixed; left:0; top:0; z-index:8998; pointer-events:none; mix-blend-mode:difference; opacity:0; will-change:transform; transition:opacity .18s ease, transform .25s cubic-bezier(.22,.61,.36,1);"><span ref="{{ setCursorTextBgLabel }}" style="position:absolute; left:26px; top:26px; display:inline-block; padding:4px 7px; background:#ffffff; color:transparent; border-radius:0; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; white-space:nowrap;"></span></div>
+  <div ref="{{ setCursorEl }}" class="m-hide-mobile" style="position:fixed; left:0; top:0; z-index:9000; pointer-events:none; mix-blend-mode:difference; opacity:0; will-change:transform;">
+    <svg width="40" height="40" style="position:absolute; left:-20px; top:-20px; display:block; overflow:visible;">
+      <g ref="{{ setCursorScale }}" style="transition:transform .2s cubic-bezier(.22,.61,.36,1); transform-box:fill-box; transform-origin:center; transform:scale(0.9);">
+        <path d="M20 14 V26 M14 20 H26" stroke="#ffffff" stroke-width="1"></path>
+        <g ref="{{ setCursorCorners }}" style="transition:transform .2s cubic-bezier(.22,.61,.36,1); transform-box:fill-box; transform-origin:center;">
+          <path d="M4 9 V4 H9 M31 4 H36 V9 M36 31 V36 H31 M9 36 H4 V31" stroke="#ffffff" stroke-width="1" fill="none"></path>
+        </g>
+      </g>
+    </svg>
+    <span ref="{{ setCursorLabel }}" style="position:absolute; left:33px; top:30px; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; white-space:nowrap; color:#ffffff; opacity:0; transition:opacity .18s ease;"></span>
+  </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   componentDidMount() {
+    this._onCursorMove = (e) => {
+      if (this.cursorEl) { this.cursorEl.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)'; if (this.cursorEl.style.opacity !== '1') this.cursorEl.style.opacity = '1'; }
+      if (this.cursorBlur) this.cursorBlur.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
+      if (this.cursorTextBg) this.cursorTextBg.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
+      const t = (e.target && e.target.closest) ? e.target.closest('a[href], [data-clickable]') : null;
+      const label = t ? 'CLICK TO VIEW' : null;
+      if (label !== this._cursorLabelText) {
+        this._cursorLabelText = label;
+        if (this.cursorScale) this.cursorScale.style.transform = label ? 'scale(0.82)' : 'scale(0.9)';
+        if (this.cursorBlur) this.cursorBlur.style.opacity = label ? '1' : '0';
+        if (this.cursorTextBg) this.cursorTextBg.style.opacity = label ? '1' : '0';
+        if (label && this.cursorTextBgLabel) this.cursorTextBgLabel.textContent = label;
+        if (this.cursorBlurInner) this.cursorBlurInner.style.transform = label ? 'scale(1)' : 'scale(.55)';
+        if (this.cursorCorners) this.cursorCorners.style.transform = label ? 'scale(2.0)' : 'scale(1)';
+        if (this.cursorLabel) {
+          if (label) { cancelAnimationFrame(this._curScrRaf); this.cursorLabel.style.opacity = '1'; this._cursorIn(this.cursorLabel, label, 400); }
+          else this._labelOut(this.cursorLabel, 220, 'CLICK TO VIEW');
+        }
+      }
+    };
+    window.addEventListener('pointermove', this._onCursorMove, { passive: true });
+    this._onCursorLeaveWin = () => { if (this.cursorEl) this.cursorEl.style.opacity = '0'; };
+    document.addEventListener('mouseleave', this._onCursorLeaveWin);
     this._layout();
     this._onResize = () => this._layout();
     window.addEventListener('resize', this._onResize);
@@ -349,6 +387,39 @@ class Component extends DCLogic {
   }
 
   // Scramble-in: cycle random glyphs, resolving left-to-right into the final text (matches the index eyebrow).
+  _cursorIn(el, text, dur) {
+    if (!el) return;
+    cancelAnimationFrame(this._curScrRaf);
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#*';
+    const t0 = performance.now();
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      const resolved = Math.floor(k * text.length);
+      let out = '';
+      for (let i = 0; i < text.length; i++) { const c = text[i]; if (i < resolved || c === ' ') out += c; else out += chars[(Math.random() * chars.length) | 0]; }
+      el.textContent = out;
+      if (k < 1) this._curScrRaf = requestAnimationFrame(step);
+      else el.textContent = text;
+    };
+    this._curScrRaf = requestAnimationFrame(step);
+  }
+  _labelOut(el, dur, text) {
+    if (!el) return;
+    cancelAnimationFrame(this._curScrRaf);
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#*';
+    const t0 = performance.now();
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      const resolved = Math.floor((1 - k) * text.length);
+      let out = '';
+      for (let i = 0; i < text.length; i++) { const c = text[i]; if (i < resolved || c === ' ') out += c; else out += chars[(Math.random() * chars.length) | 0]; }
+      el.textContent = out;
+      el.style.opacity = String(Math.min(1, (1 - k) / 0.3));
+      if (k < 1) this._curScrRaf = requestAnimationFrame(step);
+      else { el.style.opacity = '0'; el.textContent = ''; }
+    };
+    this._curScrRaf = requestAnimationFrame(step);
+  }
   scrambleIn(el, finalText, dur) {
     if (!el) return;
     cancelAnimationFrame(this._scrRaf);
@@ -448,6 +519,14 @@ class Component extends DCLogic {
       setNextEyebrow: (el) => { this.nextEyebrowEl = el; },
       setNextTitle: (el) => { this.nextTitleEl = el; },
       setMain: (el) => { this.mainEl = el; },
+      setCursorEl: (el) => { this.cursorEl = el; },
+      setCursorLabel: (el) => { this.cursorLabel = el; },
+      setCursorScale: (el) => { this.cursorScale = el; },
+      setCursorBlur: (el) => { this.cursorBlur = el; },
+      setCursorTextBg: (el) => { this.cursorTextBg = el; },
+      setCursorTextBgLabel: (el) => { this.cursorTextBgLabel = el; },
+      setCursorBlurInner: (el) => { this.cursorBlurInner = el; },
+      setCursorCorners: (el) => { this.cursorCorners = el; },
       goNext: (e) => {
         e.preventDefault();
         if (this._navigating) return; this._navigating = true;

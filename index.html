@@ -99,6 +99,7 @@
   @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal Bold'), url('./assets/fonts/extra2.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
   @font-face { font-family: 'Doto'; src: url('./assets/fonts/Doto-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
   * { box-sizing: border-box; }
+  * { cursor: none !important; }
   html, body { margin: 0; height: 100%; background: #0a0b0e; overflow: hidden; }
   a { color: #8aa0ff; text-decoration: none; transition: filter .26s ease, opacity .26s ease; }
   a:hover { color: #ffffff; }
@@ -132,7 +133,7 @@
 <div ref="{{ setRoot }}" style="position: fixed; inset: 0; background: #000000; font-family: PP Neue Montreal; color: #ececf0; overflow: hidden; cursor: grab; user-select: none; font-weight: 300; text-transform: uppercase; font-size: 32px; line-height: 1" onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" onPointerLeave="{{ onUp }}" onWheel="{{ onWheel }}">
 
   <!-- Gridded background (haoqi-style): faint fixed lattice behind everything -->
-  <div style="position:absolute; inset:0; z-index:0; pointer-events:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.14)' stroke-width='1'/%3E%3C/svg%3E&quot;), linear-gradient(to right, rgba(255,255,255,.065) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.065) 1px, transparent 1px); background-size:128px 128px, 128px 128px, 128px 128px; background-position:50% 50%, calc(50% + 64px) calc(50% + 64px), calc(50% + 64px) calc(50% + 64px); -webkit-mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%); mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%);"></div>
+  <div style="position:absolute; inset:0; z-index:0; pointer-events:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.2)' stroke-width='1'/%3E%3C/svg%3E&quot;), linear-gradient(to right, rgba(255,255,255,.095) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.095) 1px, transparent 1px); background-size:128px 128px, 128px 128px, 128px 128px; background-position:50% 50%, calc(50% + 64px) calc(50% + 64px), calc(50% + 64px) calc(50% + 64px); -webkit-mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%); mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%);"></div>
 
   <!-- Cursor "soft light": a brighter copy of the grid revealed only under a radial gradient that follows the pointer (à la stitch.withgoogle.com) -->
   <!-- "Slurbt"-style glitch: stepped horizontal tear + RGB split (applied to non-hovered devices) -->
@@ -170,18 +171,18 @@
   </svg>
 
   <!-- Spiral scene -->
-  <div ref="{{ setScene }}" style="position:absolute; inset:0; opacity:0;">
-    <!-- Background readout: company + current case-study title sit BEHIND the devices -->
-    <div style="position:absolute; inset:0; z-index:0; pointer-events:none; opacity:0.6;">
-      <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:0px; text-align:center;">
-        <div ref="{{ setBgCompany }}" style="font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; text-transform:uppercase; white-space:nowrap; line-height:1; color:#ececf0;">DoorDash</div>
-        <div ref="{{ setBgTitle }}" style="font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; text-transform:uppercase; white-space:nowrap; line-height:1; color:#ececf0;">dasher rewards</div>
-      </div>
-    </div>
-    <!-- Numerators overlay ON TOP of the spiral, blended (difference) like the header -->
+  <div ref="{{ setScene }}" style="position:absolute; inset:0; z-index:2; opacity:0;">
+    <!-- Company names (mirrored) + L/R numerators overlay ON TOP of the spiral, blended (difference) like the header -->
     <div style="position:absolute; inset:0; z-index:4000; pointer-events:none; mix-blend-mode:difference; opacity:0.6;">
+      <div ref="{{ setBgCompanyLWrap }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; text-transform:uppercase; white-space:nowrap; line-height:1; color:#ececf0;">[&nbsp;<span ref="{{ setBgCompanyL }}">DoorDash</span>&nbsp;]</div>
+      <div ref="{{ setBgCompanyRWrap }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; text-transform:uppercase; white-space:nowrap; line-height:1; color:#ececf0;">[&nbsp;<span ref="{{ setBgCompanyR }}">DoorDash</span>&nbsp;]</div>
       <div ref="{{ setBgNumL }}" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; line-height:1; color:#ececf0;">001</div>
       <div ref="{{ setBgNumR }}" style="position:absolute; right:16px; top:50%; transform:translateY(-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; line-height:1; color:#ececf0; text-align:right;">001</div>
+    </div>
+    <!-- Company logos, one meridian line in from each number — white, difference-blended. Fixed box keeps the flip axis constant across marks. -->
+    <div style="position:absolute; inset:0; z-index:4001; pointer-events:none; mix-blend-mode:difference; opacity:1;">
+      <div ref="{{ setBgLogoLWrap }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:34px; height:20px; perspective:340px;"><div ref="{{ setBgLogoLFlip }}" style="position:absolute; inset:0;"><img ref="{{ setBgLogoL }}" alt="" draggable="false" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); height:16px; width:auto; filter:brightness(0) invert(1);" /></div></div>
+      <div ref="{{ setBgLogoRWrap }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:34px; height:20px; perspective:340px;"><div ref="{{ setBgLogoRFlip }}" style="position:absolute; inset:0;"><img ref="{{ setBgLogoR }}" alt="" draggable="false" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); height:16px; width:auto; filter:brightness(0) invert(1);" /></div></div>
     </div>
     <div ref="{{ setHelix }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); will-change:transform;">
       <sc-for list="{{ cards }}" as="card" hint-placeholder-count="0">
@@ -196,7 +197,7 @@
   </div>
 
   <!-- Subtle darkened vignette -->
-  <div style="position:absolute; inset:0; z-index:8; pointer-events:none; background:radial-gradient(115% 95% at 50% 50%, rgba(0,0,0,0) 42%, rgba(0,0,0,.72) 100%);"></div>
+  <div style="position:absolute; inset:0; z-index:0; pointer-events:none; background:linear-gradient(to right, rgba(0,0,0,.72) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,.72) 100%), radial-gradient(120% 100% at 50% 50%, rgba(0,0,0,0) 36%, rgba(0,0,0,.86) 100%);"></div>
 
   <!-- CRT scanline overlay + occasional bright sweep line (hidden on hover) -->
   <div ref="{{ setScanEl }}" style="{{ scanStyle }}">
@@ -210,7 +211,7 @@
   <!-- Header -->
   <header ref="{{ setHeaderEl }}" style="position:absolute; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:16; pointer-events:none; mix-blend-mode:difference; opacity:0;">
     <div style="pointer-events:auto;">
-      <h1 style="margin:0; font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; cursor:pointer;" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goHome }}">Jason Lim</h1>
+      <h1 style="margin:0; font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; cursor:pointer;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goHome }}">Jason Lim</h1>
     </div>
     <nav class="m-hide-mobile" style="pointer-events:auto; display:flex; gap:26px; align-items:center;">
       <a href="mailto:jason.jinulim@gmail.com" style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ececf0;" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ contact }}">Contact</a>
@@ -220,7 +221,7 @@
   <!-- Center avatar (kept out of the header's difference blend so the photo stays true colour) -->
   <div ref="{{ setAvatarEl }}" class="m-avatar" style="position:absolute; top:0px; left:0; right:0; z-index:16; display:flex; justify-content:center; pointer-events:none; opacity:0;">
     <div style="position:relative; height:52px; display:flex; align-items:center; gap:12px;">
-      <div ref="{{ setProfileWrap }}" style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer; transition:opacity .5s ease;" data-clickable="true" onClick="{{ avatarClick }}">
+      <div ref="{{ setProfileWrap }}" style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer; pointer-events:auto; transition:opacity .5s ease;" data-clickable="true" onClick="{{ avatarClick }}">
         <img ref="{{ setProfileImg }}" src="./assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block; transition:opacity .5s ease;" />
       </div>
       <span ref="{{ setAboutLabelEl }}" style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ececf0; pointer-events:auto; mix-blend-mode:difference; cursor:pointer; transition:opacity .5s ease;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ avatarClick }}">{{ aboutLabel }}</span>
@@ -231,33 +232,48 @@
   <footer ref="{{ setFooterEl }}" style="position:absolute; bottom:0; left:0; right:0; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px; z-index:16; pointer-events:none; font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff; mix-blend-mode:difference; opacity:0;">
     <span ref="{{ setUpdatedEl }}" class="m-hide-mobile" style="justify-self:start;">Last updated 2026</span>
     <div ref="{{ setScrollEl }}" style="justify-self:center; display:flex; align-items:center; gap:8px; transition:opacity .5s ease;">
-      <button ref="{{ setArrowLeftBtn }}" onClick="{{ selLeft }}" data-clickable="" aria-label="Rotate ring toward top-left" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
+      <button ref="{{ setArrowLeftBtn }}" onClick="{{ selLeft }}" data-clickable="" data-cursor-label="CHANGE DIRECTION" aria-label="Rotate ring toward top-left" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
         <div ref="{{ setArrowLeftInner }}" style="width:100%; height:100%; position:relative; transform-style:preserve-3d;"></div>
       </button>
       <span style="font-family:'Doto'; font-size:22px; margin-right:-5px;">Scroll</span>
-      <button ref="{{ setArrowRightBtn }}" onClick="{{ selRight }}" data-clickable="" aria-label="Rotate ring toward bottom-right" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
+      <button ref="{{ setArrowRightBtn }}" onClick="{{ selRight }}" data-clickable="" data-cursor-label="CHANGE DIRECTION" aria-label="Rotate ring toward bottom-right" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
         <div ref="{{ setArrowRightInner }}" style="width:100%; height:100%; position:relative; transform-style:preserve-3d;"></div>
       </button>
     </div>
     <span class="m-hide-mobile" style="justify-self:end;">Brooklyn, NY &nbsp;•&nbsp; <span ref="{{ setHrEl }}">{{ estHours }}</span><span style="animation:colonBlink 1s steps(1,end) infinite;">:</span><span ref="{{ setMinEl }}">{{ estMinutes }}</span> EST</span>
   </footer>
 
+  <!-- Custom crosshair cursor + "CLICK TO VIEW" scramble over navigable devices -->
+  <div ref="{{ setCursorBlur }}" class="m-hide-mobile" style="position:fixed; left:0; top:0; z-index:8999; pointer-events:none; mix-blend-mode:difference; opacity:0; will-change:transform; transition:opacity .18s ease, transform .25s cubic-bezier(.22,.61,.36,1);"><div ref="{{ setCursorBlurInner }}" style="position:absolute; left:-26px; top:-26px; width:52px; height:52px; border-radius:0; background:#ffffff; transform:scale(.55); transition:transform .2s cubic-bezier(.22,.61,.36,1);"></div></div>
+  <div ref="{{ setCursorTextBg }}" class="m-hide-mobile" style="position:fixed; left:0; top:0; z-index:8998; pointer-events:none; mix-blend-mode:difference; opacity:0; will-change:transform; transition:opacity .18s ease, transform .25s cubic-bezier(.22,.61,.36,1);"><span ref="{{ setCursorTextBgLabel }}" style="position:absolute; left:26px; top:26px; display:inline-block; padding:4px 7px; background:#ffffff; color:transparent; border-radius:0; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; white-space:nowrap;"></span></div>
+  <div ref="{{ setCursorEl }}" class="m-hide-mobile" style="position:fixed; left:0; top:0; z-index:9000; pointer-events:none; mix-blend-mode:difference; opacity:0; will-change:transform;">
+    <svg width="40" height="40" style="position:absolute; left:-20px; top:-20px; display:block; overflow:visible;">
+      <g ref="{{ setCursorScale }}" style="transition:transform .2s cubic-bezier(.22,.61,.36,1); transform-box:fill-box; transform-origin:center; transform:scale(0.9);">
+        <path d="M20 14 V26 M14 20 H26" stroke="#ffffff" stroke-width="1"></path>
+        <g ref="{{ setCursorCorners }}" style="transition:transform .2s cubic-bezier(.22,.61,.36,1); transform-box:fill-box; transform-origin:center;">
+          <path d="M4 9 V4 H9 M31 4 H36 V9 M36 31 V36 H31 M9 36 H4 V31" stroke="#ffffff" stroke-width="1" fill="none"></path>
+        </g>
+      </g>
+    </svg>
+    <span ref="{{ setCursorLabel }}" style="position:absolute; left:33px; top:30px; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; white-space:nowrap; color:#ffffff; opacity:0; transition:opacity .18s ease;"></span>
+  </div>
+
   <!-- Ring minimap (top-right HUD): faint tilted orbit (masked inside the window), small upright poster-devices, dark base + window-clipped bright layer -->
-  <div ref="{{ setMiniWrap }}" class="m-hide-mobile" style="position:absolute; top:84px; right:30px; width:150px; height:104px; z-index:11; pointer-events:none; opacity:0; transition:opacity .8s ease; transform:scale(1.25); transform-origin:100% 0;">
+  <div ref="{{ setMiniWrap }}" class="m-hide-mobile" style="position:absolute; top:84px; left:0; width:150px; height:104px; z-index:1; pointer-events:none; opacity:0; transition:opacity .8s ease; transform:scale(1.47,1.25); transform-origin:164px 0;">
     <div style="position:absolute; left:72px; top:77px; width:63px; height:48px; transform:translate(-50%,-50%); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); background:rgba(10,11,14,0.35);"></div>
     <svg width="150" height="104" style="position:absolute; inset:0; overflow:visible;">
       <g ref="{{ setMiniRing }}"></g>
       <path d="M72 74.2 V79.8 M69.2 77 H74.8" stroke="rgba(255,255,255,0.42)" stroke-width="0.8"></path>
     </svg>
-    <div ref="{{ setMiniDevices }}" style="position:absolute; inset:0; filter:brightness(0.22);"></div>
+    <div ref="{{ setMiniDevices }}" style="position:absolute; inset:0; filter:brightness(0.32);"></div>
     <div ref="{{ setMiniDevicesBright }}" style="position:absolute; inset:0; clip-path:inset(53px 46.5px 3px 40.5px); -webkit-clip-path:inset(53px 46.5px 3px 40.5px);"></div>
     <div ref="{{ setMiniWindow }}" style="position:absolute; left:72px; top:77px; width:63px; height:48px; transform:translate(-50%,-50%); border:0.5px solid rgba(255,255,255,0.6); border-radius:0;"></div>
   </div>
 
   <!-- Hover caption (flat text, scramble-in on hover, above the footer) -->
   <sc-if value="{{ hasHover }}" hint-placeholder-val="{{ false }}">
-    <div ref="{{ setCaption }}" style="position:absolute; left:0; right:0; bottom:74px; z-index:16; display:flex; flex-direction:column; align-items:flex-start; padding-left:16px; gap:{{ hoverGap }}; pointer-events:none; mix-blend-mode:difference; animation:spiralFadeIn .2s ease both;">
-      <span ref="{{ setCompanyEl }}" style="font-family:'Doto'; font-weight:{{ eyebrowWeight }}; font-size:{{ eyebrowSize }}; letter-spacing:{{ eyebrowSpacing }}; text-transform:{{ eyebrowCase }}; color:#ffffff; opacity:0;">{{ hover.company }}</span>
+    <div ref="{{ setCaption }}" style="position:absolute; left:0; right:0; bottom:74px; z-index:16; display:flex; flex-direction:column; align-items:flex-start; text-align:left; padding-left:16px; gap:{{ hoverGap }}; pointer-events:none; mix-blend-mode:difference; animation:spiralFadeIn .2s ease both;">
+      <span ref="{{ setCompanyEl }}" style="display:none; font-family:'Doto'; font-weight:{{ eyebrowWeight }}; font-size:{{ eyebrowSize }}; letter-spacing:{{ eyebrowSpacing }}; text-transform:{{ eyebrowCase }}; color:#ffffff; opacity:0;">{{ hover.company }}</span>
       <span ref="{{ setTitleEl }}" style="font-family:{{ hoverFam }}; font-weight:{{ hoverWeight }}; font-size:{{ hoverSize }}; line-height:1; letter-spacing:{{ hoverSpacing }}; text-transform:{{ hoverCase }}; color:#f2f2f5; opacity:0;">{{ hover.title }}</span>
     </div>
   </sc-if>
@@ -654,16 +670,79 @@ class Component extends DCLogic {
     window.addEventListener('resize', this._snapAboutW);
     // Large monitors only: drop the ring minimap two grid rows lower and snap its crosshair to a
     // horizontal meridian line. Smaller breakpoints keep the current top:84px placement untouched.
+    // Center the minimap horizontally (crosshair on the vertical meridian) and sit it just above the
+    // company-name readout at screen center. Crosshair local (72,77) × scale 1.25 = (90, 96.25) from the wrap corner.
+    // Center the minimap on the vertical meridian and snap its dotted ring's left/right edges exactly to
+    // the grid meridians cx±128. The ring is a tilted ellipse, so its horizontal half-extent is
+    // hypot(AX·cosTLT, AY·sinTLT) + dot half-size — NOT AX. Ring center == crosshair (local x=72).
     this._snapMini = () => {
       if (!this.miniWrap) return;
-      const halfY = document.documentElement.clientHeight / 2, cross = 77 * 1.25;   // 77 in-box × the wrap's scale(1.25) from its top edge
-      let lineY = ((halfY % 128) + 128) % 128;            // topmost horizontal meridian line
-      while (lineY < 96) lineY += 128;                    // keep it clear of the 52px header
-      if (document.documentElement.clientWidth >= 1800) lineY += 128;   // large screens: one row lower; smaller keep the higher line
-      this.miniWrap.style.top = (lineY - cross) + 'px';
+      const cx = document.documentElement.clientWidth / 2, cy = document.documentElement.clientHeight / 2;
+      const CELL = 128, AX = 92, AY = 23, TLT = 18 * Math.PI / 180, SZ = 1.8, RCX = 72;
+      const amp = Math.hypot(AX * Math.cos(TLT), AY * Math.sin(TLT)) + SZ / 2;   // dotted-ring horizontal half-extent (local px)
+      const Sx = CELL / amp;                                   // scaleX so edges land on cx±CELL
+      this.miniWrap.style.transformOrigin = '0 0';
+      this._miniScaleTf = 'scale(' + Sx.toFixed(4) + ',' + Sx.toFixed(4) + ')';   // uniform scale keeps mini device posters square
+      if (!this._miniIntro) this.miniWrap.style.transform = this._miniScaleTf;
+      this.miniWrap.style.left = Math.round(cx - RCX * Sx) + 'px';       // crosshair (local RCX) on the center column
+      this.miniWrap.style.top = Math.round(cy - 77 * Sx) + 'px';   // crosshair on the center grid crosshair
     };
     this._snapMini();
     window.addEventListener('resize', this._snapMini);
+
+    // Place the mirrored company names on a meridian column 3 lines in from each edge number.
+    this._snapLabels = () => {
+      if (!this.bgCompanyLWrapEl || !this.bgCompanyRWrapEl) return;
+      const CELL = 128, W = document.documentElement.clientWidth, cx = W / 2;
+      const base = ((cx % CELL) + CELL) % CELL;      // leftmost meridian column x >= 0
+      let numCol = base; while (numCol < 24) numCol += CELL;   // first meridian just right of the left number (~x16)
+      const colL = numCol + 1 * CELL;                // the 2nd meridian line counting from the number
+      this.bgCompanyLWrapEl.style.left = Math.round(colL) + 'px';
+      this.bgCompanyRWrapEl.style.left = Math.round(W - colL) + 'px';   // mirror across center
+      if (this.bgLogoLWrapEl) this.bgLogoLWrapEl.style.left = Math.round(numCol) + 'px';   // 1 meridian in from the number
+      if (this.bgLogoRWrapEl) this.bgLogoRWrapEl.style.left = Math.round(W - numCol) + 'px';
+    };
+    this._snapLabels();
+    window.addEventListener('resize', this._snapLabels);
+
+    // Custom crosshair cursor that follows the pointer; shows a "CLICK TO VIEW" scramble over devices
+    // whose data-href points at a local case-study page (not external links).
+    this._onCursorMove = (e) => {
+      if (this.cursorEl) {
+        this.cursorEl.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
+        if (this.cursorEl.style.opacity !== '1') this.cursorEl.style.opacity = '1';
+      }
+      if (this.cursorBlur) this.cursorBlur.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
+      if (this.cursorTextBg) this.cursorTextBg.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
+      const t = (e.target && e.target.closest) ? e.target.closest('[data-cursor-label], [data-href], a[href], [data-clickable]') : null;
+      let label = null;
+      if (t) {
+        const custom = t.getAttribute('data-cursor-label');
+        if (custom != null) label = custom;
+        else if (t.tagName !== 'BUTTON') {
+          const href = t.getAttribute('data-href');
+          if (href != null) label = /^https?:/i.test(href) ? 'COMING SOON' : 'CLICK TO VIEW';   // external = unlinked placeholder
+          else label = 'CLICK TO VIEW';                             // header <a> / [data-clickable]
+        }
+      }
+      const prev = this._cursorLabelText;
+      if (label !== prev) {
+        this._cursorLabelText = label;
+        if (this.cursorScale) this.cursorScale.style.transform = label ? 'scale(0.82)' : 'scale(0.9)';
+        if (this.cursorBlur) this.cursorBlur.style.opacity = label ? '1' : '0';
+        if (this.cursorTextBg) this.cursorTextBg.style.opacity = label ? '1' : '0';
+        if (label && this.cursorTextBgLabel) this.cursorTextBgLabel.textContent = label;
+        if (this.cursorBlurInner) this.cursorBlurInner.style.transform = label ? 'scale(1)' : 'scale(.55)';
+        if (this.cursorCorners) this.cursorCorners.style.transform = label ? 'scale(2.0)' : 'scale(1)';
+        if (this.cursorLabel) {
+          if (label) { cancelAnimationFrame(this._curScrRaf); this.cursorLabel.style.opacity = '1'; this.scramble(this.cursorLabel, label); }
+          else this._labelOut(this.cursorLabel, 220, prev || 'CLICK TO VIEW');
+        }
+      }
+    };
+    window.addEventListener('pointermove', this._onCursorMove, { passive: true });
+    this._onCursorLeaveWin = () => { if (this.cursorEl) this.cursorEl.style.opacity = '0'; };
+    document.addEventListener('mouseleave', this._onCursorLeaveWin);
 
     // Keep the EST clock current — update HH / MM every second via direct DOM (renderVals isn't called per frame).
     this._tickClock = () => {
@@ -724,7 +803,7 @@ class Component extends DCLogic {
     // way into a case study).
     if (this.footerEl) fadeIn(this.footerEl, 450, 100);
     if (this.sceneEl) { this.sceneEl.style.pointerEvents = ''; fadeIn(this.sceneEl, 1500, 250); }
-    if (this.miniWrap) fadeIn(this.miniWrap, 1500, 250);
+    this._revealMini(1500);
     // Scanlines exist on the index but NOT on case studies, so fade them in on arrival (after the
     // page crossfade settles) rather than snapping. scanEl starts at 0 before the VT captures it.
     if (this.scanEl) fadeIn(this.scanEl, 800, 500);
@@ -774,6 +853,26 @@ class Component extends DCLogic {
     this._loadRaf = requestAnimationFrame(step);
   }
 
+  // Quick fade + upward slide of the minimap into place, after the ring has revealed.
+  _revealMini(delay) {
+    if (!this.miniWrap) return;
+    this._miniIntro = true;
+    if (this._snapMini) this._snapMini();          // ensure _miniScaleTf + left/top are computed first
+    const tf0 = this._miniScaleTf || 'scale(1,1.25)';
+    this.miniWrap.style.transition = 'none';
+    this.miniWrap.style.opacity = '0';
+    this.miniWrap.style.transform = 'translateY(16px) ' + tf0;
+    void this.miniWrap.offsetHeight;
+    setTimeout(() => {
+      if (!this.miniWrap) return;
+      const tf = this._miniScaleTf || tf0;          // re-read at apply time (final computed scale)
+      this.miniWrap.style.transition = 'opacity .5s ease, transform .5s cubic-bezier(.22,.61,.36,1)';
+      this.miniWrap.style.opacity = '1';
+      this.miniWrap.style.transform = tf;
+      setTimeout(() => { this._miniIntro = false; }, 520);
+    }, delay || 0);
+  }
+
   finishLoader() {
     const pctEl = this.loaderPctEl, loader = this.loaderEl;
     // Kick playback the instant the loader clears so on-screen mocks show clips, not posters.
@@ -796,7 +895,7 @@ class Component extends DCLogic {
         this.meltRevealMany(foot, () => {
           // 4) spiral fades in (opacity only) over 1s — enable device hovers once it's fully in
           if (this.sceneEl) { this.sceneEl.style.transition = 'opacity 1s ease'; this.sceneEl.style.opacity = '1'; }
-          if (this.miniWrap) { this.miniWrap.style.transition = 'opacity 1s ease'; this.miniWrap.style.opacity = '1'; }
+          if (this.miniWrap) this._revealMini(450);
           setTimeout(() => { this._booting = false; }, 1000);
         });
       });
@@ -805,12 +904,37 @@ class Component extends DCLogic {
 
   // Nudge the minimap up so its inner crosshair lands on the nearest background grid line above it.
   _alignMini() {
-    if (!this.miniWrap) return;
-    const SPACING = 128, base = window.innerHeight / 2;        // background crosshair rows: ih/2 + 128k
-    const crossOff = 77 * 1.25;                                // crosshair local-y (77) * minimap scale
-    const crossY = 84 + crossOff;                              // current crosshair screen-Y (top:84 baseline)
-    const lineY = base + SPACING * Math.round((crossY - base) / SPACING);   // nearest crosshair row
-    this.miniWrap.style.top = Math.round(lineY - crossOff) + 'px';
+    if (this._snapMini) this._snapMini();   // centered placement handles positioning on resize
+  }
+
+  companyLogo(c) {
+    const map = { doordash: './assets/logos/doordash.svg', nerdwallet: './assets/logos/nerdwallet-n.svg', ouster: './assets/logos/ouster-mark.png' };   // icon-only marks (wordmarks cropped out)
+    return map[(c || '').toLowerCase().replace(/\s+/g, '')] || '';
+  }
+
+  // Horizontal 3D flip swap: outer box owns perspective + centering, this inner element does the pure rotateY
+  // so the mark stays put after settling (no perspective/translate drift).
+  _swapLogo(flip, img, src, h) {
+    if (!flip || !img) return;
+    if (flip._logoSrc === src) { if (src) img.style.height = h + 'px'; return; }
+    flip._logoSrc = src;
+    const tok = (flip._logoTok = (flip._logoTok || 0) + 1);
+    const ease = 'transform .12s cubic-bezier(.45,0,.55,1)';
+    flip.style.transition = ease;
+    flip.style.transform = 'rotate3d(1,1,0,-90deg)';
+    setTimeout(() => {
+      if (flip._logoTok !== tok) return;
+      if (!src) { flip.style.display = 'none'; return; }
+      img.src = src; img.style.height = h + 'px'; flip.style.display = '';
+      flip.style.transition = 'none';
+      flip.style.transform = 'rotate3d(1,1,0,90deg)';   // far side, unseen
+      void flip.offsetWidth;
+      requestAnimationFrame(() => {
+        if (flip._logoTok !== tok) return;
+        flip.style.transition = ease;
+        flip.style.transform = 'rotate3d(1,1,0,0deg)';
+      });
+    }, 120);
   }
 
   // Build the orbit as a ring of mini squares (like the footer • bullet). Squares inside the window are darker.
@@ -819,7 +943,7 @@ class Component extends DCLogic {
     if (!g || g._built) return;
     g._built = true;
     const NS = 'http://www.w3.org/2000/svg';
-    const CX = 75, CY = 52, AX = 92, AY = 23, rad = Math.PI / 180, TLT = 18 * rad;
+    const CX = 72, CY = 52, AX = 92, AY = 23, rad = Math.PI / 180, TLT = 18 * rad;
     const c = Math.cos(TLT), s = Math.sin(TLT);
     const RCX = 72, RCY = 77, RW = 63, RH = 48;
     const rL = RCX - RW / 2, rR = RCX + RW / 2, rT = RCY - RH / 2, rB = RCY + RH / 2;
@@ -832,7 +956,7 @@ class Component extends DCLogic {
       const r = document.createElementNS(NS, 'rect');
       r.setAttribute('x', (x - SZ / 2).toFixed(2)); r.setAttribute('y', (y - SZ / 2).toFixed(2));
       r.setAttribute('width', SZ); r.setAttribute('height', SZ);
-      r.setAttribute('fill', inside ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.28)');
+      r.setAttribute('fill', inside ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.42)');
       g.appendChild(r);
     }
   }
@@ -867,7 +991,7 @@ class Component extends DCLogic {
   // (same standing-upright behaviour as the big ring). Dark + bright layers get identical transforms.
   _tickMini() {
     if (!this._miniMarks) return;
-    const CX = 75, CY = 52, AX = 92, AY = 23, rad = Math.PI / 180;
+    const CX = 72, CY = 52, AX = 92, AY = 23, rad = Math.PI / 180;
     const TLT = 18 * rad, cosTlt = Math.cos(TLT), sinTlt = Math.sin(TLT);
     for (const m of this._miniMarks) {
       const phi = (m.a + this.spin) * rad;
@@ -1010,10 +1134,11 @@ class Component extends DCLogic {
   }
 
   // Scramble-out: dissolve resolved text back into random glyphs, unresolving left-to-right, then fade.
-  scrambleOut(el, dur) {
+  scrambleOut(el, dur, textArg) {
     if (!el) return;
     cancelAnimationFrame(this._scrRaf);
-    const text = this._companyText || el.textContent || '';
+    clearInterval(el.__scr);
+    const text = textArg || this._companyText || el.textContent || '';
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#*';
     const t0 = performance.now();
     const stepFn = (t) => {
@@ -1105,6 +1230,26 @@ class Component extends DCLogic {
     loop();
   }
 
+  // Isolated scramble-out for the cursor label (own rAF so it never collides with the shared _scrRaf).
+  _labelOut(el, dur, text) {
+    if (!el) return;
+    cancelAnimationFrame(this._curScrRaf);
+    clearInterval(el.__scr);
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#*';
+    const t0 = performance.now();
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      const resolved = Math.floor((1 - k) * text.length);
+      let out = '';
+      for (let i = 0; i < text.length; i++) { const c = text[i]; if (i < resolved || c === ' ') out += c; else out += chars[(Math.random() * chars.length) | 0]; }
+      el.textContent = out;
+      el.style.opacity = String(Math.min(1, (1 - k) / 0.3));
+      if (k < 1) this._curScrRaf = requestAnimationFrame(step);
+      else { el.style.opacity = '0'; el.textContent = ''; }
+    };
+    this._curScrRaf = requestAnimationFrame(step);
+  }
+
   scramble(el, target) {
     if (!el) return;
     const glyphs = '!<>-_\\/[]{}=+*^?#%&@';
@@ -1129,7 +1274,7 @@ class Component extends DCLogic {
   tick(now) {
     const dt = Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
-    if (this.sceneEl) this.sceneEl.style.zIndex = (this.state.hovered != null || (this.slurProg || 0) > 0.02) ? '14' : '';
+    if (this.sceneEl) this.sceneEl.style.zIndex = (this.state.hovered != null || (this.slurProg || 0) > 0.02) ? '14' : '2';
     const auto = this.props.autoSpinSpeed ?? 8;
     const paused = this.state.selected != null || (this.state.hovered != null && !this.dragging);
     if (!paused && !this.dragging) {
@@ -1271,8 +1416,16 @@ class Component extends DCLogic {
       const mi = this.mod(frontSlot, this.PER_TURN);
       const m = this.mocks[mi];
       const num = String(this.mod(-mi, this.PER_TURN) + 1).padStart(3, '0');
-      if (this.bgCompanyEl) this.scramble(this.bgCompanyEl, (m.company || '').toUpperCase());
-      if (this.bgTitleEl) this.scramble(this.bgTitleEl, (m.title || '').toUpperCase());
+      const co = (m.company || '').toUpperCase();
+      const coChanged = co !== this._lastCompany;
+      this._lastCompany = co;
+      const logo = this.companyLogo(m.company);
+      const key = (m.company || '').toLowerCase().replace(/\s+/g, '');
+      const logoH = ({ doordash: 16, ouster: 17, nerdwallet: 18 })[key] || 16;   // per-mark optical sizing
+      this._swapLogo(this.bgLogoLFlipEl, this.bgLogoLEl, logo, logoH);
+      this._swapLogo(this.bgLogoRFlipEl, this.bgLogoREl, logo, logoH);
+      if (coChanged && this.bgCompanyLEl) this.scramble(this.bgCompanyLEl, co);
+      if (coChanged && this.bgCompanyREl) this.scramble(this.bgCompanyREl, co);
       if (this.bgNumLEl) this.scramble(this.bgNumLEl, num);
       if (this.bgNumREl) this.scramble(this.bgNumREl, num);
     }
@@ -1310,7 +1463,7 @@ class Component extends DCLogic {
     const footerCase = cap(this.props.footerCase ?? 'UPPERCASE');
     const hoverFam = fam(this.props.hoverFont, 'PP Neue Montreal');
     const hoverWeight = this.props.hoverWeight ?? 400;
-    const hoverSize = (this.props.hoverSize ?? 33) + 'px';
+    const hoverSize = '82px';   // fixed caption-title size (was picking up a stale injected hoverSize prop)
     const hoverSpacing = (this.props.hoverSpacing ?? -0.3) + 'px';
     const hoverCase = cap(this.props.hoverCase);
     const hoverGap = (this.props.hoverGap ?? -11) + 'px';
@@ -1540,7 +1693,7 @@ class Component extends DCLogic {
       setSlurGrain: (el) => { this.slurGrainEl = el; },
       meltIn: (e) => this.animateMelt(e.currentTarget, true),
       meltOut: (e) => this.animateMelt(e.currentTarget, false),
-      setScene: (el) => { this.sceneEl = el; if (el) el.style.zIndex = this.state.hovered != null ? '14' : ''; },
+      setScene: (el) => { this.sceneEl = el; if (el) el.style.zIndex = this.state.hovered != null ? '14' : '2'; },
       setHeaderEl: (el) => { this.headerEl = el; },
       setFooterEl: (el) => { this.footerEl = el; },
       setAvatarEl: (el) => { this.avatarEl = el; },
@@ -1585,10 +1738,26 @@ class Component extends DCLogic {
       eyebrowFam, eyebrowWeight, eyebrowSize, eyebrowSpacing, eyebrowCase,
       aboutBioFam, aboutBioWeight, aboutBioSize, aboutBioLH, aboutBioSpacing, aboutBioCase, aboutImgW, aboutBioMax, aboutBioTop,
       hasHover: shownHov != null,
-      hover: shownHov ? { company: shownHov.company + (/^https?:/i.test(shownHov.href || '') ? '\u2002\u2002\u2022\u2002\u2002Coming soon' : ''), title: shownHov.title } : {},
+      hover: shownHov ? { company: shownHov.company, title: shownHov.title } : {},
       setHelix: (el) => { this.helixEl = el; },
-      setBgTitle: (el) => { this.bgTitleEl = el; },
-      setBgCompany: (el) => { this.bgCompanyEl = el; },
+      setBgCompanyL: (el) => { this.bgCompanyLEl = el; },
+      setBgCompanyR: (el) => { this.bgCompanyREl = el; },
+      setBgCompanyLWrap: (el) => { this.bgCompanyLWrapEl = el; },
+      setBgCompanyRWrap: (el) => { this.bgCompanyRWrapEl = el; },
+      setBgLogoL: (el) => { this.bgLogoLEl = el; },
+      setBgLogoR: (el) => { this.bgLogoREl = el; },
+      setBgLogoLWrap: (el) => { this.bgLogoLWrapEl = el; },
+      setBgLogoRWrap: (el) => { this.bgLogoRWrapEl = el; },
+      setBgLogoLFlip: (el) => { this.bgLogoLFlipEl = el; },
+      setBgLogoRFlip: (el) => { this.bgLogoRFlipEl = el; },
+      setCursorEl: (el) => { this.cursorEl = el; },
+      setCursorLabel: (el) => { this.cursorLabel = el; },
+      setCursorScale: (el) => { this.cursorScale = el; },
+      setCursorBlur: (el) => { this.cursorBlur = el; },
+      setCursorTextBg: (el) => { this.cursorTextBg = el; },
+      setCursorTextBgLabel: (el) => { this.cursorTextBgLabel = el; },
+      setCursorBlurInner: (el) => { this.cursorBlurInner = el; },
+      setCursorCorners: (el) => { this.cursorCorners = el; },
       setBgNumL: (el) => { this.bgNumLEl = el; },
       setBgNumR: (el) => { this.bgNumREl = el; },
       setMiniWrap: (el) => { this.miniWrap = el; },
