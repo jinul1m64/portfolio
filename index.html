@@ -1302,7 +1302,7 @@ class Component extends DCLogic {
     if (this.arrowRightBtn) this.arrowRightBtn.style.opacity = sel === 'right' ? '1' : '0.3';
 
     const rad = Math.PI / 180;
-    const R = this.radius() * 1.22;   // wider ring → more spread / breathing room
+    const R = this.radius() * 1.15;   // wider ring → more spread / breathing room
     const P = 2500;                       // larger → gentler foreshortening (camera further back)
     const GSCALE = 0.91;                  // global device shrink → devices sit a bit further back
     const cosT = Math.cos(this.TILT * rad), sinT = Math.sin(this.TILT * rad);
