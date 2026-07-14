@@ -97,6 +97,7 @@
   @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal Medium'), url('./assets/fonts/extra1.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
   @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal SemiBold'), url('./assets/fonts/extra5.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
   @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal Bold'), url('./assets/fonts/extra2.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'Doto'; src: url('./assets/fonts/Doto-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: #0a0b0e; overflow: hidden; }
   a { color: #8aa0ff; text-decoration: none; transition: filter .26s ease, opacity .26s ease; }
@@ -170,6 +171,18 @@
 
   <!-- Spiral scene -->
   <div ref="{{ setScene }}" style="position:absolute; inset:0; opacity:0;">
+    <!-- Background readout: company + current case-study title sit BEHIND the devices -->
+    <div style="position:absolute; inset:0; z-index:0; pointer-events:none; opacity:0.6;">
+      <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:0px; text-align:center;">
+        <div ref="{{ setBgCompany }}" style="font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; text-transform:uppercase; white-space:nowrap; line-height:1; color:#ececf0;">DoorDash</div>
+        <div ref="{{ setBgTitle }}" style="font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; text-transform:uppercase; white-space:nowrap; line-height:1; color:#ececf0;">dasher rewards</div>
+      </div>
+    </div>
+    <!-- Numerators overlay ON TOP of the spiral, blended (difference) like the header -->
+    <div style="position:absolute; inset:0; z-index:4000; pointer-events:none; mix-blend-mode:difference; opacity:0.6;">
+      <div ref="{{ setBgNumL }}" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; line-height:1; color:#ececf0;">001</div>
+      <div ref="{{ setBgNumR }}" style="position:absolute; right:16px; top:50%; transform:translateY(-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; line-height:1; color:#ececf0; text-align:right;">001</div>
+    </div>
     <div ref="{{ setHelix }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); will-change:transform;">
       <sc-for list="{{ cards }}" as="card" hint-placeholder-count="0">
         <div ref="{{ card.ref }}" style="{{ card.style }}">
@@ -221,7 +234,7 @@
       <button ref="{{ setArrowLeftBtn }}" onClick="{{ selLeft }}" data-clickable="" aria-label="Rotate ring toward top-left" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
         <div ref="{{ setArrowLeftInner }}" style="width:100%; height:100%; position:relative; transform-style:preserve-3d;"></div>
       </button>
-      <span>Scroll</span>
+      <span style="font-family:'Doto'; font-size:22px;">Scroll</span>
       <button ref="{{ setArrowRightBtn }}" onClick="{{ selRight }}" data-clickable="" aria-label="Rotate ring toward bottom-right" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
         <div ref="{{ setArrowRightInner }}" style="width:100%; height:100%; position:relative; transform-style:preserve-3d;"></div>
       </button>
@@ -244,7 +257,7 @@
   <!-- Hover caption (flat text, scramble-in on hover, above the footer) -->
   <sc-if value="{{ hasHover }}" hint-placeholder-val="{{ false }}">
     <div ref="{{ setCaption }}" style="position:absolute; left:0; right:0; bottom:74px; z-index:16; display:flex; flex-direction:column; align-items:flex-start; padding-left:16px; gap:{{ hoverGap }}; pointer-events:none; mix-blend-mode:difference; animation:spiralFadeIn .2s ease both;">
-      <span ref="{{ setCompanyEl }}" style="font-family:{{ eyebrowFam }}; font-weight:{{ eyebrowWeight }}; font-size:{{ eyebrowSize }}; letter-spacing:{{ eyebrowSpacing }}; text-transform:{{ eyebrowCase }}; color:#ffffff; opacity:0;">{{ hover.company }}</span>
+      <span ref="{{ setCompanyEl }}" style="font-family:'Doto'; font-weight:{{ eyebrowWeight }}; font-size:{{ eyebrowSize }}; letter-spacing:{{ eyebrowSpacing }}; text-transform:{{ eyebrowCase }}; color:#ffffff; opacity:0;">{{ hover.company }}</span>
       <span ref="{{ setTitleEl }}" style="font-family:{{ hoverFam }}; font-weight:{{ hoverWeight }}; font-size:{{ hoverSize }}; line-height:1; letter-spacing:{{ hoverSpacing }}; text-transform:{{ hoverCase }}; color:#f2f2f5; opacity:0;">{{ hover.title }}</span>
     </div>
   </sc-if>
@@ -969,7 +982,7 @@ class Component extends DCLogic {
     if (this.companyEl) { this.companyEl.style.filter = ''; this.companyEl.style.opacity = '1'; this._companyText = this.companyEl.textContent; this.scrambleIn(this.companyEl, this._companyText, 700); }
     clearTimeout(this._capStagger);
     this._capStagger = setTimeout(() => {
-      if (this.titleEl) { this.titleEl.style.opacity = '1'; this.meltReveal(this.titleEl, this.gooRevealBlurEl2, 'gooReveal2', 1200, '_revRaf2'); }
+      if (this.titleEl) { this.titleEl.style.opacity = '1'; this.meltReveal(this.titleEl, this.gooRevealBlurEl2, 'gooReveal2', 650, '_revRaf2'); }
     }, 360);
   }
 
@@ -1056,7 +1069,7 @@ class Component extends DCLogic {
   animateMelt(el, on) {
     if (!el) return;
     const blur = this.gooBlurEl;
-    const target = on ? 3.2 : 0.01;
+    const target = on ? 2.6 : 0.01;
     if (on) el.style.filter = 'url(#goo)';
     if (!blur) { if (!on) el.style.filter = ''; return; }
     cancelAnimationFrame(this._gooRaf);
@@ -1195,6 +1208,7 @@ class Component extends DCLogic {
       }
     };
     const cand = [];   // visible cards ranked by prominence, to pick which few decode
+    let frontC = -1, frontSlot = -1;   // most front-facing visible device = current case study
     for (let k = 0; k < this.cardEls.length; k++) {
       const e = this.cardEls[k];
       if (!e || !e.el) continue;
@@ -1203,6 +1217,7 @@ class Component extends DCLogic {
       const th = phi * rad;
       const c = Math.cos(th);
       if (c <= 0.08) { e.el.style.visibility = 'hidden'; continue; }
+      if (c > frontC) { frontC = c; frontSlot = this.FROM + k; }
       const p = ringPt(th);
       const dx = p.dx + ox, dy = p.dy + oy;
       const isHov = (k === hoveredIdx);
@@ -1250,6 +1265,17 @@ class Component extends DCLogic {
     const active = [];
     for (const it of cand) { if (warmSet.has(it.slot) && it.op > 0.06) active.push(String(it.slot)); }
     this._activeSlots = new Set(active);
+    // Update the background readout (title + L/R numerator) when the front-most device changes.
+    if (frontSlot >= 0 && frontSlot !== this._curSlot) {
+      this._curSlot = frontSlot;
+      const mi = this.mod(frontSlot, this.PER_TURN);
+      const m = this.mocks[mi];
+      const num = String(mi + 1).padStart(3, '0');
+      if (this.bgCompanyEl) this.scramble(this.bgCompanyEl, (m.company || '').toUpperCase());
+      if (this.bgTitleEl) this.scramble(this.bgTitleEl, (m.title || '').toUpperCase());
+      if (this.bgNumLEl) this.scramble(this.bgNumLEl, num);
+      if (this.bgNumREl) this.scramble(this.bgNumREl, num);
+    }
     this._visDirty = false;
     if (this._applyVideoPlayback) this._applyVideoPlayback();
     if (this._running) this.raf = requestAnimationFrame(this.tick);
@@ -1290,7 +1316,7 @@ class Component extends DCLogic {
     const hoverGap = (this.props.hoverGap ?? -11) + 'px';
     const eyebrowFam = fam(this.props.eyebrowFont, 'PP Neue Montreal');
     const eyebrowWeight = this.props.eyebrowWeight ?? 400;
-    const eyebrowSize = (this.props.eyebrowSize ?? 11) + 'px';
+    const eyebrowSize = (this.props.eyebrowSize ?? 22) + 'px';
     const eyebrowSpacing = (this.props.eyebrowSpacing ?? 3.5) + 'px';
     const eyebrowCase = cap(this.props.eyebrowCase);
     // About-page bio typography (all tweakable)
@@ -1561,6 +1587,10 @@ class Component extends DCLogic {
       hasHover: shownHov != null,
       hover: shownHov ? { company: shownHov.company + (/^https?:/i.test(shownHov.href || '') ? '\u2002\u2002\u2022\u2002\u2002Coming soon' : ''), title: shownHov.title } : {},
       setHelix: (el) => { this.helixEl = el; },
+      setBgTitle: (el) => { this.bgTitleEl = el; },
+      setBgCompany: (el) => { this.bgCompanyEl = el; },
+      setBgNumL: (el) => { this.bgNumLEl = el; },
+      setBgNumR: (el) => { this.bgNumREl = el; },
       setMiniWrap: (el) => { this.miniWrap = el; },
       setMiniRing: (el) => { this.miniRing = el; this._buildMiniRing && this._buildMiniRing(); },
       setMiniDevices: (el) => { this.miniDevices = el; this._buildMiniDevices && this._buildMiniDevices(); },

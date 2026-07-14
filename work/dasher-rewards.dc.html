@@ -78,6 +78,7 @@
   @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal Medium'), url('../assets/fonts/extra1.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
   @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal SemiBold'), url('../assets/fonts/extra5.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
   @font-face { font-family: 'PP Neue Montreal'; src: local('PP Neue Montreal Bold'), url('../assets/fonts/extra2.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'Doto'; src: url('../assets/fonts/Doto-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: #0a0b0e; }
   a { color: #ececf0; text-decoration: none; transition: filter .26s ease, opacity .26s ease; }
@@ -162,12 +163,12 @@
     <div ref="{{ setIntro }}" style="padding:0 16px;">
       <div style="display:flex; align-items:center; gap:12px;">
         <img ref="{{ setLogo }}" src="../assets/logos/doordash.svg" alt="" draggable="false" style="height:22px; width:auto; display:block; filter:brightness(0) invert(1); opacity:0; transition:opacity .5s ease;" />
-        <span ref="{{ setCompany }}" style="font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ececf0; opacity:0;">DoorDash</span>
+        <span ref="{{ setCompany }}" style="font-family:'Doto'; font-weight:400; font-size:22px; letter-spacing:-0.5px; text-transform:uppercase; color:#ececf0; opacity:0;">DoorDash</span>
       </div>
       <div style="display:grid; grid-template-columns:calc(var(--hw, 50vw) + 112px) calc(var(--hw, 50vw) - 144px); gap:0; align-items:end;">
         <h2 ref="{{ setTitle }}" style="align-self:start; margin:10px 0 0; max-width:calc(var(--hw, 50vw) - 16px); font-weight:300; font-size:clamp(48px,8vw,104px); line-height:0.9; letter-spacing:-4px; text-transform:none; text-wrap:balance; opacity:0;">dasher rewards</h2>
         <div ref="{{ setContext }}" style="align-self:start; transform:translateY(0); opacity:0;">
-          <p style="margin:0 0 10px; font-weight:400; font-size:20px; letter-spacing:-0.5px; text-transform:uppercase; color:#ececf0;">Context</p>
+          <p style="margin:0 0 10px; font-family:'Doto'; font-weight:400; font-size:22px; letter-spacing:-0.5px; text-transform:uppercase; color:#ececf0;">Context</p>
           <p style="margin:0; font-size:15px; line-height:1.3; letter-spacing:0; text-transform:none; text-align:justify; color:#c6cad4;">DoorDash&rsquo;s delivery network depends on millions of decisions made by Dashers every day. While the platform offered numerous incentives and performance programs, many were fragmented, difficult to discover, and lacked a cohesive experience that helped Dashers understand how their actions translated into rewards.<br><br>dasher rewards was an effort to create a unified framework that aligned the needs of Dashers and DoorDash. For Dashers, it provided greater transparency into performance expectations, clearer goals to work toward, and meaningful incentives for delivering high-quality service. For DoorDash, it created a mechanism for encouraging behaviors that improved delivery quality, operational efficiency, and long-term retention across the platform.</p>
         </div>
       </div>
@@ -287,7 +288,7 @@ class Component extends DCLogic {
     // Reveal only once the page is scrolled to the very bottom, then wait 200ms.
     this._onNextScroll = () => {
       if (this._nextRevealed || this._nextArmed) return;
-      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 180;
       if (atBottom) {
         this._nextArmed = true;
         window.removeEventListener('scroll', this._onNextScroll);
@@ -300,9 +301,9 @@ class Component extends DCLogic {
   _revealNext() {
     if (this._nextRevealed) return;
     this._nextRevealed = true;
-    if (this.nextEyebrowEl) this.meltReveal(this.nextEyebrowEl, this.gooReveal2El, 'gooReveal2', 900, 11);
+    if (this.nextEyebrowEl) this.meltReveal(this.nextEyebrowEl, this.gooReveal2El, 'gooReveal2', 650, 11);
     if (this.nextEl) { this.nextEl.style.opacity = '1'; }
-    if (this.nextTitleEl) this.meltReveal(this.nextTitleEl, this.gooRevealEl, 'gooReveal', 1300, 24);
+    if (this.nextTitleEl) this.meltReveal(this.nextTitleEl, this.gooRevealEl, 'gooReveal', 950, 24);
   }
 
   // Gooey reveal: ramp the filter's blur from a heavy blob down to sharp (quartic ease-out).
@@ -451,8 +452,8 @@ class Component extends DCLogic {
       setIntro: (el) => { this.introEl = el; if (el) this._layout && this._layout(); },
       setContent: (el) => { this.contentEl = el; if (el) this._layout && this._layout(); },
       setStickyText: (el) => { this.stickyTextEl = el; },
-      meltIn: (e) => this.animateMelt(e.currentTarget, true, 3.2),
-      meltOut: (e) => this.animateMelt(e.currentTarget, false, 3.2),
+      meltIn: (e) => this.animateMelt(e.currentTarget, true, 2.6),
+      meltOut: (e) => this.animateMelt(e.currentTarget, false, 2.6),
       meltInBig: () => { this.animateMelt(this.nextEyebrowEl, true, 2.1, this.gooHoverEl, 'gooHover'); this.animateMelt(this.nextTitleEl, true, 7, this.gooHoverTitleEl, 'gooHoverTitle'); },
       meltOutBig: () => { this.animateMelt(this.nextEyebrowEl, false, 2.1, this.gooHoverEl, 'gooHover'); this.animateMelt(this.nextTitleEl, false, 7, this.gooHoverTitleEl, 'gooHoverTitle'); },
       setNext: (el) => { this.nextEl = el; },
