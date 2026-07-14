@@ -3,7 +3,69 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* Cross-document View Transitions: every page opts in, so navigations crossfade the whole page
+     (transition COMPLETES rather than being skipped, which had thrown the unhandled rejection).
+     Nothing is given a view-transition-name: naming the header lifted it into an isolated snapshot
+     whose hand-off to the live mix-blend-mode:difference element flashed black. Letting it ride the
+     root crossfade bakes the blend into the flat snapshot (white over the dark bg) so it stays stable.
+     The paint-bridge keeps the header + avatar present on the first frame so nothing pops in. */
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .45s; }
+  @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+  /* During a view transition, neutralise the header's mix-blend-mode and the backdrop blur — both
+     re-render live against the crossfade and bloom the header text; restored ~0.9s after it settles. */
+  html.vt-freeze header, html.vt-freeze footer, html.vt-freeze .m-avatar span { mix-blend-mode: normal !important; }
+  html.vt-freeze [style*="backdrop-filter"] { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  /* Header font in the real head so the paint-bridge (below) renders correctly on the first frame. */
+  @font-face { font-family: 'PP Neue Montreal'; src: url('./assets/fonts/extra3.woff2') format('woff2'); font-weight: 350; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'PP Neue Montreal'; src: url('./assets/fonts/extra4.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+</style>
+<link rel="preload" href="./assets/fonts/extra3.woff2" as="font" type="font/woff2" crossorigin="">
+<link rel="preload" href="./assets/fonts/extra4.woff2" as="font" type="font/woff2" crossorigin="">
+<link rel="preload" href="./assets/profile.png" as="image">
 <script src="./support.js"></script>
+<script>
+  /* Paint-bridge chrome for internal arrivals (home / About from a case study): the real header +
+     avatar are React-mounted on DOMContentLoaded, a frame after first paint, which flickered the
+     header text and the centre "about"/"exit" button. This static copy paints on the first frame and
+     is removed once the real chrome mounts. Skipped on a first visit (the loader plays instead). */
+  addEventListener('unhandledrejection', function (e) {
+    var r = e && e.reason; var m = (r && r.message) || String(r || '');
+    if (/transition was skipped/i.test(m)) e.preventDefault();
+  });
+  addEventListener('pageswap', function (e) { if (e && e.viewTransition) document.documentElement.classList.add('vt-freeze'); });
+  addEventListener('pagereveal', function (e) {
+    if (!e || !e.viewTransition) return;
+    var h = document.documentElement; h.classList.add('vt-freeze');
+    var clear = function () { setTimeout(function () { h.classList.remove('vt-freeze'); }, 900); };
+    e.viewTransition.finished.then(clear, clear);
+  });
+  (function () {
+    try {
+      var isAbout = (location.hash || '').indexOf('#about') === 0;
+      var seen = false; try { seen = !!sessionStorage.getItem('om_seen'); } catch (e) {}
+      if (!seen && !isAbout) return;
+      var lower = "font-weight:350;font-size:40px;line-height:.94;letter-spacing:-1.5px;text-transform:lowercase;";
+      var b = document.createElement('div');
+      b.id = 'vt-bridge'; b.setAttribute('aria-hidden', 'true');
+      b.style.cssText = "position:fixed;top:0;left:0;right:0;height:52px;display:flex;justify-content:space-between;align-items:center;padding:0 16px;z-index:60;pointer-events:none;font-family:'PP Neue Montreal';color:#e2e1e2;";
+      var centre = isAbout
+        ? '<span style="' + lower + 'color:#ffffff;">exit</span>'
+        : '<img src="./assets/profile.png" alt="" draggable="false" style="width:52px;height:52px;object-fit:cover;display:block;" /><span style="' + lower + 'color:#ffffff;">about</span>';
+      b.innerHTML =
+        '<span style="' + lower + '">jason lim</span>' +
+        '<span class="m-hide-mobile" style="' + lower + '">contact</span>' +
+        '<div style="position:absolute;left:0;right:0;top:0;height:52px;display:flex;justify-content:center;align-items:center;gap:12px;">' + centre + '</div>';
+      (document.body || document.documentElement).appendChild(b);
+      addEventListener('DOMContentLoaded', function () {
+        requestAnimationFrame(function () { requestAnimationFrame(function () {
+          var el = document.getElementById('vt-bridge'); if (el) el.style.display = 'none';
+        }); });
+      });
+    } catch (e) {}
+  })();
+</script>
 </head>
 <body>
 <x-dc>
@@ -92,17 +154,17 @@
       <feComposite in="grain" in2="gray" operator="in" result="grainClipped"></feComposite>
       <feBlend in="gray" in2="grainClipped" mode="overlay"></feBlend>
     </filter>
-    <filter id="goo" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+    <filter id="goo" x="-90%" y="-90%" width="280%" height="280%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGoo }}" result="blur"></feGaussianBlur>
-      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 12 -3.5"></feColorMatrix>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 16 -6"></feColorMatrix>
     </filter>
-    <filter id="gooReveal" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+    <filter id="gooReveal" x="-90%" y="-90%" width="280%" height="280%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal }}" result="blur"></feGaussianBlur>
-      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"></feColorMatrix>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11"></feColorMatrix>
     </filter>
-    <filter id="gooReveal2" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+    <filter id="gooReveal2" x="-90%" y="-90%" width="280%" height="280%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal2 }}" result="blur"></feGaussianBlur>
-      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"></feColorMatrix>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11"></feColorMatrix>
     </filter>
   </svg>
 
@@ -129,8 +191,8 @@
   </div>
 
   <!-- Progressive-blur header & footer backdrops (blur strong at the edge, unblurs inward) -->
-  <div style="position:absolute; top:0; left:0; right:0; height:172px; z-index:6; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to bottom,rgba(10,11,14,.72),rgba(10,11,14,0));"></div>
-  <div style="position:absolute; bottom:0; left:0; right:0; height:160px; z-index:6; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to top,rgba(10,11,14,.72),rgba(10,11,14,0));"></div>
+  <div style="position:absolute; top:0; left:0; right:0; height:172px; z-index:6; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,0) 100%); background:linear-gradient(to bottom,rgba(10,11,14,.72),rgba(10,11,14,0));"></div>
+  <div style="position:absolute; bottom:0; left:0; right:0; height:160px; z-index:6; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to top,#000 0%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to top,#000 0%,rgba(0,0,0,0) 100%); background:linear-gradient(to top,rgba(10,11,14,.72),rgba(10,11,14,0));"></div>
 
   <!-- Header -->
   <header ref="{{ setHeaderEl }}" style="position:absolute; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:16; pointer-events:none; mix-blend-mode:difference; opacity:0;">
@@ -147,9 +209,8 @@
     <div style="position:relative; height:52px; display:flex; align-items:center; gap:12px;">
       <div ref="{{ setProfileWrap }}" style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer; transition:opacity .5s ease;" data-clickable="true" onClick="{{ avatarClick }}">
         <img ref="{{ setProfileImg }}" src="./assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block; transition:opacity .5s ease;" />
-        <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(128,128,128,0.06) 0px, rgba(128,128,128,0.06) 3px, transparent 3px, transparent 6px); animation:scanMove 1.2s linear infinite;"></div>
       </div>
-      <span ref="{{ setAboutLabelEl }}" style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ffffff; pointer-events:auto; -webkit-mask-image:repeating-linear-gradient(to bottom, #000 0px, #000 3px, rgba(0,0,0,0.92) 3px, rgba(0,0,0,0.92) 6px); mask-image:repeating-linear-gradient(to bottom, #000 0px, #000 3px, rgba(0,0,0,0.92) 3px, rgba(0,0,0,0.92) 6px); animation:scanMask 1.2s linear infinite; cursor:pointer; transition:opacity .5s ease;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ avatarClick }}">{{ aboutLabel }}</span>
+      <span ref="{{ setAboutLabelEl }}" style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ececf0; pointer-events:auto; mix-blend-mode:difference; cursor:pointer; transition:opacity .5s ease;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ avatarClick }}">{{ aboutLabel }}</span>
     </div>
   </div>
 
@@ -365,19 +426,42 @@ class Component extends DCLogic {
   }
   closeAbout(instant) {
     this._aboutOpen = false;
-    if (instant) { this.setState({ aboutOpen: false }); if (this.profileWrap) { this.profileWrap.style.display = ''; this.profileWrap.style.opacity = ''; } if (this.profileImg) this.profileImg.style.opacity = ''; }
-    else { if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '0'; if (this.profileWrap) { this.profileWrap.style.opacity = '0'; } setTimeout(() => { if (!this._aboutOpen) { this.setState({ aboutOpen: false }); if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '1'; if (this.profileImg) this.profileImg.style.opacity = '1'; if (this.profileWrap) { this.profileWrap.style.display = ''; this.profileWrap.style.opacity = '1'; } if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .5s ease'; this.scrollEl.style.opacity = ''; } } }, 500); }
     clearTimeout(this._aboutTimer);
-    cancelAnimationFrame(this._revRaf);
-    if (this.aboutInner) this.aboutInner.style.filter = '';
-    if (this.moiWrap) { this.moiWrap.style.filter = ''; this.moiWrap.style.opacity = ''; }
-    if (this.bioEl) { this.bioEl.style.filter = ''; this.bioEl.style.opacity = ''; }
-    if (this.marqueeEl) { this.marqueeEl.style.filter = ''; this.marqueeEl.style.opacity = ''; }
-    if (this.reachEl) { this.reachEl.style.filter = ''; this.reachEl.style.opacity = ''; }
-    if (this.aboutEl) { this.aboutEl.style.transition = 'opacity .3s ease'; this.aboutEl.style.opacity = '0'; this.aboutEl.style.pointerEvents = 'none'; this.aboutEl.scrollTop = 0; }
-    if (instant && this.scrollEl) this.scrollEl.style.opacity = '';
-    if (this.sceneEl) { this.sceneEl.style.pointerEvents = ''; if (!instant) { this.sceneEl.style.transition = 'none'; this.sceneEl.style.opacity = '0'; void this.sceneEl.offsetHeight; clearTimeout(this._sceneReveal); this._sceneReveal = setTimeout(() => { if (!this._aboutOpen && this.sceneEl) { this.sceneEl.style.transition = 'opacity 1s ease'; this.sceneEl.style.opacity = '1'; } }, 450); } }
-    if (this.miniWrap) { if (instant) { this.miniWrap.style.opacity = '1'; } else { this.miniWrap.style.transition = 'opacity 1s ease'; clearTimeout(this._miniReveal); this._miniReveal = setTimeout(() => { if (!this._aboutOpen && this.miniWrap) this.miniWrap.style.opacity = '1'; }, 450); } }
+    const resetText = () => {
+      cancelAnimationFrame(this._revRaf);
+      if (this.aboutInner) this.aboutInner.style.filter = '';
+      [this.moiWrap, this.bioEl, this.marqueeEl, this.reachEl].filter(Boolean).forEach(el => { el.style.filter = ''; el.style.opacity = ''; });
+    };
+    if (instant) {
+      resetText();
+      this.setState({ aboutOpen: false });
+      if (this.profileWrap) { this.profileWrap.style.display = ''; this.profileWrap.style.opacity = ''; }
+      if (this.profileImg) this.profileImg.style.opacity = '';
+      if (this.aboutEl) { this.aboutEl.style.transition = 'none'; this.aboutEl.style.opacity = '0'; this.aboutEl.style.pointerEvents = 'none'; this.aboutEl.scrollTop = 0; }
+      if (this.scrollEl) this.scrollEl.style.opacity = '';
+      if (this.sceneEl) this.sceneEl.style.pointerEvents = '';
+      if (this.miniWrap) this.miniWrap.style.opacity = '1';
+      return;
+    }
+    // Non-instant: let the About text goo apart (the container stays opaque so the goo is visible),
+    // reveal the ring behind after the dissolve, then hide the now-empty container + reset for reuse.
+    this._aboutGooOut();
+    if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '0';
+    if (this.profileWrap) this.profileWrap.style.opacity = '0';
+    if (this.aboutEl) this.aboutEl.style.pointerEvents = 'none';
+    if (this.sceneEl) { this.sceneEl.style.pointerEvents = ''; this.sceneEl.style.transition = 'none'; this.sceneEl.style.opacity = '0'; void this.sceneEl.offsetHeight; clearTimeout(this._sceneReveal); this._sceneReveal = setTimeout(() => { if (!this._aboutOpen && this.sceneEl) { this.sceneEl.style.transition = 'opacity 1s ease'; this.sceneEl.style.opacity = '1'; } }, 500); }
+    if (this.miniWrap) { this.miniWrap.style.transition = 'opacity 1s ease'; clearTimeout(this._miniReveal); this._miniReveal = setTimeout(() => { if (!this._aboutOpen && this.miniWrap) this.miniWrap.style.opacity = '1'; }, 500); }
+    clearTimeout(this._aboutClose);
+    this._aboutClose = setTimeout(() => {
+      if (this._aboutOpen) return;
+      if (this.aboutEl) { this.aboutEl.style.transition = 'none'; this.aboutEl.style.opacity = '0'; this.aboutEl.scrollTop = 0; }
+      resetText();
+      this.setState({ aboutOpen: false });
+      if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '1';
+      if (this.profileImg) this.profileImg.style.opacity = '1';
+      if (this.profileWrap) { this.profileWrap.style.display = ''; this.profileWrap.style.opacity = '1'; }
+      if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .5s ease'; this.scrollEl.style.opacity = ''; }
+    }, 540);
   }
 
   // Snap the portrait frame to the background crosshair lattice (the "+" marks sit at 128px multiples
@@ -408,7 +492,14 @@ class Component extends DCLogic {
     this._aboutOpen = true;
     const loader = this.loaderEl;
     if (loader) { loader.style.display = 'none'; loader.style.visibility = 'hidden'; loader.style.opacity = '0'; }
-    [this.headerEl, this.footerEl, this.avatarEl].filter(Boolean).forEach(el => { el.style.opacity = '1'; el.style.filter = ''; });
+    // Header + avatar are persistent nav (carried across the navigation by the paint-bridge) so they
+    // show at once. The footer and scanlines are NOT carried from the case study, so fade them in
+    // gently instead of snapping — that snap was what felt unnatural.
+    [this.headerEl, this.avatarEl].filter(Boolean).forEach(el => { el.style.opacity = '1'; el.style.filter = ''; });
+    const _fadeUp = (el, dur, delay) => { if (!el) return; el.style.transition = 'none'; el.style.opacity = '0'; void el.offsetHeight; setTimeout(() => { if (el) { el.style.transition = 'opacity ' + dur + 'ms ease'; el.style.opacity = '1'; } }, delay || 0); };
+    _fadeUp(this.footerEl, 600, 220);
+    // Scanlines are index-only; fade them in (case studies have none) once the crossfade settles.
+    _fadeUp(this.scanEl, 800, 500);
     if (this.sceneEl) { this.sceneEl.style.transition = 'none'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
     if (this.miniWrap) { this.miniWrap.style.transition = 'none'; this.miniWrap.style.opacity = '0'; }
     if (this.scrollEl) { this.scrollEl.style.opacity = '0'; }
@@ -437,9 +528,14 @@ class Component extends DCLogic {
     const dest = this._aboutReturn;
     this._aboutReturn = null;
     this._aboutOpen = false;
-    if (!dest) { this.closeAbout(); this.setState({ selected: null, hovered: null }); this.runLoader(); return; }
-    if (this.aboutEl) { this.aboutEl.style.transition = 'opacity .6s ease'; this.aboutEl.style.opacity = '0'; this.aboutEl.style.pointerEvents = 'none'; }
+    this._aboutGooOut();
+    if (!dest) { this.closeAbout(); this.setState({ selected: null, hovered: null }); return; }
+    if (this.aboutEl) { this.aboutEl.style.pointerEvents = 'none'; }
     if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '0';
+    // Fade the footer out as we leave (it's index-only). Scanlines persist across the crossfade.
+    if (this.footerEl) { this.footerEl.style.transition = 'opacity .5s ease'; this.footerEl.style.opacity = '0'; }
+    // Leaving to a case study, which has no scanlines — fade the index scanlines out first.
+    if (this.scanEl) { this.scanEl.style.transition = 'opacity .45s ease'; this.scanEl.style.opacity = '0'; }
     setTimeout(() => { window.location.href = dest; }, 640);
   }
 
@@ -524,7 +620,12 @@ class Component extends DCLogic {
       const h = (location.hash || '').replace('#', '');
       if (h.indexOf('about') === 0) { _deepAbout = true; this._aboutReturn = sessionStorage.getItem('aboutReturn') || null; sessionStorage.removeItem('aboutReturn'); }
     } catch (e) {}
-    if (_deepAbout) this.openAboutDeep(); else this.runLoader();
+    // The loader intro plays only on the first visit of a session. Any later arrival at the
+    // index within the same tab (e.g. clicking "jason lim" home from a case study) skips it and
+    // reveals the site instantly, so the site feels persisted rather than re-loading.
+    let _seen = false; try { _seen = !!sessionStorage.getItem('om_seen'); } catch (e) {}
+    if (_deepAbout) this.openAboutDeep(); else if (_seen) this._revealInstant(); else this.runLoader();
+    try { sessionStorage.setItem('om_seen', '1'); } catch (e) {}
     // Failsafe: never let the deep-link cover strand as a black screen.
     setTimeout(() => { const c = document.getElementById('__aboutCover'); if (c && c.parentNode) c.parentNode.removeChild(c); }, 2000);
     // Snap the About text block to the 128px grid: width = an even multiple of 128 (256×k) so both
@@ -584,6 +685,38 @@ class Component extends DCLogic {
       el.appendChild(s);
     }
     el.style.filter = 'drop-shadow(0 1px 2px rgba(0,0,0,.5))';
+  }
+
+  // Instant reveal (no loader) — used on repeat arrivals at the index within a session.
+  _revealInstant() {
+    { const c = document.getElementById('__aboutCover'); if (c && c.parentNode) c.parentNode.removeChild(c); }
+    cancelAnimationFrame(this._loadRaf);
+    const loader = this.loaderEl;
+    if (loader) { loader.style.display = 'none'; loader.style.visibility = 'hidden'; loader.style.opacity = '0'; }
+    // Header + avatar are the persistent chrome carried across the navigation — show them at once,
+    // no fade, so they feel continuous with the case study we came from.
+    [this.headerEl, this.avatarEl].filter(Boolean).forEach(el => { el.style.transition = 'none'; el.style.opacity = '1'; el.style.filter = ''; });
+    // Everything the ring view adds (footer, spiral, minimap, scanlines + sweep) fades in like the
+    // loader-finish reveal, starting from 0 with a gentle stagger.
+    const fadeIn = (el, dur, delay) => {
+      if (!el) return;
+      el.style.transition = 'none';
+      el.style.opacity = '0';
+      void el.offsetHeight;
+      setTimeout(() => { el.style.transition = 'opacity ' + dur + 'ms ease'; el.style.opacity = '1'; }, delay || 0);
+    };
+    // Scanlines exist on both pages, so they persist through the root crossfade (don't fade them
+    // from 0 here — that dipped them out then in). Ring, footer and minimap are new to this view, fade in.
+    // Footer fades in fast; the spiral + minimap fade in slowly (mirrors how they fade OUT on the
+    // way into a case study).
+    if (this.footerEl) fadeIn(this.footerEl, 450, 100);
+    if (this.sceneEl) { this.sceneEl.style.pointerEvents = ''; fadeIn(this.sceneEl, 1500, 250); }
+    if (this.miniWrap) fadeIn(this.miniWrap, 1500, 250);
+    // Scanlines exist on the index but NOT on case studies, so fade them in on arrival (after the
+    // page crossfade settles) rather than snapping. scanEl starts at 0 before the VT captures it.
+    if (this.scanEl) fadeIn(this.scanEl, 800, 500);
+    this._booting = false;
+    if (this._applyVideoPlayback) this._applyVideoPlayback();
   }
 
   runLoader() {
@@ -747,11 +880,11 @@ class Component extends DCLogic {
     if (!els.length || !blur) { els.forEach(el => { el.style.filter = ''; }); if (onDone) onDone(); return; }
     cancelAnimationFrame(this._revRaf);
     els.forEach(el => { el.style.opacity = ''; el.style.filter = 'url(#gooReveal)'; });
-    const start = (this.props.gooStrength ?? 2.3) + 4.6;
+    const start = (this.props.gooStrength ?? 2.3) + 9;
     const t0 = performance.now(); dur = dur || 520;
     const stepFn = (t) => {
       const k = Math.min(1, (t - t0) / dur);
-      const eased = 1 - Math.pow(1 - k, 4);
+      const eased = 1 - Math.pow(1 - k, 2.4);
       const v = start * (1 - eased) + 0.01 * eased;
       blur.setAttribute('stdDeviation', v.toFixed(2));
       if (k < 1) this._revRaf = requestAnimationFrame(stepFn);
@@ -785,6 +918,24 @@ class Component extends DCLogic {
   }
 
   // One-shot reveal: the caption comes in gooey and resolves sharp (à la "Hey, I'm Artem").
+  // Gooey dissolve of the About text on exit (inverse of its meltReveal-in), driving the shared blur.
+  _aboutGooOut() {
+    const blur = this.gooRevealBlurEl;
+    const els = [this.bioEl, this.marqueeEl, this.reachEl].filter(Boolean);
+    if (!blur || !els.length) return;
+    els.forEach((el) => { el.style.filter = 'url(#gooReveal)'; });
+    cancelAnimationFrame(this._revRaf);
+    const t0 = performance.now(), dur = 460;
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / dur), e = k * k * k;
+      blur.setAttribute('stdDeviation', (0.01 * (1 - e) + 22 * e).toFixed(2));
+      if (k < 1) this._revRaf = requestAnimationFrame(step);
+    };
+    this._revRaf = requestAnimationFrame(step);
+    // Fade ONLY the portrait; the text is dissolved by the goo threshold, not opacity.
+    if (this.moiWrap) { this.moiWrap.style.transition = 'opacity .45s ease'; this.moiWrap.style.opacity = '0'; }
+  }
+
   meltReveal(el, blur, filterId, dur, rafKey) {
     if (!el) return;
     blur = blur || this.gooRevealBlurEl;
@@ -795,11 +946,11 @@ class Component extends DCLogic {
     el.style.filter = 'url(#' + filterId + ')';
     if (!blur) { el.style.filter = ''; return; }
     cancelAnimationFrame(this[rafKey]);
-    const start = (this.props.gooStrength ?? 2.3) + 4.6;
+    const start = (this.props.gooStrength ?? 2.3) + 9;
     const t0 = performance.now();
     const stepFn = (t) => {
       const k = Math.min(1, (t - t0) / dur);
-      const eased = 1 - Math.pow(1 - k, 4);
+      const eased = 1 - Math.pow(1 - k, 2.4);
       const v = start * (1 - eased) + 0.01 * eased;
       blur.setAttribute('stdDeviation', v.toFixed(2));
       if (k < 1) this[rafKey] = requestAnimationFrame(stepFn);
@@ -818,7 +969,7 @@ class Component extends DCLogic {
     if (this.companyEl) { this.companyEl.style.filter = ''; this.companyEl.style.opacity = '1'; this._companyText = this.companyEl.textContent; this.scrambleIn(this.companyEl, this._companyText, 700); }
     clearTimeout(this._capStagger);
     this._capStagger = setTimeout(() => {
-      if (this.titleEl) { this.titleEl.style.opacity = '1'; this.meltReveal(this.titleEl, this.gooRevealBlurEl2, 'gooReveal2', 2600, '_revRaf2'); }
+      if (this.titleEl) { this.titleEl.style.opacity = '1'; this.meltReveal(this.titleEl, this.gooRevealBlurEl2, 'gooReveal2', 1200, '_revRaf2'); }
     }, 360);
   }
 
@@ -1348,7 +1499,7 @@ class Component extends DCLogic {
       accent,
       overlayEl,
       scanStyle: {
-        position: 'absolute', inset: 0, zIndex: 12, pointerEvents: 'none', overflow: 'hidden',
+        position: 'absolute', inset: 0, zIndex: 17, pointerEvents: 'none', overflow: 'hidden',
         opacity: 1,
         backgroundImage: 'repeating-linear-gradient(to bottom, rgba(128,128,128,0.075) 0px, rgba(128,128,128,0.075) 3px, transparent 3px, transparent 6px)',
         animation: 'scanMove 1.2s linear infinite',
@@ -1394,7 +1545,7 @@ class Component extends DCLogic {
       aboutOpen: !!this.state.aboutOpen,
       aboutClosed: !this.state.aboutOpen,
       aboutLabel: this.state.aboutOpen ? 'Exit' : 'About',
-      goHome: () => { this._aboutReturn = null; this.spin = 0; this.dragMomentum = 0; this.closeAbout(true); this.setState({ selected: null, hovered: null }); this.runLoader(); },
+      goHome: () => { this._aboutReturn = null; this.spin = 0; this.dragMomentum = 0; this.setState({ selected: null, hovered: null }); if (this._aboutOpen) this.closeAbout(); },
       contact: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } window.location.href = 'mailto:jason.jinulim@gmail.com'; },
       setCompanyEl: (el) => { this.companyEl = el; },
       setTitleEl: (el) => { this.titleEl = el; },

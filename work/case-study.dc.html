@@ -3,9 +3,73 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* View Transitions opt-in MUST live in the real <head> at parse time (not the DC helmet,
+     which the runtime injects too late) so cross-document navigations carry the nav chrome. */
+  @view-transition { navigation: auto; }
+  @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+  /* During a view transition, neutralise the header's mix-blend-mode and the backdrop blur — both
+     re-render live against the crossfade and bloom the header text; restored ~0.9s after it settles. */
+  html.vt-freeze header, html.vt-freeze footer, html.vt-freeze .m-avatar span { mix-blend-mode: normal !important; }
+  html.vt-freeze [style*="backdrop-filter"] { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  /* No element is named — the whole page rides the root crossfade. (Naming the mix-blend-mode
+     header lifted it into an isolated snapshot whose hand-off to the live element flashed black.) */
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .45s; }
+  /* Header font declared in the real head too, so the paint-bridge header below renders in the
+     correct face on the first frame (the DC helmet's @font-face is injected too late for it). */
+  @font-face { font-family: 'PP Neue Montreal'; src: url('../assets/fonts/extra3.woff2') format('woff2'); font-weight: 350; font-style: normal; font-display: swap; }
+  @font-face { font-family: 'PP Neue Montreal'; src: url('../assets/fonts/extra4.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+</style>
+<link rel="preload" href="../assets/fonts/extra3.woff2" as="font" type="font/woff2" crossorigin="">
+<link rel="preload" href="../assets/fonts/extra4.woff2" as="font" type="font/woff2" crossorigin="">
+<link rel="preload" href="../assets/profile.png" as="image">
 <script src="./support.js"></script>
 </head>
 <body>
+<!-- Paint-bridge header: static, present at parse time so the destination's first frame already
+     shows the nav chrome (the real header is React-mounted on DOMContentLoaded, a frame later).
+     Hidden as soon as the DC header mounts, which sits pixel-identical on top. -->
+<div id="vt-bridge" aria-hidden="true" style="position:fixed; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:60; pointer-events:none; font-family:'PP Neue Montreal'; color:#e2e1e2;">
+  <span style="font-weight:350; font-size:40px; line-height:.94; letter-spacing:-1.5px; text-transform:lowercase;">jason lim</span>
+  <span class="m-hide-mobile" style="font-weight:350; font-size:40px; line-height:.94; letter-spacing:-1.5px; text-transform:lowercase;">contact</span>
+  <div style="position:absolute; left:0; right:0; top:0; height:52px; display:flex; justify-content:center; align-items:center; gap:12px; color:#ffffff;">
+    <img src="../assets/profile.png" alt="" draggable="false" style="width:52px; height:52px; object-fit:cover; display:block;" />
+    <span style="font-weight:350; font-size:40px; line-height:.94; letter-spacing:-1.5px; text-transform:lowercase;">about</span>
+  </div>
+</div>
+<script>
+  addEventListener('DOMContentLoaded', function () {
+    // Hold the bridge until the entry cover has finished fading (~0.5s), so the real header is
+    // never revealed while still masked by the cover — that gap was the header flicker.
+    setTimeout(function () {
+      var b = document.getElementById('vt-bridge'); if (b) b.style.display = 'none';
+    }, 620);
+  });
+  // Mark the session as active so the index skips its loader intro when we navigate home.
+  try { sessionStorage.setItem('om_seen', '1'); } catch (e) {}
+  // Navigating to the index (which doesn't opt into view transitions) auto-skips the outbound
+  // transition and rejects its promises with "Transition was skipped". Swallow ONLY that rejection
+  // so it doesn't surface as an unhandled error; case-study <-> case-study transitions resolve fine.
+  addEventListener('unhandledrejection', function (e) {
+    var r = e && e.reason; var m = (r && r.message) || String(r || '');
+    if (/transition was skipped/i.test(m)) e.preventDefault();
+  });
+  // Navigating to the index (no VT opt-in) skips the outbound transition and rejects its promises.
+  // Attach catch handlers so those rejections are never "unhandled".
+  addEventListener('pageswap', function (e) {
+    var vt = e && e.viewTransition; if (!vt) return;
+    document.documentElement.classList.add('vt-freeze');
+    if (vt.ready) vt.ready.catch(function () {});
+    if (vt.finished) vt.finished.catch(function () {});
+    if (vt.updateCallbackDone) vt.updateCallbackDone.catch(function () {});
+  });
+  addEventListener('pagereveal', function (e) {
+    if (!e || !e.viewTransition) return;
+    var h = document.documentElement; h.classList.add('vt-freeze');
+    var clear = function () { setTimeout(function () { h.classList.remove('vt-freeze'); }, 900); };
+    e.viewTransition.finished.then(clear, clear);
+  });
+</script>
 <x-dc>
 <helmet>
 <style>
@@ -44,27 +108,27 @@
 
   <!-- SVG goo filters: header hover melt (#goo) + entrance reveals for title (#gooReveal) and content (#gooReveal2) -->
   <svg width="0" height="0" style="position:absolute;" aria-hidden="true">
-    <filter id="goo" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+    <filter id="goo" x="-90%" y="-90%" width="280%" height="280%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGoo }}" result="blur"></feGaussianBlur>
-      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 12 -3.5"></feColorMatrix>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 16 -6"></feColorMatrix>
     </filter>
-    <filter id="gooReveal" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+    <filter id="gooReveal" x="-90%" y="-90%" width="280%" height="280%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal }}" result="blur"></feGaussianBlur>
-      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 32 -14"></feColorMatrix>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 30 -13"></feColorMatrix>
     </filter>
-    <filter id="gooReveal2" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+    <filter id="gooReveal2" x="-90%" y="-90%" width="280%" height="280%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal2 }}" result="blur"></feGaussianBlur>
-      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"></feColorMatrix>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11"></feColorMatrix>
     </filter>
-    <filter id="gooReveal3" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+    <filter id="gooReveal3" x="-90%" y="-90%" width="280%" height="280%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal3 }}" result="blur"></feGaussianBlur>
-      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"></feColorMatrix>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11"></feColorMatrix>
     </filter>
-    <filter id="gooHover" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+    <filter id="gooHover" x="-90%" y="-90%" width="280%" height="280%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooHover }}" result="blur"></feGaussianBlur>
       <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -8"></feColorMatrix>
     </filter>
-    <filter id="gooHoverTitle" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+    <filter id="gooHoverTitle" x="-90%" y="-90%" width="280%" height="280%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooHoverTitle }}" result="blur"></feGaussianBlur>
       <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 15 -4"></feColorMatrix>
     </filter>
@@ -85,9 +149,8 @@
     <div style="position:relative; display:flex; align-items:center; gap:12px;">
       <div style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer;" data-clickable="true" onClick="{{ goAbout }}">
         <img src="../assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block;" />
-        <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(128,128,128,0.06) 0px, rgba(128,128,128,0.06) 3px, transparent 3px, transparent 6px); animation:scanMove 1.2s linear infinite;"></div>
       </div>
-      <span style="font-family:'PP Neue Montreal'; font-weight:350; font-size:40px; letter-spacing:-1.5px; text-transform:lowercase; color:#ffffff; pointer-events:auto; -webkit-mask-image:repeating-linear-gradient(to bottom, #000 0px, #000 3px, rgba(0,0,0,0.92) 3px, rgba(0,0,0,0.92) 6px); mask-image:repeating-linear-gradient(to bottom, #000 0px, #000 3px, rgba(0,0,0,0.92) 3px, rgba(0,0,0,0.92) 6px); animation:scanMask 1.2s linear infinite; cursor:pointer;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goAbout }}">About</span>
+      <span style="font-family:'PP Neue Montreal'; font-weight:350; font-size:40px; letter-spacing:-1.5px; text-transform:lowercase; color:#ececf0; pointer-events:auto; mix-blend-mode:difference; cursor:pointer;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goAbout }}">About</span>
     </div>
   </div>
 
@@ -197,9 +260,9 @@ class Component extends DCLogic {
   _enter() {
     if (this.logoEl) this.logoEl.style.opacity = '1';
     if (this.companyEl) { this.companyEl.style.opacity = '1'; this.scrambleIn(this.companyEl, this.companyEl.textContent, 700); }
-    if (this.titleEl) this.meltReveal(this.titleEl, this.gooRevealEl, 'gooReveal', 2000, 13);
+    if (this.titleEl) this.meltReveal(this.titleEl, this.gooRevealEl, 'gooReveal', 1400, 26);
     setTimeout(() => {
-      if (this.contextEl) this.meltReveal(this.contextEl, this.gooReveal2El, 'gooReveal2', 1100, 5);
+      if (this.contextEl) this.meltReveal(this.contextEl, this.gooReveal2El, 'gooReveal2', 900, 12);
     }, 400);
   }
 
@@ -216,7 +279,7 @@ class Component extends DCLogic {
   _revealContent() {
     if (this._contentRevealed) return;
     this._contentRevealed = true;
-    if (this.bioEl) this.meltReveal(this.bioEl, this.gooReveal3El, 'gooReveal3', 1500, 4);
+    if (this.bioEl) this.meltReveal(this.bioEl, this.gooReveal3El, 'gooReveal3', 1100, 11);
     if (this.mocksEl) this.mocksEl.style.opacity = '1';
   }
 
@@ -238,14 +301,14 @@ class Component extends DCLogic {
   _revealNext() {
     if (this._nextRevealed) return;
     this._nextRevealed = true;
-    if (this.nextEyebrowEl) this.meltReveal(this.nextEyebrowEl, this.gooReveal2El, 'gooReveal2', 1200, 4);
+    if (this.nextEyebrowEl) this.meltReveal(this.nextEyebrowEl, this.gooReveal2El, 'gooReveal2', 900, 11);
     if (this.nextEl) { this.nextEl.style.opacity = '1'; }
-    if (this.nextTitleEl) this.meltReveal(this.nextTitleEl, this.gooRevealEl, 'gooReveal', 1800, 11);
+    if (this.nextTitleEl) this.meltReveal(this.nextTitleEl, this.gooRevealEl, 'gooReveal', 1300, 24);
   }
 
   // Gooey reveal: ramp the filter's blur from a heavy blob down to sharp (quartic ease-out).
   meltReveal(el, blurEl, filterId, dur, start) {
-    if (!el) return;
+    if (!el || this._leaving) return;
     start = start || 6.5; dur = dur || 1500;
     if (!blurEl) { el.style.opacity = '1'; return; }
     // Prime the blur to its heavy start value and commit it while the element is STILL
@@ -255,11 +318,13 @@ class Component extends DCLogic {
     el.style.filter = `url(#${filterId})`;
     void el.getBoundingClientRect();
     requestAnimationFrame(() => {
+      if (this._leaving) return;
       el.style.opacity = '1';
       const t0 = performance.now();
       const step = (t) => {
+        if (this._leaving) return;
         const k = Math.min(1, (t - t0) / dur);
-        const eased = 1 - Math.pow(1 - k, 4);
+        const eased = 1 - Math.pow(1 - k, 2.4);
         const v = start * (1 - eased) + 0.01 * eased;
         blurEl.setAttribute('stdDeviation', v.toFixed(2));
         if (k < 1) requestAnimationFrame(step);
@@ -267,6 +332,32 @@ class Component extends DCLogic {
       };
       requestAnimationFrame(step);
     });
+  }
+
+  // Gooey dissolve of ALL text on leave (inverse of the meltReveal goo-in): ramp each reveal
+  // filter's blur UP so the text blobs apart, and fade the content (images) out.
+  _gooOutAll() {
+    // Stop any in-flight reveals (and the scroll observers that re-trigger them) so they don't
+    // fight the goo-out on the shared filters — that race left titles sharp or re-revealing.
+    this._leaving = true;
+    if (this._contentIO) this._contentIO.disconnect();
+    if (this._onNextScroll) window.removeEventListener('scroll', this._onNextScroll);
+    const apply = (el, fid) => { if (el) el.style.filter = 'url(#' + fid + ')'; };
+    apply(this.titleEl, 'gooReveal'); apply(this.nextTitleEl, 'gooReveal');
+    apply(this.contextEl, 'gooReveal2'); apply(this.nextEyebrowEl, 'gooReveal2'); apply(this.companyEl, 'gooReveal2');
+    apply(this.bioEl, 'gooReveal3');
+    const filters = [[this.gooRevealEl, 34], [this.gooReveal2El, 20], [this.gooReveal3El, 17]];
+    cancelAnimationFrame(this._awayRaf);
+    const t0 = performance.now(), dur = 520;
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / dur), e = k * k * k;
+      filters.forEach((p) => { if (p[0]) p[0].setAttribute('stdDeviation', (0.01 * (1 - e) + p[1] * e).toFixed(2)); });
+      if (k < 1) this._awayRaf = requestAnimationFrame(step);
+    };
+    this._awayRaf = requestAnimationFrame(step);
+    // Fade ONLY the imagery; the text is dissolved by the goo threshold (not opacity) so it visibly blobs.
+    if (this.mocksEl) { this.mocksEl.style.transition = 'opacity .45s ease'; this.mocksEl.style.opacity = '0'; }
+    if (this.logoEl) { this.logoEl.style.transition = 'opacity .45s ease'; this.logoEl.style.opacity = '0'; }
   }
 
   // Scramble-in: cycle random glyphs, resolving left-to-right into the final text (matches the index eyebrow).
@@ -324,7 +415,7 @@ class Component extends DCLogic {
 
   // Header melt-on-hover — matches the index screen: ramp the shared #goo blur up on enter, down on leave.
   animateMelt(el, on, strength, blurEl, filterId, keepFilter) {
-    if (!el) return;
+    if (!el || this._leaving) return;
     const blur = blurEl || this.gooEl;
     filterId = filterId || 'goo';
     const target = on ? (strength || 2.3) : 0.01;
@@ -374,15 +465,19 @@ class Component extends DCLogic {
         if (this._navigating) return; this._navigating = true;
         const href = e.currentTarget.getAttribute('href');
         if (!href || href === '#') { this._navigating = false; return; }
-        if (this.mainEl) { this.mainEl.style.transition = 'opacity .6s ease'; this.mainEl.style.opacity = '0'; }
-        setTimeout(() => { window.location.href = href; }, 700);
+        this._gooOutAll();
+        setTimeout(() => { window.location.href = href; }, 620);
       },
-      goHome: () => { window.location.href = '../index.html'; },
+      goHome: () => {
+        if (this._navigating) return; this._navigating = true;
+        this._gooOutAll();
+        setTimeout(() => { window.location.href = '../index.html'; }, 620);
+      },
       goAbout: () => {
         if (this._navigating) return; this._navigating = true;
         try { sessionStorage.setItem('aboutReturn', location.href.split('#')[0]); } catch (e) {}
-        if (this.mainEl) { this.mainEl.style.transition = 'opacity .32s ease'; this.mainEl.style.opacity = '0'; }
-        setTimeout(() => { window.location.href = '../index.html#about'; }, 300);
+        this._gooOutAll();
+        setTimeout(() => { window.location.href = '../index.html#about'; }, 620);
       },
     };
   }
