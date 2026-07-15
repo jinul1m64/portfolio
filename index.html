@@ -263,11 +263,13 @@
     <div style="position:absolute; left:72px; top:77px; width:63px; height:48px; transform:translate(-50%,-50%); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); background:rgba(10,11,14,0.35);"></div>
     <svg width="150" height="104" style="position:absolute; inset:0; overflow:visible;">
       <g ref="{{ setMiniRing }}"></g>
-      <path d="M72 74.2 V79.8 M69.2 77 H74.8" stroke="rgba(255,255,255,0.42)" stroke-width="0.8"></path>
     </svg>
     <div ref="{{ setMiniDevices }}" style="position:absolute; inset:0; filter:brightness(0.32);"></div>
     <div ref="{{ setMiniDevicesBright }}" style="position:absolute; inset:0; clip-path:inset(53px 46.5px 3px 40.5px); -webkit-clip-path:inset(53px 46.5px 3px 40.5px);"></div>
     <div ref="{{ setMiniWindow }}" style="position:absolute; left:72px; top:77px; width:63px; height:48px; transform:translate(-50%,-50%); border:0.5px solid rgba(255,255,255,0.6); border-radius:0;"></div>
+    <svg width="150" height="104" style="position:absolute; inset:0; overflow:visible;">
+      <path d="M72 74.2 V79.8 M69.2 77 H74.8" stroke="rgba(255,255,255,0.75)" stroke-width="0.8"></path>
+    </svg>
   </div>
 
   <!-- Hover caption (flat text, scramble-in on hover, above the footer) -->
@@ -406,13 +408,18 @@ class Component extends DCLogic {
     // Step 2: once the device has popped, fade the ring, minimap, scanlines/sweep and
     // footer, then navigate so the case study starts its own reveal.
     const fadeChrome = () => {
-      if (this.sceneEl) { this.sceneEl.style.transition = 'opacity .6s ease'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
-      if (this.miniWrap) { this.miniWrap.style.transition = 'opacity .6s ease'; this.miniWrap.style.opacity = '0'; }
+      // Minimap leaves first: fade out while inverse-scaling UP (grows as the big ring shrinks).
+      if (this.miniWrap) { this.miniWrap.style.transition = 'opacity .45s ease, transform .45s cubic-bezier(.22,.61,.36,1)'; this.miniWrap.style.opacity = '0'; this.miniWrap.style.transform = (this._miniScaleTf || 'scale(1)') + ' scale(1.3)'; }
+      // Then the large ring scales DOWN as it fades.
+      setTimeout(() => {
+        if (this.sceneEl) { this.sceneEl.style.transition = 'opacity .6s ease'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
+        this._ringKTarget = 0.9;   // large ring scales down as it fades
+      }, 200);
       if (this.scanEl) { this.scanEl.style.transition = 'opacity .6s ease'; this.scanEl.style.opacity = '0'; }
       if (this.footerEl) { this.footerEl.style.transition = 'opacity .6s ease'; this.footerEl.style.opacity = '0'; }
       if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .6s ease'; this.scrollEl.style.opacity = '0'; }
-      // Hold on just the gridded background + header for 300ms before the next screen loads.
-      setTimeout(() => { window.location.href = dest; }, 600 + 300);
+      // Hold on just the gridded background + header before the next screen loads.
+      setTimeout(() => { window.location.href = dest; }, 200 + 600 + 300);
     };
     // Step 1: slowly scale the device down, then back up — using the exact same easing and
     // scale values as the hover transition (1.1 hovered → 1.0 → 1.1).
@@ -802,8 +809,8 @@ class Component extends DCLogic {
     // Footer fades in fast; the spiral + minimap fade in slowly (mirrors how they fade OUT on the
     // way into a case study).
     if (this.footerEl) fadeIn(this.footerEl, 450, 100);
-    if (this.sceneEl) { this.sceneEl.style.pointerEvents = ''; fadeIn(this.sceneEl, 1500, 250); }
-    this._revealMini(1500);
+    if (this.sceneEl) { this.sceneEl.style.pointerEvents = ''; this._revealScene(1500, 250); }
+    this._revealMini(1550);
     // Scanlines exist on the index but NOT on case studies, so fade them in on arrival (after the
     // page crossfade settles) rather than snapping. scanEl starts at 0 before the VT captures it.
     if (this.scanEl) fadeIn(this.scanEl, 800, 500);
@@ -853,6 +860,20 @@ class Component extends DCLogic {
     this._loadRaf = requestAnimationFrame(step);
   }
 
+  // Fade the scene in on arrival; the RING (helix) also scales in via _ringK, but the background
+  // numerators / logo / company name only fade (they live in the scene but outside the helix).
+  _revealScene(dur, delay) {
+    const s = this.sceneEl;
+    if (!s) return;
+    s.style.transition = 'none';
+    s.style.opacity = '0';
+    s.style.transform = 'none';
+    void s.offsetWidth;
+    this._ringK = 0.9; this._ringKTarget = 0.9;   // ring starts small while hidden
+    const go = () => { if (!this.sceneEl) return; this.sceneEl.style.transition = 'opacity ' + dur + 'ms ease'; this.sceneEl.style.opacity = '1'; this._ringKTarget = 1; };
+    if (delay) setTimeout(go, delay); else go();
+  }
+
   // Quick fade + upward slide of the minimap into place, after the ring has revealed.
   _revealMini(delay) {
     if (!this.miniWrap) return;
@@ -869,7 +890,11 @@ class Component extends DCLogic {
       this.miniWrap.style.transition = 'opacity .5s ease, transform .5s cubic-bezier(.22,.61,.36,1)';
       this.miniWrap.style.opacity = '1';
       this.miniWrap.style.transform = tf;
-      setTimeout(() => { this._miniIntro = false; }, 520);
+      if (!this._dotSweepTimer) {              // then re-fire once in a while
+        const schedule = () => { this._dotSweepTimer = setTimeout(() => { this._sweepStart = performance.now(); schedule(); }, 9000 + Math.random() * 12000); };
+        schedule();
+      }
+      setTimeout(() => { this._miniIntro = false; this._sweepStart = performance.now(); }, 520);   // fire the first lidar sweep right after the minimap finishes revealing
     }, delay || 0);
   }
 
@@ -894,8 +919,8 @@ class Component extends DCLogic {
         foot.forEach(el => { el.style.opacity = ''; });
         this.meltRevealMany(foot, () => {
           // 4) spiral fades in (opacity only) over 1s — enable device hovers once it's fully in
-          if (this.sceneEl) { this.sceneEl.style.transition = 'opacity 1s ease'; this.sceneEl.style.opacity = '1'; }
-          if (this.miniWrap) this._revealMini(450);
+          if (this.sceneEl) { this._revealScene(1000, 0); }
+          if (this.miniWrap) this._revealMini(1000);
           setTimeout(() => { this._booting = false; }, 1000);
         });
       });
@@ -943,11 +968,12 @@ class Component extends DCLogic {
     if (!g || g._built) return;
     g._built = true;
     const NS = 'http://www.w3.org/2000/svg';
-    const CX = 72, CY = 52, AX = 92, AY = 23, rad = Math.PI / 180, TLT = 18 * rad;
+    const CX = 72, CY = 30, AX = 184, AY = 46, rad = Math.PI / 180, TLT = 18 * rad;
     const c = Math.cos(TLT), s = Math.sin(TLT);
     const RCX = 72, RCY = 77, RW = 63, RH = 48;
     const rL = RCX - RW / 2, rR = RCX + RW / 2, rT = RCY - RH / 2, rB = RCY + RH / 2;
-    const N = 32, SZ = 1.8;
+    const N = 76, SZ = 1.8;
+    this._miniDots = [];
     for (let k = 0; k < N; k++) {
       const t = (k / N) * 2 * Math.PI;
       const lx = AX * Math.cos(t), ly = AY * Math.sin(t);
@@ -956,9 +982,16 @@ class Component extends DCLogic {
       const r = document.createElementNS(NS, 'rect');
       r.setAttribute('x', (x - SZ / 2).toFixed(2)); r.setAttribute('y', (y - SZ / 2).toFixed(2));
       r.setAttribute('width', SZ); r.setAttribute('height', SZ);
-      r.setAttribute('fill', inside ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.42)');
+      r.setAttribute('fill', inside ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.26)');
       g.appendChild(r);
+      this._miniDots.push({ r, t, base: inside ? 0.08 : 0.26, cx: x, cy: y, inside: inside, gx: (Math.random() * 2 - 1) * 24, gy: (Math.random() * 2 - 1) * 16 });
     }
+    // Endpoints of the outer arc = the two dots just outside the window outline (right + left of it).
+    const n = this._miniDots.length;
+    let first = -1, last = -1;
+    this._miniDots.forEach((d, i) => { if (d.inside) { if (first < 0) first = i; last = i; } });
+    this._sweepT1 = this._miniDots[(first - 1 + n) % n].t;   // right, just outside the outline
+    this._sweepT2 = this._miniDots[(last + 1) % n].t;        // left, just outside the outline
   }
 
   // Build the minimap device markers in TWO layers: a dark base (all devices) and a bright copy that the
@@ -990,8 +1023,43 @@ class Component extends DCLogic {
   // Advance the minimap markers: position on the tilted ellipse, each device UPRIGHT with a rotateY turn
   // (same standing-upright behaviour as the big ring). Dark + bright layers get identical transforms.
   _tickMini() {
+    // Lidar sweep: a single pass of a comet head along the OUTER arc — starts at the first dot outside the
+    // right of the outline, travels over the top, finishes at the left (reversed when the left arrow is active).
+    if (this._miniDots && this._sweepStart != null) {
+      const DUR = 2600, PLATEAU = 3.4, LEAD = 0.12;
+      const p = (performance.now() - this._sweepStart) / DUR;
+      const left = (this.state.spinSel === 'left');
+      if (p >= 2.4) {
+        for (const d of this._miniDots) {
+          d.r.setAttribute('fill', 'rgba(255,255,255,' + d.base.toFixed(3) + ')');
+          d.r.setAttribute('width', '1.8'); d.r.setAttribute('height', '1.8');
+          d.r.setAttribute('x', (d.cx - 0.9).toFixed(2)); d.r.setAttribute('y', (d.cy - 0.9).toFixed(2));
+        }
+        this._sweepStart = null;
+      } else {
+        const TWO = Math.PI * 2, t1 = this._sweepT1, t2 = this._sweepT2;
+        const span = ((t1 - t2) % TWO + TWO) % TWO;       // outer-arc length (right → over top → left)
+        const q = Math.min(p, 1);
+        const ez = q < 0.5 ? 16 * q * q * q * q * q : 1 - Math.pow(-2 * q + 2, 5) / 2;
+        const eased = 0.18 * q + 0.82 * ez;   // strong quintic ease → whips through the middle much faster
+        const headS = (eased + Math.max(0, p - 1)) * span;   // keeps growing past the end so the trail dims
+        for (const d of this._miniDots) {
+          let glow = 0;
+          if (!d.inside) {
+            const s = left ? ((d.t - t2) % TWO + TWO) % TWO : ((t1 - d.t) % TWO + TWO) % TWO;   // dot's position along the arc
+            const behind = headS - s;                      // radians the head is past this dot
+            glow = behind < 0 ? 0 : (behind < LEAD ? behind / LEAD : (behind < PLATEAU ? 1 : Math.exp(-(behind - PLATEAU) * 1.1)));
+          }
+          const a = Math.min(0.5, d.base + glow * (0.5 - d.base));
+          d.r.setAttribute('fill', 'rgba(255,255,255,' + a.toFixed(3) + ')');
+          const sz = 1.8 + glow * 0.6;
+          d.r.setAttribute('width', sz.toFixed(2)); d.r.setAttribute('height', sz.toFixed(2));
+          d.r.setAttribute('x', (d.cx - sz / 2).toFixed(2)); d.r.setAttribute('y', (d.cy - sz / 2).toFixed(2));
+        }
+      }
+    }
     if (!this._miniMarks) return;
-    const CX = 72, CY = 52, AX = 92, AY = 23, rad = Math.PI / 180;
+    const CX = 72, CY = 30, AX = 184, AY = 46, rad = Math.PI / 180;
     const TLT = 18 * rad, cosTlt = Math.cos(TLT), sinTlt = Math.sin(TLT);
     for (const m of this._miniMarks) {
       const phi = (m.a + this.spin) * rad;
@@ -1031,7 +1099,7 @@ class Component extends DCLogic {
     this._revRaf = requestAnimationFrame(stepFn);
   }
   setRoot = (el) => { this.rootEl = el; };
-  componentWillUnmount() { cancelAnimationFrame(this.raf); clearInterval(this._clockTimer); window.removeEventListener('resize', this._onResize); clearTimeout(this._sweepTimer); clearInterval(this._playTimer); window.removeEventListener('pointerdown', this._playAll); window.removeEventListener('focus', this._playAll); document.removeEventListener('visibilitychange', this._playAll); document.removeEventListener('visibilitychange', this._onVis); if (this._io) this._io.disconnect(); }
+  componentWillUnmount() { cancelAnimationFrame(this.raf); clearInterval(this._clockTimer); window.removeEventListener('resize', this._onResize); clearTimeout(this._sweepTimer); clearTimeout(this._dotSweepTimer); clearTimeout(this._pingTimer); clearInterval(this._playTimer); window.removeEventListener('pointerdown', this._playAll); window.removeEventListener('focus', this._playAll); document.removeEventListener('visibilitychange', this._playAll); document.removeEventListener('visibilitychange', this._onVis); if (this._io) this._io.disconnect(); }
 
   // Inverse of the reveal: caption melts into goo and dissolves, then unmounts via onDone.
   meltAway(el, onDone) {
@@ -1312,7 +1380,9 @@ class Component extends DCLogic {
     // diagonal ellipse. But each device is only translated/scaled and given a rotateY turn
     // under its own centred perspective — so it STANDS UPRIGHT (no roll/pitch) while it
     // rotates in 3D as it travels the ellipse.
-    if (this.helixEl) this.helixEl.style.transform = 'translate(-50%,-50%)';
+    if (this._ringK == null) { this._ringK = 1; this._ringKTarget = 1; }
+    this._ringK += (this._ringKTarget - this._ringK) * 0.08;
+    if (this.helixEl) this.helixEl.style.transform = 'translate(-50%,-50%) scale(' + this._ringK.toFixed(4) + ')';
     const ringPt = (th) => {
       const x0 = R * Math.sin(th), z0 = R * Math.cos(th);          // th=0 → front (0,0,R)
       const y1 = -z0 * sinT, z1 = z0 * cosT, x1 = x0;              // pitch about X
