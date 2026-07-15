@@ -621,8 +621,10 @@ class Component extends DCLogic {
     this._applyVideoPlayback = () => {
       if (!this._running) { this.videoEls.forEach(v => { if (v && !v.paused) v.pause(); }); return; }
       const hov = this.state.hovered;
-      // Active set is chosen in the tick loop (most on-screen cards); hover isolates to one.
-      const active = (hov != null) ? new Set([String(hov)]) : (this._activeSlots || new Set());
+      // Keep every on-screen clip playing; hover just guarantees the hovered one is included.
+      // (Pausing the others fired their `pause` event, popping each poster back in — a hover flash.)
+      const active = new Set(this._activeSlots || []);
+      if (hov != null) active.add(String(hov));
       this.videoEls.forEach(v => {
         if (!v) return;
         if (active.has(v.dataset.slot)) { if (v._loaded !== false && v.paused) { v.muted = true; const p = v.play(); if (p && p.catch) p.catch(() => {}); } }
@@ -1574,7 +1576,10 @@ class Component extends DCLogic {
     // to their poster (see the video ref), freeing the slot. Rank by how FRONT-FACING each
     // card is (c = cos of its angle, peaks dead-center) so warming tracks rotation smoothly.
     // Skip cards in post-error cooldown so a decodable card takes the budget instead.
-    const MAXDEC = 14, WARM_BONUS = 0.04, tnow = performance.now();
+    // Cap concurrent decodes well within the browser's real limit — 6 devices but only the
+    // front ~3-4 are ever prominent, and warming all of them at once exhausts the decoder
+    // (cascading error→poster→re-warm, i.e. flicker + memory pressure).
+    const MAXDEC = 4, WARM_BONUS = 0.04, tnow = performance.now();
     const scored = cand.map((it) => ({ it, score: it.c + ((it.e.vid && it.e.vid.getAttribute('src')) ? WARM_BONUS : 0) }));
     scored.sort((a, b) => b.score - a.score);
     const warmSet = new Set();
@@ -1582,13 +1587,21 @@ class Component extends DCLogic {
     for (let i = 0; i < scored.length && filled < MAXDEC; i++) {
       const it = scored[i].it, v = it.e.vid;
       if (v && v._decErr && tnow - v._decErr < 5000) continue;
-      setWarm(v, true); warmSet.add(it.slot); filled++;
+      setWarm(v, true); if (v) v._coldAt = 0; warmSet.add(it.slot); filled++;
     }
+    // Cooling hysteresis: a video that drops out of the warm set holds its decoder for a
+    // short grace period before detaching, so a device grazing the rank/visibility boundary
+    // doesn't attach/detach (load()) every frame.
+    const COLD_DELAY = 900;
     for (let k = 0; k < this.cardEls.length; k++) {
       const e = this.cardEls[k];
       if (!e || !e.el) continue;
       if (e.vid === undefined) e.vid = e.el.querySelector('video');
-      if (!warmSet.has(this.FROM + k)) setWarm(e.vid, false);
+      const v = e.vid;
+      if (!v || !v.getAttribute('src')) continue;
+      if (warmSet.has(this.FROM + k)) { v._coldAt = 0; continue; }
+      if (!v._coldAt) v._coldAt = tnow;
+      else if (tnow - v._coldAt > COLD_DELAY) { setWarm(v, false); v._coldAt = 0; }
     }
     const active = [];
     for (const it of cand) { if (warmSet.has(it.slot) && it.op > 0.06) active.push(String(it.slot)); }
@@ -1696,7 +1709,6 @@ class Component extends DCLogic {
       const DEVICE_W = W;   // render at full width; spacing comes from the arc layout
       const cardR = R;   // iPad sits on the same Z as the phones
       const isHov = hovered === i;
-      const scv = isHov ? 1.1 : 1;
       const idx = i - this.FROM;
       const h = React.createElement;
       // Face media: video cards render a still poster under a lazily-loaded <video> (src attached only near the front).
@@ -1785,22 +1797,23 @@ class Component extends DCLogic {
       cards.push({
         key: i,
         body,
-        ref: (el) => { this.cardEls[idx] = el ? { el, a, isTablet, W, rad: cardR } : null; },
+        ref: (el) => { if (!el) { this.cardEls[idx] = null; return; } const p = this.cardEls[idx] || {}; p.el = el; p.a = a; p.isTablet = isTablet; p.W = W; p.rad = cardR; this.cardEls[idx] = p; },   // preserve per-card warm-band state (vid/_coldAt/_decErr) across re-renders
         onEnter: () => { if (this._booting) return; this.setState({ hovered: i }); },
         onLeave: () => this.setState(s => (s.hovered === i ? { hovered: null } : null)),
         onOpen: () => { if (!/^https?:/i.test(base.href || '')) this.openCase(base.href); },
         href: base.href,
         style: {
           position: 'absolute', top: 0, left: 0, width: '1px', height: '1px',
-          transform: 'none',   // billboard position/scale driven per-frame in tick()
-          // (perspective moved onto the inner's own transform so this element stays 2D — Safari won't paint SVG filters on a 3D-context element)
-          '--f': 1,
-          zIndex: isHov ? 30 : 1,
+          // transform / --f (opacity) / zIndex are owned exclusively by tick() per-frame.
+          // Keeping them out of the render style stops a hover re-render from resetting the
+          // billboard to the origin for one frame (the old flicker / cards vanishing to center).
         },
         innerStyle: {
           position: 'absolute', left: 0, top: 0, width: W + 'px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transform: `perspective(${1200 * SS}px) translate(-50%,-50%) scale(${scv / SS})`,   // tick() sets rotateY + hover scale; perspective() keeps the 3D turn while the outer stays 2D (Safari filter fix). scale(1/SS) counter-scales the supersampled build.
+          // transform (perspective + rotateY + centering) is owned exclusively by tick() per-frame;
+          // keeping it out of the render style stops a hover re-render from snapping every device
+          // back to its un-rotated, un-centered frame-0 pose for one frame.
           transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
           cursor: 'pointer',
         },
