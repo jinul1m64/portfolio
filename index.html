@@ -11,12 +11,14 @@
      root crossfade bakes the blend into the flat snapshot (white over the dark bg) so it stays stable.
      The paint-bridge keeps the header + avatar present on the first frame so nothing pops in. */
   @view-transition { navigation: auto; }
+  html { scrollbar-width: none; -ms-overflow-style: none; }
+  html::-webkit-scrollbar { width: 0; height: 0; display: none; }
+  html, body { background: #000000; }
   ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .45s; }
   @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
   /* During a view transition, neutralise the header's mix-blend-mode and the backdrop blur — both
      re-render live against the crossfade and bloom the header text; restored ~0.9s after it settles. */
   html.vt-freeze header, html.vt-freeze footer, html.vt-freeze .m-avatar span { mix-blend-mode: normal !important; }
-  html.vt-freeze [style*="backdrop-filter"] { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
   /* Header font in the real head so the paint-bridge (below) renders correctly on the first frame. */
   @font-face { font-family: 'PP Neue Montreal'; src: url('./assets/fonts/extra3.woff2') format('woff2'); font-weight: 350; font-style: normal; font-display: swap; }
   @font-face { font-family: 'PP Neue Montreal'; src: url('./assets/fonts/extra4.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
@@ -32,7 +34,7 @@
      is removed once the real chrome mounts. Skipped on a first visit (the loader plays instead). */
   addEventListener('unhandledrejection', function (e) {
     var r = e && e.reason; var m = (r && r.message) || String(r || '');
-    if (/transition was skipped/i.test(m)) e.preventDefault();
+    if (/transition was (skipped|aborted)/i.test(m)) e.preventDefault();
   });
   addEventListener('pageswap', function (e) { if (e && e.viewTransition) document.documentElement.classList.add('vt-freeze'); });
   addEventListener('pagereveal', function (e) {
@@ -57,10 +59,24 @@
         '<span style="' + lower + '">jason lim</span>' +
         '<span class="m-hide-mobile" style="' + lower + '">contact</span>' +
         '<div style="position:absolute;left:0;right:0;top:0;height:52px;display:flex;justify-content:center;align-items:center;gap:12px;">' + centre + '</div>';
+      // Grid bridge: the DC grid mounts a frame late, so paint a matching grid now — the arriving
+      // snapshot then shows an identical grid, so the root crossfade of grid→grid is invisible (no flicker).
+      var g = document.createElement('div');
+      g.id = 'vt-grid-bridge'; g.setAttribute('aria-hidden', 'true');
+      g.style.cssText = `position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.16)' stroke-width='1'/%3E%3C/svg%3E"),linear-gradient(to right,rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.08) 1px,transparent 1px);background-size:128px 128px,128px 128px,128px 128px;background-position:50% 50%,calc(50% + 64px) calc(50% + 64px),calc(50% + 64px) calc(50% + 64px);-webkit-mask-image:radial-gradient(120% 110% at 50% 50%,#000 40%,rgba(0,0,0,0) 92%);mask-image:radial-gradient(120% 110% at 50% 50%,#000 40%,rgba(0,0,0,0) 92%);`;
+      (document.body || document.documentElement).appendChild(g);
+      // Header blur backdrop bridge: the DC blur layer mounts late, so paint a matching one now
+      // so the progressive blur persists through the crossfade instead of dropping out.
+      var bf = document.createElement('div');
+      bf.id = 'vt-blur-bridge'; bf.setAttribute('aria-hidden', 'true');
+      bf.style.cssText = "position:fixed;top:0;left:0;right:0;height:172px;z-index:6;pointer-events:none;backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);-webkit-mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,0) 100%);background:linear-gradient(to bottom,rgba(10,11,14,.72),rgba(10,11,14,0));";
+      (document.body || document.documentElement).appendChild(bf);
       (document.body || document.documentElement).appendChild(b);
       addEventListener('DOMContentLoaded', function () {
         requestAnimationFrame(function () { requestAnimationFrame(function () {
           var el = document.getElementById('vt-bridge'); if (el) el.style.display = 'none';
+          var gr = document.getElementById('vt-grid-bridge'); if (gr) gr.style.display = 'none';
+          var bl = document.getElementById('vt-blur-bridge'); if (bl) bl.style.display = 'none';
         }); });
       });
     } catch (e) {}
@@ -79,9 +95,9 @@
 <meta name="ext-resource-dependency" content="./assets/ouster-fleet.png" data-resource-id="m4">
 <meta name="ext-resource-dependency" content="https://cdn.prod.website-files.com/61bfcea949e78a64df3dcc8a/65b041af6127d88b289d5fba_nw-1.png" data-resource-id="m5">
 <meta name="ext-resource-dependency" content="./assets/moi.png" data-resource-id="moi">
-<template id="__bundler_thumbnail" data-bg-color="#0a0b0e">
+<template id="__bundler_thumbnail" data-bg-color="#000000">
   <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
-    <rect width="1200" height="800" fill="#0a0b0e"></rect>
+    <rect width="1200" height="800" fill="#000000"></rect>
     <g transform="translate(600 400)">
       <rect x="-70" y="-360" width="140" height="290" rx="26" fill="#e9e9ee" transform="rotate(18)"></rect>
       <rect x="-70" y="-150" width="140" height="290" rx="26" fill="#c7ccd8" transform="rotate(-8)"></rect>
@@ -100,11 +116,11 @@
   @font-face { font-family: 'Doto'; src: url('./assets/fonts/Doto-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
   * { box-sizing: border-box; }
   * { cursor: none !important; }
-  html, body { margin: 0; height: 100%; background: #0a0b0e; overflow: hidden; }
+  html, body { margin: 0; height: 100%; background: #000000; overflow: hidden; }
+  .m-about-scroll::-webkit-scrollbar { width: 0; height: 0; display: none; }
   a { color: #8aa0ff; text-decoration: none; transition: filter .26s ease, opacity .26s ease; }
   a:hover { color: #ffffff; }
-  ::selection { background: #8aa0ff; color: #0a0b0e; }
-  @keyframes spiralFadeIn { from { opacity: 0; transform: scale(.98); } to { opacity: 1; transform: scale(1); } }
+  ::selection { background: #8aa0ff; color: #000000; }
   @keyframes crtSweep { 0% { transform: translateY(-14vh); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(112vh); opacity: 0; } }
   @keyframes scanMove { from { background-position: 0 0; } to { background-position: 0 60px; } }
   @keyframes colonBlink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
@@ -133,7 +149,7 @@
   <canvas ref="{{ setBgCanvas }}" style="position:absolute; inset:0; z-index:0; width:100%; height:100%; display:block; pointer-events:none;"></canvas>
 
   <!-- Gridded background (haoqi-style): faint fixed lattice behind everything -->
-  <div style="position:absolute; inset:0; z-index:0; pointer-events:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.2)' stroke-width='1'/%3E%3C/svg%3E&quot;), linear-gradient(to right, rgba(255,255,255,.095) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.095) 1px, transparent 1px); background-size:128px 128px, 128px 128px, 128px 128px; background-position:50% 50%, calc(50% + 64px) calc(50% + 64px), calc(50% + 64px) calc(50% + 64px); -webkit-mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%); mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%);"></div>
+  <div style="position:fixed; inset:0; z-index:0; pointer-events:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.16)' stroke-width='1'/%3E%3C/svg%3E&quot;), linear-gradient(to right, rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.08) 1px, transparent 1px); background-size:128px 128px, 128px 128px, 128px 128px; background-position:50% 50%, calc(50% + 64px) calc(50% + 64px), calc(50% + 64px) calc(50% + 64px); -webkit-mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%); mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%);"></div>
 
   <!-- "Slurbt"-style glitch: stepped horizontal tear + RGB split (applied to non-hovered devices) -->
   <svg width="0" height="0" style="position:absolute; width:0; height:0; pointer-events:none;" aria-hidden="true">
@@ -200,7 +216,7 @@
 
   <!-- CRT scanline overlay + occasional bright sweep line (hidden on hover) -->
   <div ref="{{ setScanEl }}" style="{{ scanStyle }}">
-    <div ref="{{ setSweep }}" style="position:absolute; left:0; right:0; top:0; height:2px; background:linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.1) 50%, rgba(255,255,255,0)); filter:blur(.6px); box-shadow:0 0 8px rgba(255,255,255,.12); opacity:0; will-change:transform;"></div>
+    <div ref="{{ setSweep }}" style="position:absolute; left:0; right:0; top:0; height:5px; background:linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.14) 50%, rgba(255,255,255,0)); filter:blur(1px); box-shadow:0 0 16px rgba(255,255,255,.16); opacity:0; will-change:transform;"></div>
   </div>
 
   <!-- Progressive-blur header & footer backdrops (blur strong at the edge, unblurs inward) -->
@@ -208,7 +224,7 @@
   <div style="position:absolute; bottom:0; left:0; right:0; height:160px; z-index:6; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to top,#000 0%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to top,#000 0%,rgba(0,0,0,0) 100%); background:linear-gradient(to top,rgba(10,11,14,.72),rgba(10,11,14,0));"></div>
 
   <!-- Header -->
-  <header ref="{{ setHeaderEl }}" style="position:absolute; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:16; pointer-events:none; mix-blend-mode:difference; opacity:0;">
+  <header ref="{{ setHeaderEl }}" style="position:fixed; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:16; pointer-events:none; mix-blend-mode:difference; opacity:0;">
     <div style="pointer-events:auto;">
       <h1 style="margin:0; font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; cursor:pointer;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goHome }}">Jason Lim</h1>
     </div>
@@ -218,7 +234,7 @@
   </header>
 
   <!-- Center avatar (kept out of the header's difference blend so the photo stays true colour) -->
-  <div ref="{{ setAvatarEl }}" class="m-avatar" style="position:absolute; top:0px; left:0; right:0; z-index:16; display:flex; justify-content:center; pointer-events:none; opacity:0;">
+  <div ref="{{ setAvatarEl }}" class="m-avatar" style="position:fixed; top:0px; left:0; right:0; z-index:16; display:flex; justify-content:center; pointer-events:none; opacity:0;">
     <div style="position:relative; height:52px; display:flex; align-items:center; gap:12px;">
       <div ref="{{ setProfileWrap }}" style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer; pointer-events:auto; transition:opacity .5s ease;" data-clickable="true" onClick="{{ avatarClick }}">
         <img ref="{{ setProfileImg }}" src="./assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block; transition:opacity .5s ease;" />
@@ -283,7 +299,7 @@
   {{ overlayEl }}
 
   <!-- About page (sits below the shared chrome: header, footer, scanlines + vignette all render over it) -->
-  <div ref="{{ setAboutEl }}" style="position:absolute; inset:0; z-index:3; opacity:0; pointer-events:none; overflow-y:auto; scrollbar-gutter:stable both-edges; transition:opacity .7s ease; background:transparent;">
+  <div ref="{{ setAboutEl }}" class="m-about-scroll" style="position:absolute; inset:0; z-index:3; opacity:0; pointer-events:none; overflow-y:auto; scrollbar-width:none; transition:opacity .7s ease; background:transparent;">
     <div style="position:sticky; top:0; height:100vh; margin-bottom:-100vh; z-index:5; pointer-events:none; overflow:hidden;">
       <div style="position:absolute; left:0; right:0; top:0; height:2px; background:linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.12) 50%, rgba(255,255,255,0)); filter:blur(.6px); box-shadow:0 0 8px rgba(255,255,255,.12); animation:crtSweep 7s linear infinite;"></div>
     </div>
@@ -594,7 +610,7 @@ class Component extends DCLogic {
       if (!b) return;
       b.style.animation = 'none';
       void b.offsetWidth;            // force reflow so it restarts
-      b.style.animation = 'crtSweep 3s linear';
+      b.style.animation = 'crtSweep 3s linear forwards';
     };
     this._scheduleSweep = () => {
       const delay = 8000 + Math.random() * 13000;   // 8–21s, uneven
@@ -897,7 +913,7 @@ class Component extends DCLogic {
       this.miniWrap.style.opacity = '1';
       this.miniWrap.style.transform = tf;
       if (!this._dotSweepTimer) {              // then re-fire once in a while
-        const schedule = () => { this._dotSweepTimer = setTimeout(() => { this._fireSweep(); if (Math.random() < 0.4) setTimeout(() => this._fireSweep(), 850); schedule(); }, 9000 + Math.random() * 12000); };
+        const schedule = () => { this._dotSweepTimer = setTimeout(() => { this._fireSweep(); if (Math.random() < 0.4) setTimeout(() => this._fireSweep(), 850); schedule(); }, 8000 + Math.random() * 8000); };
         schedule();
       }
       setTimeout(() => { this._miniIntro = false; this._fireSweep(); }, 520);   // fire the first lidar sweep right after the minimap finishes revealing
@@ -1068,7 +1084,7 @@ class Component extends DCLogic {
         }
         const a = Math.min(0.8, base + glow * (0.8 - base));
         const depth = (Math.sin(ang) + 1) / 2;   // 0 = back (top), 1 = front (bottom, nearest)
-        const sz = 1.8 * (1.02 + 0.55 * depth) + glow * 0.6;   // bigger back floor + larger front dots
+        const sz = 1.8 * (1.02 + 0.55 * depth) + glow * 1.4;   // bigger back floor + larger front dots; sweep bumps size up
         const av = a * (0.72 + 0.28 * depth);   // and slightly brighter than the ones in back
         d.r.setAttribute('x', (x - sz / 2).toFixed(2)); d.r.setAttribute('y', (y - sz / 2).toFixed(2));
         d.r.setAttribute('width', sz.toFixed(2)); d.r.setAttribute('height', sz.toFixed(2));
@@ -1184,8 +1200,9 @@ class Component extends DCLogic {
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const t0 = performance.now();
     this._bgDir = -(this.spinDir || 1);
-    if (this._bgFade == null) this._bgFade = 1;
-    if (this._bgFadeTarget == null) this._bgFadeTarget = 1;
+    let _seenBg = false; try { _seenBg = !!sessionStorage.getItem('om_seen'); } catch (e) {}
+    if (this._bgFade == null) this._bgFade = _seenBg ? 0 : 1;   // internal arrival: start dithered-out so no full-brightness flash before _revealInstant
+    if (this._bgFadeTarget == null) this._bgFadeTarget = _seenBg ? 0 : 1;
     if (this._bgDith == null) this._bgDith = 1;
     if (this._bgDithTarget == null) this._bgDithTarget = 1;
     const draw = (now) => { const target = -(this.spinDir || 1); this._bgDir += (target - this._bgDir) * 0.05; this._bgFade += (this._bgFadeTarget - this._bgFade) * (this._bgFadeRate || 0.06); this._bgDith += (this._bgDithTarget - this._bgDith) * 0.035; gl.uniform1f(uDith, this._bgDith); gl.uniform1f(uFade, this._bgFade); gl.uniform1f(uDir, this._bgDir); gl.uniform1f(uTime, (now - t0) / 1000); gl.drawArrays(gl.TRIANGLES, 0, 3); if (!reduce && !document.hidden) this._bgRaf = requestAnimationFrame(draw); };
@@ -1880,9 +1897,7 @@ class Component extends DCLogic {
       setHrEl: (el) => { this.hrEl = el; },
       setMinEl: (el) => { this.minEl = el; },
       setUpdatedEl: (el) => { this.updatedEl = el; this._startFooterCycle && this._startFooterCycle(); },
-      goAbout: () => { this.openAbout(); },
       avatarClick: () => { if (this._aboutOpen && this._aboutReturn) { this._exitAboutToCase(); return; } if (this._aboutOpen) { this.spin = 0; this.dragMomentum = 0; this.closeAbout(); this.setState({ selected: null, hovered: null }); } else { this.openAbout(); } },
-      aboutOpen: !!this.state.aboutOpen,
       aboutLabel: this.state.aboutOpen ? 'Exit' : 'About',
       goHome: () => { this._aboutReturn = null; this.spin = 0; this.dragMomentum = 0; this.setState({ selected: null, hovered: null }); if (this._aboutOpen) this.closeAbout(); },
       contact: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } window.location.href = 'mailto:jason.jinulim@gmail.com'; },
@@ -1891,7 +1906,7 @@ class Component extends DCLogic {
       headerFam, headerWeight, headerSize, headerSpacing, headerCase,
       footerFam, footerWeight, footerSize, footerSpacing, footerCase,
       hoverFam, hoverWeight, hoverSize, hoverSpacing, hoverCase, hoverGap,
-      eyebrowFam, eyebrowWeight, eyebrowSize, eyebrowSpacing, eyebrowCase,
+      eyebrowWeight, eyebrowSize, eyebrowSpacing, eyebrowCase,
       aboutBioFam, aboutBioWeight, aboutBioSize, aboutBioLH, aboutBioSpacing, aboutBioCase, aboutImgW, aboutBioMax, aboutBioTop,
       hasHover: shownHov != null,
       hover: shownHov ? { company: shownHov.company, title: shownHov.title } : {},
