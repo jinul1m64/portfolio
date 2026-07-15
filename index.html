@@ -891,10 +891,10 @@ class Component extends DCLogic {
       this.miniWrap.style.opacity = '1';
       this.miniWrap.style.transform = tf;
       if (!this._dotSweepTimer) {              // then re-fire once in a while
-        const schedule = () => { this._dotSweepTimer = setTimeout(() => { this._sweepStart = performance.now(); schedule(); }, 9000 + Math.random() * 12000); };
+        const schedule = () => { this._dotSweepTimer = setTimeout(() => { this._fireSweep(); if (Math.random() < 0.4) setTimeout(() => this._fireSweep(), 850); schedule(); }, 9000 + Math.random() * 12000); };
         schedule();
       }
-      setTimeout(() => { this._miniIntro = false; this._sweepStart = performance.now(); }, 520);   // fire the first lidar sweep right after the minimap finishes revealing
+      setTimeout(() => { this._miniIntro = false; this._fireSweep(); }, 520);   // fire the first lidar sweep right after the minimap finishes revealing
     }, delay || 0);
   }
 
@@ -972,7 +972,7 @@ class Component extends DCLogic {
     const c = Math.cos(TLT), s = Math.sin(TLT);
     const RCX = 72, RCY = 77, RW = 63, RH = 48;
     const rL = RCX - RW / 2, rR = RCX + RW / 2, rT = RCY - RH / 2, rB = RCY + RH / 2;
-    const N = 76, SZ = 1.8;
+    const N = 64, SZ = 1.8;
     this._miniDots = [];
     for (let k = 0; k < N; k++) {
       const t = (k / N) * 2 * Math.PI;
@@ -986,12 +986,19 @@ class Component extends DCLogic {
       g.appendChild(r);
       this._miniDots.push({ r, t, base: inside ? 0.08 : 0.26, cx: x, cy: y, inside: inside, gx: (Math.random() * 2 - 1) * 24, gy: (Math.random() * 2 - 1) * 16 });
     }
-    // Endpoints of the outer arc = the two dots just outside the window outline (right + left of it).
-    const n = this._miniDots.length;
-    let first = -1, last = -1;
-    this._miniDots.forEach((d, i) => { if (d.inside) { if (first < 0) first = i; last = i; } });
-    this._sweepT1 = this._miniDots[(first - 1 + n) % n].t;   // right, just outside the outline
-    this._sweepT2 = this._miniDots[(last + 1) % n].t;        // left, just outside the outline
+    // Endpoints of the outer arc — fixed outline-crossing ANGLES (independent of the dot orbit): scan the
+    // ellipse path finely for the contiguous inside arc; the sweep starts just outside its right edge,
+    // travels over the top, and ends just outside its left edge. Dots orbit THROUGH this fixed arc.
+    this._miniGeo = { CX: CX, CY: CY, AX: AX, AY: AY, c: c, s: s, rL: rL, rR: rR, rT: rT, rB: rB };
+    const M = 1440; let fIn = -1, lIn = -1;
+    for (let i = 0; i < M; i++) {
+      const th = (i / M) * 2 * Math.PI;
+      const lx2 = AX * Math.cos(th), ly2 = AY * Math.sin(th);
+      const x2 = CX + (lx2 * c - ly2 * s), y2 = CY + (lx2 * s + ly2 * c);
+      if (x2 >= rL && x2 <= rR && y2 >= rT && y2 <= rB) { if (fIn < 0) fIn = i; lIn = i; }
+    }
+    this._sweepT1 = ((fIn - 1 + M) % M) / M * 2 * Math.PI;   // right, just outside the outline
+    this._sweepT2 = ((lIn + 1) % M) / M * 2 * Math.PI;       // left, just outside the outline
   }
 
   // Build the minimap device markers in TWO layers: a dark base (all devices) and a bright copy that the
@@ -1022,40 +1029,44 @@ class Component extends DCLogic {
 
   // Advance the minimap markers: position on the tilted ellipse, each device UPRIGHT with a rotateY turn
   // (same standing-upright behaviour as the big ring). Dark + bright layers get identical transforms.
+  _fireSweep() { (this._sweeps || (this._sweeps = [])).push(performance.now()); }
+
   _tickMini() {
     // Lidar sweep: a single pass of a comet head along the OUTER arc — starts at the first dot outside the
     // right of the outline, travels over the top, finishes at the left (reversed when the left arrow is active).
-    if (this._miniDots && this._sweepStart != null) {
-      const DUR = 2600, PLATEAU = 3.4, LEAD = 0.12;
-      const p = (performance.now() - this._sweepStart) / DUR;
+    // Minimap dots: a slow orbit repositions every dot each frame; the lidar sweep (when active) overlays
+    // a glow, anchored to the FIXED outline-crossing angles so it still starts/ends at the outline edges.
+    if (this._miniDots && this._miniGeo) {
+      const geo = this._miniGeo, TWO = Math.PI * 2, orbit = this._dotOrbit || 0;
+      const t1 = this._sweepT1, t2 = this._sweepT2, DUR = 2600, LEAD = 0.12, TAIL = 0.28;
+      const now = performance.now();
+      if (this._sweeps && this._sweeps.length) this._sweeps = this._sweeps.filter(st => (now - st) / DUR < 2.4);
+      const active = this._sweeps || [];
       const left = (this.state.spinSel === 'left');
-      if (p >= 2.4) {
-        for (const d of this._miniDots) {
-          d.r.setAttribute('fill', 'rgba(255,255,255,' + d.base.toFixed(3) + ')');
-          d.r.setAttribute('width', '1.8'); d.r.setAttribute('height', '1.8');
-          d.r.setAttribute('x', (d.cx - 0.9).toFixed(2)); d.r.setAttribute('y', (d.cy - 0.9).toFixed(2));
-        }
-        this._sweepStart = null;
-      } else {
-        const TWO = Math.PI * 2, t1 = this._sweepT1, t2 = this._sweepT2;
-        const span = ((t1 - t2) % TWO + TWO) % TWO;       // outer-arc length (right → over top → left)
-        const q = Math.min(p, 1);
-        const ez = q < 0.5 ? 16 * q * q * q * q * q : 1 - Math.pow(-2 * q + 2, 5) / 2;
-        const eased = 0.18 * q + 0.82 * ez;   // strong quintic ease → whips through the middle much faster
-        const headS = (eased + Math.max(0, p - 1)) * span;   // keeps growing past the end so the trail dims
-        for (const d of this._miniDots) {
-          let glow = 0;
-          if (!d.inside) {
-            const s = left ? ((d.t - t2) % TWO + TWO) % TWO : ((t1 - d.t) % TWO + TWO) % TWO;   // dot's position along the arc
-            const behind = headS - s;                      // radians the head is past this dot
-            glow = behind < 0 ? 0 : (behind < LEAD ? behind / LEAD : (behind < PLATEAU ? 1 : Math.exp(-(behind - PLATEAU) * 1.1)));
+      const span = ((t1 - t2) % TWO + TWO) % TWO;
+      const heads = active.map(st => { const p = (now - st) / DUR; const q = Math.min(p, 1); const ez = q < 0.5 ? 16 * q * q * q * q * q : 1 - Math.pow(-2 * q + 2, 5) / 2; return ((0.18 * q + 0.82 * ez) + Math.max(0, p - 1)) * span; });
+      for (const d of this._miniDots) {
+        const ang = d.t + orbit;
+        const lx = geo.AX * Math.cos(ang), ly = geo.AY * Math.sin(ang);
+        const x = geo.CX + (lx * geo.c - ly * geo.s), y = geo.CY + (lx * geo.s + ly * geo.c);
+        const inside = (x >= geo.rL && x <= geo.rR && y >= geo.rT && y <= geo.rB);
+        const base = inside ? 0.08 : 0.26;
+        let glow = 0;
+        if (heads.length && !inside) {
+          const sarc = left ? ((ang - t2) % TWO + TWO) % TWO : ((t1 - ang) % TWO + TWO) % TWO;
+          for (let h = 0; h < heads.length; h++) {
+            const behind = heads[h] - sarc;
+            const g = behind < 0 ? 0 : (behind < LEAD ? behind / LEAD : Math.exp(-(behind - LEAD) * TAIL));
+            if (g > glow) glow = g;
           }
-          const a = Math.min(0.5, d.base + glow * (0.5 - d.base));
-          d.r.setAttribute('fill', 'rgba(255,255,255,' + a.toFixed(3) + ')');
-          const sz = 1.8 + glow * 0.6;
-          d.r.setAttribute('width', sz.toFixed(2)); d.r.setAttribute('height', sz.toFixed(2));
-          d.r.setAttribute('x', (d.cx - sz / 2).toFixed(2)); d.r.setAttribute('y', (d.cy - sz / 2).toFixed(2));
         }
+        const a = Math.min(0.8, base + glow * (0.8 - base));
+        const depth = (Math.sin(ang) + 1) / 2;   // 0 = back (top), 1 = front (bottom, nearest)
+        const sz = 1.8 * (1.02 + 0.55 * depth) + glow * 0.6;   // bigger back floor + larger front dots
+        const av = a * (0.72 + 0.28 * depth);   // and slightly brighter than the ones in back
+        d.r.setAttribute('x', (x - sz / 2).toFixed(2)); d.r.setAttribute('y', (y - sz / 2).toFixed(2));
+        d.r.setAttribute('width', sz.toFixed(2)); d.r.setAttribute('height', sz.toFixed(2));
+        d.r.setAttribute('fill', 'rgba(255,255,255,' + av.toFixed(3) + ')');
       }
     }
     if (!this._miniMarks) return;
@@ -1350,6 +1361,7 @@ class Component extends DCLogic {
       this.spin += this.dragMomentum * dt;
     }
     this.dragMomentum *= Math.pow(0.9, dt * 60);
+    this._dotOrbit = (this._dotOrbit || 0) - (this.spinDir || 1) * 0.014 * dt;   // very slow minimap dot orbit
     this._tickMini();
     if (Math.abs(this.dragMomentum) < 0.02) this.dragMomentum = 0;
 
