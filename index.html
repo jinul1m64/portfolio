@@ -105,13 +105,10 @@
   a:hover { color: #ffffff; }
   ::selection { background: #8aa0ff; color: #0a0b0e; }
   @keyframes spiralFadeIn { from { opacity: 0; transform: scale(.98); } to { opacity: 1; transform: scale(1); } }
-  @keyframes spiralTextIn { 0% { opacity: 0; filter: blur(26px); } 35% { opacity: 1; } 100% { opacity: 1; filter: blur(0); } }
   @keyframes crtSweep { 0% { transform: translateY(-14vh); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(112vh); opacity: 0; } }
   @keyframes scanMove { from { background-position: 0 0; } to { background-position: 0 60px; } }
-  @keyframes scanMask { from { -webkit-mask-position: 0 0; mask-position: 0 0; } to { -webkit-mask-position: 0 6px; mask-position: 0 6px; } }
   @keyframes colonBlink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
   @keyframes marquee { from { transform: translateX(-50%); } to { transform: translateX(0); } }
-  @keyframes chromeSpinX { from { transform: rotateX(0deg); } to { transform: rotateX(360deg); } }
   /* Mobile breakpoint: drop the contact button, minimap, and footer meta; flush the About toggle to the right */
   @media (max-width: 640px) {
     .m-hide-mobile { display: none !important; }
@@ -132,10 +129,12 @@
 
 <div ref="{{ setRoot }}" style="position: fixed; inset: 0; background: #000000; font-family: PP Neue Montreal; color: #ececf0; overflow: hidden; cursor: grab; user-select: none; font-weight: 300; text-transform: uppercase; font-size: 32px; line-height: 1" onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" onPointerLeave="{{ onUp }}" onWheel="{{ onWheel }}">
 
+  <!-- Animated grainy mesh-gradient (WebGL) — bottom layer, beneath the grid -->
+  <canvas ref="{{ setBgCanvas }}" style="position:absolute; inset:0; z-index:0; width:100%; height:100%; display:block; pointer-events:none;"></canvas>
+
   <!-- Gridded background (haoqi-style): faint fixed lattice behind everything -->
   <div style="position:absolute; inset:0; z-index:0; pointer-events:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.2)' stroke-width='1'/%3E%3C/svg%3E&quot;), linear-gradient(to right, rgba(255,255,255,.095) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.095) 1px, transparent 1px); background-size:128px 128px, 128px 128px, 128px 128px; background-position:50% 50%, calc(50% + 64px) calc(50% + 64px), calc(50% + 64px) calc(50% + 64px); -webkit-mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%); mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%);"></div>
 
-  <!-- Cursor "soft light": a brighter copy of the grid revealed only under a radial gradient that follows the pointer (à la stitch.withgoogle.com) -->
   <!-- "Slurbt"-style glitch: stepped horizontal tear + RGB split (applied to non-hovered devices) -->
   <svg width="0" height="0" style="position:absolute; width:0; height:0; pointer-events:none;" aria-hidden="true">
     <filter id="slurbt" x="-30%" y="-6%" width="160%" height="112%" color-interpolation-filters="sRGB">
@@ -266,7 +265,7 @@
     </svg>
     <div ref="{{ setMiniDevices }}" style="position:absolute; inset:0; filter:brightness(0.32);"></div>
     <div ref="{{ setMiniDevicesBright }}" style="position:absolute; inset:0; clip-path:inset(53px 46.5px 3px 40.5px); -webkit-clip-path:inset(53px 46.5px 3px 40.5px);"></div>
-    <div ref="{{ setMiniWindow }}" style="position:absolute; left:72px; top:77px; width:63px; height:48px; transform:translate(-50%,-50%); border:0.5px solid rgba(255,255,255,0.6); border-radius:0;"></div>
+    <div style="position:absolute; left:72px; top:77px; width:63px; height:48px; transform:translate(-50%,-50%); border:0.5px solid rgba(255,255,255,0.6); border-radius:0;"></div>
     <svg width="150" height="104" style="position:absolute; inset:0; overflow:visible;">
       <path d="M72 74.2 V79.8 M69.2 77 H74.8" stroke="rgba(255,255,255,0.75)" stroke-width="0.8"></path>
     </svg>
@@ -274,7 +273,7 @@
 
   <!-- Hover caption (flat text, scramble-in on hover, above the footer) -->
   <sc-if value="{{ hasHover }}" hint-placeholder-val="{{ false }}">
-    <div ref="{{ setCaption }}" style="position:absolute; left:0; right:0; bottom:74px; z-index:16; display:flex; flex-direction:column; align-items:flex-start; text-align:left; padding-left:16px; gap:{{ hoverGap }}; pointer-events:none; mix-blend-mode:difference; animation:spiralFadeIn .2s ease both;">
+    <div style="position:absolute; left:0; right:0; bottom:74px; z-index:16; display:flex; flex-direction:column; align-items:flex-start; text-align:left; padding-left:16px; gap:{{ hoverGap }}; pointer-events:none; mix-blend-mode:difference; animation:spiralFadeIn .2s ease both;">
       <span ref="{{ setCompanyEl }}" style="display:none; font-family:'Doto'; font-weight:{{ eyebrowWeight }}; font-size:{{ eyebrowSize }}; letter-spacing:{{ eyebrowSpacing }}; text-transform:{{ eyebrowCase }}; color:#ffffff; opacity:0;">{{ hover.company }}</span>
       <span ref="{{ setTitleEl }}" style="font-family:{{ hoverFam }}; font-weight:{{ hoverWeight }}; font-size:{{ hoverSize }}; line-height:1; letter-spacing:{{ hoverSpacing }}; text-transform:{{ hoverCase }}; color:#f2f2f5; opacity:0;">{{ hover.title }}</span>
     </div>
@@ -338,8 +337,7 @@
   </div>
 
   <!-- Boot loader: black + scanlines, centred count-up, melts out on complete -->
-  <div ref="{{ setLoader }}" style="position:absolute; inset:0; z-index:40; background:transparent; display:flex; align-items:center; justify-content:center; pointer-events:none;">
-    <div style="position:absolute; inset:0; pointer-events:none; background-image:repeating-linear-gradient(to bottom, rgba(128,128,128,0.06) 0px, rgba(128,128,128,0.06) 3px, transparent 3px, transparent 6px); animation:scanMove 1.2s linear infinite;"></div>
+  <div ref="{{ setLoader }}" style="position:absolute; inset:0; z-index:40; background:transparent; display:flex; align-items:center; justify-content:center; pointer-events:auto;">
     <span ref="{{ setLoaderPct }}" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff;">0%</span>
   </div>
 
@@ -359,13 +357,14 @@ class Component extends DCLogic {
   TO = 5;   // single tilted ring (Saturn-style): one instance of each of the 6 mocks
   TILT = 1;
   ROLL = -18;   // diagonal roll of the whole ring (top-left high → bottom-right low, steeper on exit)
+  DEVICE_SS = 2;   // supersample: build devices at SSx then counter-scale, so the 3D-layer texture is hi-res (crisp video on low-DPR/large monitors)
 
   // Radius so the spiral spans from the header logo to the "Site" link.
   radius() {
     const w = (typeof window !== 'undefined' ? window.innerWidth : 1200);
     const span = Math.max(320, w - 96);           // header inner width (40px pad each side)
     const factor = this.props.spiralWidth ?? 1;
-    return Math.min(760, Math.max(300, (span / 2) * factor * 0.9));
+    return Math.min(980, Math.max(300, (span / 2) * factor * 0.9));
   }
 
   get mocks() {
@@ -415,6 +414,7 @@ class Component extends DCLogic {
         if (this.sceneEl) { this.sceneEl.style.transition = 'opacity .6s ease'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
         this._ringKTarget = 0.9;   // large ring scales down as it fades
       }, 200);
+      this._bgFadeTarget = 0; this._bgFadeRate = 0.06;   // dither the WebGL background completely away
       if (this.scanEl) { this.scanEl.style.transition = 'opacity .6s ease'; this.scanEl.style.opacity = '0'; }
       if (this.footerEl) { this.footerEl.style.transition = 'opacity .6s ease'; this.footerEl.style.opacity = '0'; }
       if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .6s ease'; this.scrollEl.style.opacity = '0'; }
@@ -572,7 +572,8 @@ class Component extends DCLogic {
     if (this.footerEl) { this.footerEl.style.transition = 'opacity .5s ease'; this.footerEl.style.opacity = '0'; }
     // Leaving to a case study, which has no scanlines — fade the index scanlines out first.
     if (this.scanEl) { this.scanEl.style.transition = 'opacity .45s ease'; this.scanEl.style.opacity = '0'; }
-    setTimeout(() => { window.location.href = dest; }, 640);
+    this._bgFadeTarget = 0; this._bgFadeRate = 0.06;   // dither the WebGL background completely away before leaving
+    setTimeout(() => { window.location.href = dest; }, 900);
   }
 
   componentDidMount() {
@@ -814,6 +815,11 @@ class Component extends DCLogic {
     // Scanlines exist on the index but NOT on case studies, so fade them in on arrival (after the
     // page crossfade settles) rather than snapping. scanEl starts at 0 before the VT captures it.
     if (this.scanEl) fadeIn(this.scanEl, 800, 500);
+    // Inverse of the leave transition: dither the WebGL background back IN via the fade uniform.
+    // Hold it fully dithered-out until the root view-transition crossfade settles, then ramp so the
+    // dither-in plays on the already-opaque page instead of being masked by the crossfade.
+    this._bgFade = 0; this._bgFadeTarget = 0; this._bgFadeRate = 0.028;
+    setTimeout(() => { this._bgFadeTarget = 1; }, 520);
     this._booting = false;
     if (this._applyVideoPlayback) this._applyVideoPlayback();
   }
@@ -1110,7 +1116,85 @@ class Component extends DCLogic {
     this._revRaf = requestAnimationFrame(stepFn);
   }
   setRoot = (el) => { this.rootEl = el; };
-  componentWillUnmount() { cancelAnimationFrame(this.raf); clearInterval(this._clockTimer); window.removeEventListener('resize', this._onResize); clearTimeout(this._sweepTimer); clearTimeout(this._dotSweepTimer); clearTimeout(this._pingTimer); clearInterval(this._playTimer); window.removeEventListener('pointerdown', this._playAll); window.removeEventListener('focus', this._playAll); document.removeEventListener('visibilitychange', this._playAll); document.removeEventListener('visibilitychange', this._onVis); if (this._io) this._io.disconnect(); }
+
+  // Animated grainy mesh-gradient background (WebGL), à la mescubook.com — domain-warped fbm
+  // noise ramped across a dark indigo/violet palette, with animated film grain. Bottom layer.
+  _initBg(canvas) {
+    let gl;
+    try { gl = canvas.getContext('webgl', { antialias: false, alpha: false, depth: false, powerPreference: 'low-power' }); } catch (e) {}
+    if (!gl) return;
+    this._bgGl = gl;
+    const vs = 'attribute vec2 a; void main(){ gl_Position = vec4(a,0.,1.); }';
+    const fs = [
+      'precision highp float;',
+      'uniform vec2 u_res; uniform float u_time; uniform float u_dir; uniform float u_fade; uniform float u_dith;',
+      'float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }',
+      'float noise(vec2 p){ vec2 i=floor(p), f=fract(p);',
+      '  float a=hash(i), b=hash(i+vec2(1.,0.)), c=hash(i+vec2(0.,1.)), d=hash(i+vec2(1.,1.));',
+      '  vec2 u=f*f*(3.-2.*f); return mix(mix(a,b,u.x),mix(c,d,u.x),u.y); }',
+      'float fbm(vec2 p){ float v=0.,amp=0.5; for(int i=0;i<5;i++){ v+=amp*noise(p); p*=2.02; amp*=0.5; } return v; }',
+      'float bayer2(vec2 a){ a=floor(a); return fract(a.x/2.0+a.y*a.y*0.75); }',
+      'float bayer4(vec2 a){ return bayer2(0.5*a)*0.25+bayer2(a); }',
+      'float bayer8(vec2 a){ return bayer4(0.5*a)*0.25+bayer2(a); }',
+      'void main(){',
+      '  vec2 uv=gl_FragCoord.xy/u_res.xy;',
+      '  vec2 p=uv; p.x*=u_res.x/u_res.y; p*=2.2;',
+      '  float t=u_time*0.12;',
+      '  vec2 wq=vec2(fbm(p+vec2(0.0,t*0.4)), fbm(p+vec2(3.1,1.7)-t*0.28));',
+      '  float h=fbm(p*1.4+wq*2.7+vec2(t*0.65*u_dir,0.0));',
+      '  float c1=abs(sin(h*7.4+t));',
+      '  float c2=abs(sin(h*14.8-t*0.7));',
+      '  float metal=pow(c1,1.9)*0.72+pow(c2,2.5)*0.35;',
+      '  float aurora=clamp(metal,0.0,1.0);',
+      '  vec2 cc=uv-0.5; cc.x*=u_res.x/u_res.y;',
+      '  aurora*=smoothstep(0.16,0.58,length(cc));',
+      '  aurora*=u_fade;',
+      '  vec3 base=vec3(0.016,0.017,0.019);',
+      '  vec3 glow=vec3(0.058,0.061,0.068);',
+      '  float bth=(bayer8(floor(gl_FragCoord.xy/5.0))-0.5)*1.1*u_dith;',
+      '  float a2=aurora+bth*smoothstep(0.02,0.14,aurora);',
+      '  float q=step(0.5,a2);',
+      '  vec3 col=mix(base,glow,q);',
+      '  float vig=smoothstep(1.3,0.2,length(uv-0.5));',
+      '  col*=mix(0.55,1.0,vig);',
+      '  float g=hash(gl_FragCoord.xy+fract(u_time)*vec2(91.7,47.3));',
+      '  col+=(g-0.5)*0.05;',
+      '  gl_FragColor=vec4(col,1.0);',
+      '}',
+    ].join('\n');
+    const mk = (type, src) => { const sh = gl.createShader(type); gl.shaderSource(sh, src); gl.compileShader(sh); return sh; };
+    const prog = gl.createProgram();
+    gl.attachShader(prog, mk(gl.VERTEX_SHADER, vs));
+    gl.attachShader(prog, mk(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+    gl.useProgram(prog);
+    const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const uRes = gl.getUniformLocation(prog, 'u_res'), uTime = gl.getUniformLocation(prog, 'u_time'), uDir = gl.getUniformLocation(prog, 'u_dir'), uFade = gl.getUniformLocation(prog, 'u_fade'), uDith = gl.getUniformLocation(prog, 'u_dith');
+    this._bgResize = () => {
+      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+      const w = Math.max(1, Math.floor(canvas.clientWidth * dpr)), h = Math.max(1, Math.floor(canvas.clientHeight * dpr));
+      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+    };
+    window.addEventListener('resize', this._bgResize); this._bgResize();
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const t0 = performance.now();
+    this._bgDir = -(this.spinDir || 1);
+    if (this._bgFade == null) this._bgFade = 1;
+    if (this._bgFadeTarget == null) this._bgFadeTarget = 1;
+    if (this._bgDith == null) this._bgDith = 1;
+    if (this._bgDithTarget == null) this._bgDithTarget = 1;
+    const draw = (now) => { const target = -(this.spinDir || 1); this._bgDir += (target - this._bgDir) * 0.05; this._bgFade += (this._bgFadeTarget - this._bgFade) * (this._bgFadeRate || 0.06); this._bgDith += (this._bgDithTarget - this._bgDith) * 0.035; gl.uniform1f(uDith, this._bgDith); gl.uniform1f(uFade, this._bgFade); gl.uniform1f(uDir, this._bgDir); gl.uniform1f(uTime, (now - t0) / 1000); gl.drawArrays(gl.TRIANGLES, 0, 3); if (!reduce && !document.hidden) this._bgRaf = requestAnimationFrame(draw); };
+    if (reduce) { gl.uniform1f(uDith, 1); gl.uniform1f(uFade, 1); gl.uniform1f(uDir, -1); gl.uniform1f(uTime, 12.0); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+    else this._bgRaf = requestAnimationFrame(draw);
+    this._bgVis = () => { if (document.hidden) cancelAnimationFrame(this._bgRaf); else if (!reduce) this._bgRaf = requestAnimationFrame(draw); };
+    document.addEventListener('visibilitychange', this._bgVis);
+  }
+  componentWillUnmount() { cancelAnimationFrame(this.raf); cancelAnimationFrame(this._bgRaf); if (this._bgResize) window.removeEventListener('resize', this._bgResize); if (this._bgVis) document.removeEventListener('visibilitychange', this._bgVis); clearInterval(this._clockTimer); window.removeEventListener('resize', this._onResize); clearTimeout(this._sweepTimer); clearTimeout(this._dotSweepTimer); clearInterval(this._playTimer); window.removeEventListener('pointerdown', this._playAll); window.removeEventListener('focus', this._playAll); document.removeEventListener('visibilitychange', this._playAll); document.removeEventListener('visibilitychange', this._onVis); if (this._io) this._io.disconnect(); }
 
   // Inverse of the reveal: caption melts into goo and dissolves, then unmounts via onDone.
   meltAway(el, onDone) {
@@ -1451,7 +1535,7 @@ class Component extends DCLogic {
       e.el.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${(p.sc * GSCALE).toFixed(3)})`;
       e.el.style.zIndex = isHov ? '5000' : String(1000 + Math.round(p.z2));
       const inner = e.el.firstElementChild;
-      if (inner) inner.style.transform = `perspective(1200px) translate(-50%,-50%) rotateY(${phi.toFixed(2)}deg)`;
+      if (inner) inner.style.transform = `perspective(${1200 * this.DEVICE_SS}px) translate(-50%,-50%) rotateY(${phi.toFixed(2)}deg) scale(${(1 / this.DEVICE_SS).toFixed(4)})`;
       // Fade across the front arc — asymmetric: the incoming (top-left) device reveals a touch
       // later, the outgoing (bottom-right) device hides a touch sooner.
       const sinth = Math.sin(th);
@@ -1511,7 +1595,6 @@ class Component extends DCLogic {
       if (this.bgNumLEl) this.scramble(this.bgNumLEl, num);
       if (this.bgNumREl) this.scramble(this.bgNumREl, num);
     }
-    this._visDirty = false;
     if (this._applyVideoPlayback) this._applyVideoPlayback();
     if (this._running) this.raf = requestAnimationFrame(this.tick);
   }
@@ -1519,10 +1602,6 @@ class Component extends DCLogic {
   renderVals() {
     const R = this.radius();
     const accent = this.props.accentColor ?? '#8aa0ff';
-    const slurScale = this.props.slurScale ?? 55;
-    const slurDur = (this.props.slurSpeed ?? 0.5) + 's';
-    const gooStrength = this.props.gooStrength ?? 2.3;
-    const gooThresh = this.props.gooThresh ?? 20;
 
     // Per-region type controls (font / weight / size / spacing / capitalization)
     const FONTS = {
@@ -1595,7 +1674,8 @@ class Component extends DCLogic {
       const isTablet = base.o === 'landscape';
       const y = 0;   // single row: no vertical stacking (one tilted ring of devices)
       const a = this.slotAngle(i);
-      const W = isTablet ? TABLET_W : PHONE_W;
+      const SS = this.DEVICE_SS;
+      const W = (isTablet ? TABLET_W : PHONE_W) * SS;
       const DEVICE_W = W;   // render at full width; spacing comes from the arc layout
       const cardR = R;   // iPad sits on the same Z as the phones
       const isHov = hovered === i;
@@ -1629,20 +1709,20 @@ class Component extends DCLogic {
 
       // --- Titanium body: stacked side-wall layers behind the glass ---
       const depth = isTablet ? Math.round(DEVICE_W * 0.03) : Math.round(W * 0.062); // thinner
-      const rad0 = isTablet ? 22 : Math.round(W * 0.135);
+      const rad0 = isTablet ? 22 * SS : Math.round(W * 0.135);
       const nL = isTablet ? 12 : 16;
       const parts = [];
       for (let j = 0; j < nL; j++) {
         const t = (j + 1) / nL;
         const z = -(depth * t);
-        const inset = -(0.4 + t * 1.0);          // slim wall
+        const inset = -(0.4 + t * 1.0) * SS;          // slim wall
         const dark = 1 - 0.45 * t;               // deeper layers darker
         const g = `linear-gradient(96deg, hsl(220 5% ${Math.round(28*dark)}%) 0%, hsl(222 7% ${Math.round(14*dark)}%) 20%, hsl(224 9% ${Math.round(5*dark)}%) 52%, hsl(222 7% ${Math.round(12*dark)}%) 80%, hsl(220 5% ${Math.round(24*dark)}%) 100%)`;
         parts.push(h('div', { key: 'l' + j, style: {
           position: 'absolute', top: inset + 'px', left: inset + 'px', right: inset + 'px', bottom: inset + 'px',
           borderRadius: (rad0 + Math.abs(inset)) + 'px', background: g, opacity: FADE,
           transform: `translateZ(${z.toFixed(1)}px)`,
-          boxShadow: j === nL - 1 ? '0 40px 80px rgba(0,0,0,.6)' : 'none',
+          boxShadow: j === nL - 1 ? `0 ${40 * SS}px ${80 * SS}px rgba(0,0,0,.6)` : 'none',
         } }));
       }
 
@@ -1650,36 +1730,36 @@ class Component extends DCLogic {
       const bz = -Math.round(depth * 0.45);
       const btnBg = 'linear-gradient(180deg,#2c2e33,#141519)';
       const mkBtn = (k, side, topPct, hPct) => {
-        const s = { position: 'absolute', top: topPct + '%', height: hPct + '%', width: '3px',
-          background: btnBg, borderRadius: '2px', opacity: FADE, transform: `translateZ(${bz}px)` };
-        if (side === 'l') s.left = '-2.5px'; else s.right = '-2.5px';
+        const s = { position: 'absolute', top: topPct + '%', height: hPct + '%', width: (3 * SS) + 'px',
+          background: btnBg, borderRadius: (2 * SS) + 'px', opacity: FADE, transform: `translateZ(${bz}px)` };
+        if (side === 'l') s.left = (-2.5 * SS) + 'px'; else s.right = (-2.5 * SS) + 'px';
         return h('div', { key: k, style: s });
       };
       if (!isTablet) {
         parts.push(mkBtn('ba', 'l', 15, 5), mkBtn('bvu', 'l', 25, 9), mkBtn('bvd', 'l', 37, 9), mkBtn('bp', 'r', 27, 15));
         parts.push(h('div', { key: 'rim', style: {
-          position: 'absolute', top: '-2px', left: '-2px', right: '-2px', bottom: '-2px',
-          borderRadius: (rad0 + 2) + 'px', opacity: FADE, transform: 'translateZ(0.3px)',
+          position: 'absolute', top: (-2 * SS) + 'px', left: (-2 * SS) + 'px', right: (-2 * SS) + 'px', bottom: (-2 * SS) + 'px',
+          borderRadius: (rad0 + 2 * SS) + 'px', opacity: FADE, transform: `translateZ(${0.3 * SS}px)`,
           background: 'linear-gradient(120deg,#44474d,#1a1b1f 38%,#0a0b0d 60%,#3a3d43)',
         } }));
         parts.push(mkFace({
           position: 'absolute', inset: '0', width: '100%', height: '100%', objectFit: faceFit,
-          borderRadius: rad0 + 'px', opacity: FADE, transform: 'translateZ(0.7px)', display: 'block',
+          borderRadius: rad0 + 'px', opacity: FADE, transform: `translateZ(${0.7 * SS}px)`, display: 'block',
         }));
       } else {
         parts.push(mkBtn('bp', 'r', 8, 12), mkBtn('bv', 'r', 26, 9));
         parts.push(h('div', { key: 'pad', style: {
-          position: 'absolute', inset: '0', borderRadius: (rad0 + 2) + 'px', opacity: FADE,
-          background: 'linear-gradient(140deg,#232529,#0d0e11)', transform: 'translateZ(0.7px)',
-          padding: '9px', display: 'flex', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,.04)',
+          position: 'absolute', inset: '0', borderRadius: (rad0 + 2 * SS) + 'px', opacity: FADE,
+          background: 'linear-gradient(140deg,#232529,#0d0e11)', transform: `translateZ(${0.7 * SS}px)`,
+          padding: (9 * SS) + 'px', display: 'flex', boxShadow: `inset 0 0 0 ${SS}px rgba(255,255,255,.04)`,
         } },
-          h('div', { style: { flex: '1', borderRadius: '13px', overflow: 'hidden', background: '#000', display: 'flex' } },
+          h('div', { style: { flex: '1', borderRadius: (13 * SS) + 'px', overflow: 'hidden', background: '#000', display: 'flex' } },
             mkFace({ flex: '1', width: '100%', height: '100%', objectFit: faceFit, display: 'block', background: '#000' })
           )
         ));
       }
       const body = h('div', { style: {
-        position: 'relative', width: DEVICE_W + 'px', aspectRatio: isTablet ? '1.4' : '0.4997',
+        position: 'relative', width: DEVICE_W + 'px', aspectRatio: isTablet ? '1.3136' : '0.4997',
         transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
         transform: isHov ? 'scale(1.1)' : 'scale(1)',
         transition: 'transform .35s cubic-bezier(.22,.61,.36,1)',
@@ -1703,7 +1783,7 @@ class Component extends DCLogic {
         innerStyle: {
           position: 'absolute', left: 0, top: 0, width: W + 'px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transform: `perspective(1200px) translate(-50%,-50%) scale(${scv})`,   // tick() sets rotateY + hover scale; perspective() keeps the 3D turn while the outer stays 2D (Safari filter fix)
+          transform: `perspective(${1200 * SS}px) translate(-50%,-50%) scale(${scv / SS})`,   // tick() sets rotateY + hover scale; perspective() keeps the 3D turn while the outer stays 2D (Safari filter fix). scale(1/SS) counter-scales the supersampled build.
           transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
           cursor: 'pointer',
         },
@@ -1757,7 +1837,7 @@ class Component extends DCLogic {
       estHours,
       estMinutes,
       setRoot: this.setRoot,
-      accent,
+      setBgCanvas: (el) => { if (el && !this._bgInit) { this._bgInit = true; this._initBg(el); } },
       overlayEl,
       scanStyle: {
         position: 'absolute', inset: 0, zIndex: 17, pointerEvents: 'none', overflow: 'hidden',
@@ -1770,7 +1850,6 @@ class Component extends DCLogic {
       setGoo: (el) => { this.gooBlurEl = el; },
       setGooReveal: (el) => { this.gooRevealBlurEl = el; },
       setGooReveal2: (el) => { this.gooRevealBlurEl2 = el; },
-      setCaption: (el) => { this.captionEl = el; },
       setSlurDisp: (el) => { this.slurDispEl = el; },
       setSlurGrain: (el) => { this.slurGrainEl = el; },
       meltIn: (e) => this.animateMelt(e.currentTarget, true),
@@ -1804,16 +1883,11 @@ class Component extends DCLogic {
       goAbout: () => { this.openAbout(); },
       avatarClick: () => { if (this._aboutOpen && this._aboutReturn) { this._exitAboutToCase(); return; } if (this._aboutOpen) { this.spin = 0; this.dragMomentum = 0; this.closeAbout(); this.setState({ selected: null, hovered: null }); } else { this.openAbout(); } },
       aboutOpen: !!this.state.aboutOpen,
-      aboutClosed: !this.state.aboutOpen,
       aboutLabel: this.state.aboutOpen ? 'Exit' : 'About',
       goHome: () => { this._aboutReturn = null; this.spin = 0; this.dragMomentum = 0; this.setState({ selected: null, hovered: null }); if (this._aboutOpen) this.closeAbout(); },
       contact: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } window.location.href = 'mailto:jason.jinulim@gmail.com'; },
       setCompanyEl: (el) => { this.companyEl = el; },
       setTitleEl: (el) => { this.titleEl = el; },
-      slurScale: slurScale,
-      slurDur: slurDur,
-      gooStrength: gooStrength,
-      gooThresh: gooThresh,
       headerFam, headerWeight, headerSize, headerSpacing, headerCase,
       footerFam, footerWeight, footerSize, footerSpacing, footerCase,
       hoverFam, hoverWeight, hoverSize, hoverSpacing, hoverCase, hoverGap,
@@ -1846,7 +1920,6 @@ class Component extends DCLogic {
       setMiniRing: (el) => { this.miniRing = el; this._buildMiniRing && this._buildMiniRing(); },
       setMiniDevices: (el) => { this.miniDevices = el; this._buildMiniDevices && this._buildMiniDevices(); },
       setMiniDevicesBright: (el) => { this.miniDevicesBright = el; this._buildMiniDevices && this._buildMiniDevices(); },
-      setMiniWindow: (el) => { this.miniWindow = el; },
       onDown: (e) => { if (e.target && e.target.closest && e.target.closest('a, h1, [data-clickable]')) return; this._downDevice = (e.target && e.target.closest && e.target.closest('[data-href]')) || null; this._dragDist = 0; this.dragging = true; this.lastX = e.clientX; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} if (e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grabbing'; },
       onMove: (e) => { if (!this.dragging) return; const dx = e.clientX - this.lastX; this.lastX = e.clientX; this._dragDist = (this._dragDist || 0) + Math.abs(dx); this.spin += dx * 0.28; this.dragMomentum = dx * 12; },
       onUp: (e) => { const wasTap = this.dragging && (this._dragDist || 0) < 6; this.dragging = false; if (e && e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grab'; if (wasTap && this._downDevice) { const href = this._downDevice.getAttribute('data-href'); if (href && !/^https?:/i.test(href)) this.openCase(href); } this._downDevice = null; },
