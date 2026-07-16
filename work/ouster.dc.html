@@ -15,6 +15,10 @@
   /* No element is named — the whole page rides the root crossfade. (Naming the mix-blend-mode
      header lifted it into an isolated snapshot whose hand-off to the live element flashed black.) */
   ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .45s; }
+  /* Dark backstop: the crossfade overlay + incoming snapshot paint on #000000 so any blank
+     pre-paint frame during the cross-document swap shows dark, never a white flash. */
+  ::view-transition { background: #000000; }
+  html::view-transition-new(root) { background: #000000; }
   /* Header font declared in the real head too, so the paint-bridge header below renders in the
      correct face on the first frame (the DC helmet's @font-face is injected too late for it). */
   @font-face { font-family: 'PP Neue Montreal'; src: url('../assets/fonts/extra3.woff2') format('woff2'); font-weight: 350; font-style: normal; font-display: swap; }
@@ -47,6 +51,43 @@
   });
   // Mark the session as active so the index skips its loader intro when we navigate home.
   try { sessionStorage.setItem('om_seen', '1'); } catch (e) {}
+  /* Dark nav backstop: paint an opaque #000000 cover the instant any same-tab navigation starts,
+     so the unload gap / VT snapshot / incoming blank first-frame can never flash white. */
+  window.__BACKSTOP_OFF = false;   // dark nav backstop enabled. Set to true to disable.
+  window.__navCover = function () {
+    if (window.__BACKSTOP_OFF) return;
+    if (document.getElementById('__nav-cover')) return;
+    var c = document.createElement('div');
+    c.id = '__nav-cover';
+    c.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#000000;pointer-events:none;overflow:hidden;';
+    var grid = document.createElement('div');
+    grid.style.cssText = `position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.16)' stroke-width='1'/%3E%3C/svg%3E"),linear-gradient(to right,rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.08) 1px,transparent 1px);background-size:128px 128px,128px 128px,128px 128px;background-position:50% 50%,calc(50% + 64px) calc(50% + 64px),calc(50% + 64px) calc(50% + 64px);-webkit-mask-image:radial-gradient(120% 110% at 50% 50%,#000 40%,rgba(0,0,0,0) 92%);mask-image:radial-gradient(120% 110% at 50% 50%,#000 40%,rgba(0,0,0,0) 92%);`;
+    c.appendChild(grid);
+    var vig = document.createElement('div');
+    vig.style.cssText = 'position:absolute;inset:0;background:linear-gradient(to right, rgba(0,0,0,.72) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,.72) 100%), radial-gradient(120% 100% at 50% 50%, rgba(0,0,0,0) 36%, rgba(0,0,0,.86) 100%);';
+    c.appendChild(vig);
+    var hb = document.createElement('div');
+    hb.style.cssText = 'position:absolute;top:0;left:0;right:0;height:172px;backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%);background:linear-gradient(to bottom,rgba(0,0,0,.72),rgba(0,0,0,0));';
+    c.appendChild(hb);
+    var fb = document.createElement('div');
+    fb.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:160px;backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);-webkit-mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%);background:linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,0));';
+    c.appendChild(fb);
+    var lower = "font-family:'PP Neue Montreal';font-weight:350;font-size:40px;line-height:.94;letter-spacing:-1.5px;text-transform:lowercase;";
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'position:absolute;top:0;left:0;right:0;height:52px;display:flex;justify-content:space-between;align-items:center;padding:0 16px;color:#e2e1e2;';
+    hdr.innerHTML = '<span style="' + lower + '">jason lim</span><span style="' + lower + '">contact</span><div style="position:absolute;left:0;right:0;top:0;height:52px;display:flex;justify-content:center;align-items:center;gap:12px;color:#ffffff;"><img src="../assets/profile.png" alt="" draggable="false" style="width:52px;height:52px;object-fit:cover;display:block;" /><span style="' + lower + 'color:#ffffff;">about</span></div>';
+    c.appendChild(hdr);
+    (document.body || document.documentElement).appendChild(c);
+  };
+  addEventListener('click', function (e) {
+    var a = e.target && e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href') || '';
+    if (a.target === '_blank' || /^(mailto:|tel:|#)/i.test(href) || /^https?:/i.test(href)) return;
+    window.__navCover();
+  }, true);
+  addEventListener('pageswap', function () { window.__navCover(); });
+  addEventListener('pageshow', function () { var c = document.getElementById('__nav-cover'); if (c) c.remove(); });
   // Navigating to the index (which doesn't opt into view transitions) auto-skips the outbound
   // transition and rejects its promises with "Transition was skipped". Swallow ONLY that rejection
   // so it doesn't surface as an unhandled error; case-study <-> case-study transitions resolve fine.
@@ -81,14 +122,13 @@
   @font-face { font-family: 'Doto'; src: url('../assets/fonts/Doto-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
   * { box-sizing: border-box; }
   * { cursor: none !important; }
-  html, body { margin: 0; height: 100%; background: #0a0b0e; }
+  html, body { margin: 0; height: 100%; background: #000000; }
   a { color: #ececf0; text-decoration: none; transition: filter .26s ease, opacity .26s ease; }
   a:hover { color: #ffffff; }
-  ::selection { background: #8aa0ff; color: #0a0b0e; }
+  ::selection { background: #8aa0ff; color: #000000; }
   @keyframes pageEntryFade { from { opacity: 1; } to { opacity: 0; } }
   @media (min-width: 1800px) { .m-mock { max-width: 960px !important; } .m-oust-panel { padding-top: 128px !important; padding-bottom: 128px !important; } }
   @keyframes scanMove { from { background-position: 0 0; } to { background-position: 0 60px; } }
-  @keyframes crtSweep { 0% { transform: translateY(-14vh); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(112vh); opacity: 0; } }
   @keyframes scanMask { from { -webkit-mask-position: 0 0; mask-position: 0 0; } to { -webkit-mask-position: 0 6px; mask-position: 0 6px; } }
   @media (max-width: 640px) { .m-hide-mobile { display: none !important; } }
 </style>
@@ -98,7 +138,7 @@
 
   <!-- Entry cover: starts opaque (page colour) and fades out via CSS on load, so any white
        navigation frame or content repaint during load is never visible. JS-independent. -->
-  <div style="position:fixed; inset:0; z-index:50; pointer-events:none; background:#0a0b0e; opacity:1; animation:pageEntryFade .5s ease forwards;"></div>
+  <div style="position:fixed; inset:0; z-index:50; pointer-events:none; background:#000000; opacity:1; animation:pageEntryFade .5s ease forwards;"></div>
 
   <!-- Gridded background (fixed lattice behind everything) -->
   <div style="position:fixed; inset:0; z-index:0; pointer-events:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.16)' stroke-width='1'/%3E%3C/svg%3E&quot;), linear-gradient(to right, rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.08) 1px, transparent 1px); background-size:128px 128px, 128px 128px, 128px 128px; background-position:50% 50%, calc(50% + 64px) calc(50% + 64px), calc(50% + 64px) calc(50% + 64px); -webkit-mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%); mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%);"></div>
@@ -107,7 +147,7 @@
   <div style="position:fixed; inset:0; z-index:0; pointer-events:none; background:linear-gradient(to right, rgba(0,0,0,.72) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,.72) 100%), radial-gradient(120% 100% at 50% 50%, rgba(0,0,0,0) 36%, rgba(0,0,0,.86) 100%);"></div>
 
   <!-- Progressive-blur header backdrop (matches index: strong blur at the top edge, unblurs inward) -->
-  <div style="position:fixed; top:0; left:0; right:0; height:172px; z-index:6; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to bottom,rgba(10,11,14,.72),rgba(10,11,14,0));"></div>
+  <div style="position:fixed; top:0; left:0; right:0; height:172px; z-index:6; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to bottom,rgba(0,0,0,.72),rgba(0,0,0,0));"></div>
 
   <!-- SVG goo filters: header hover melt (#goo) + entrance reveals for title (#gooReveal) and content (#gooReveal2) -->
   <svg width="0" height="0" style="position:absolute;" aria-hidden="true">
@@ -138,7 +178,7 @@
   </svg>
 
   <!-- Persistent header (copied from the index screen: melt-on-hover) -->
-  <header style="position:fixed; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:16; pointer-events:none; mix-blend-mode:difference;">
+  <header style="position:fixed; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:16; pointer-events:none;">
     <div style="pointer-events:auto;">
       <h1 style="margin:0; font-family:'PP Neue Montreal'; font-weight:350; font-size:40px; line-height:.94; letter-spacing:-1.5px; text-transform:lowercase; cursor:pointer;" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" data-clickable="true" onClick="{{ goHome }}">Jason Lim</h1>
     </div>
@@ -153,7 +193,7 @@
       <div style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer; pointer-events:auto;" data-clickable="true" onClick="{{ goAbout }}">
         <img src="../assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block;" />
       </div>
-      <span style="font-family:'PP Neue Montreal'; font-weight:350; font-size:40px; letter-spacing:-1.5px; text-transform:lowercase; color:#ececf0; pointer-events:auto; mix-blend-mode:difference; cursor:pointer;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goAbout }}">About</span>
+      <span style="font-family:'PP Neue Montreal'; font-weight:350; font-size:40px; letter-spacing:-1.5px; text-transform:lowercase; color:#ececf0; pointer-events:auto; cursor:pointer;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goAbout }}">About</span>
     </div>
   </div>
 
@@ -233,12 +273,13 @@
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   componentDidMount() {
+    this._curReady = false; setTimeout(() => { this._curReady = true; }, 700);   // suppress the cursor label until the entry transition settles
     this._onCursorMove = (e) => {
       if (this.cursorEl) { this.cursorEl.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)'; if (this.cursorEl.style.opacity !== '1') this.cursorEl.style.opacity = '1'; }
       if (this.cursorBlur) this.cursorBlur.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
       if (this.cursorTextBg) this.cursorTextBg.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
       const t = (e.target && e.target.closest) ? e.target.closest('a[href], [data-clickable]') : null;
-      const label = t ? 'CLICK TO VIEW' : null;
+      const label = (t && this._curReady) ? 'CLICK TO VIEW' : null;
       if (label !== this._cursorLabelText) {
         this._cursorLabelText = label;
         if (this.cursorScale) this.cursorScale.style.transform = label ? 'scale(0.82)' : 'scale(0.9)';
