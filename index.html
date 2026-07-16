@@ -252,20 +252,20 @@
   <!-- Header -->
   <header ref="{{ setHeaderEl }}" style="position:fixed; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:60; pointer-events:none; opacity:0;">
     <div style="pointer-events:auto;">
-      <h1 style="margin:0; font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; cursor:pointer;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goHome }}">Jason Lim</h1>
+      <h1 style="margin:0; font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; cursor:pointer;" data-clickable="true" data-cursor-label="SEE WORK" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goHome }}">Jason Lim</h1>
     </div>
     <nav class="m-hide-mobile" style="pointer-events:auto; display:flex; gap:26px; align-items:center;">
-      <a href="mailto:jason.jinulim@gmail.com" style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ececf0;" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ contact }}">Contact</a>
+      <a href="mailto:jason.jinulim@gmail.com" style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ececf0;" data-cursor-label="SAY HI" data-cursor-anchor="bl" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ contact }}">Contact</a>
     </nav>
   </header>
 
   <!-- Center avatar (kept out of the header's difference blend so the photo stays true colour) -->
   <div ref="{{ setAvatarEl }}" class="m-avatar" style="position:fixed; top:0px; left:0; right:0; z-index:60; display:flex; justify-content:center; pointer-events:none; opacity:0;">
     <div style="position:relative; height:52px; display:flex; align-items:center; gap:12px;">
-      <div ref="{{ setProfileWrap }}" style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer; pointer-events:auto; transition:opacity .5s ease;" data-clickable="true" onClick="{{ avatarClick }}">
+      <div ref="{{ setProfileWrap }}" style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer; pointer-events:auto; transition:opacity .5s ease;" data-clickable="true" data-cursor-label="{{ aboutCursorLabel }}" onClick="{{ avatarClick }}">
         <img ref="{{ setProfileImg }}" src="./assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block; transition:opacity .5s ease;" />
       </div>
-      <span ref="{{ setAboutLabelEl }}" style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ececf0; pointer-events:auto; cursor:pointer; transition:opacity .5s ease;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ avatarClick }}">{{ aboutLabel }}</span>
+      <span ref="{{ setAboutLabelEl }}" style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ececf0; pointer-events:auto; cursor:pointer; transition:opacity .5s ease;" data-clickable="true" data-cursor-label="{{ aboutCursorLabel }}" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ avatarClick }}">{{ aboutLabel }}</span>
     </div>
   </div>
 
@@ -273,11 +273,11 @@
   <footer ref="{{ setFooterEl }}" style="position:absolute; bottom:0; left:0; right:0; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px; z-index:60; pointer-events:none; font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff; opacity:0;">
     <span ref="{{ setUpdatedEl }}" class="m-hide-mobile" style="justify-self:start;">Last updated 2026</span>
     <div ref="{{ setScrollEl }}" style="justify-self:center; display:flex; align-items:center; gap:8px; transition:opacity .5s ease;">
-      <button ref="{{ setArrowLeftBtn }}" onClick="{{ selLeft }}" data-clickable="" data-cursor-label="CHANGE DIRECTION" aria-label="Rotate ring toward top-left" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
+      <button ref="{{ setArrowLeftBtn }}" onClick="{{ selLeft }}" data-clickable="" data-cursor-label="CHANGE DIRECTION" data-cursor-anchor="tr" aria-label="Rotate ring toward top-left" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
         <div ref="{{ setArrowLeftInner }}" style="width:100%; height:100%; position:relative; transform-style:preserve-3d;"></div>
       </button>
       <span style="font-family:'Doto'; font-size:22px; margin-right:-5px;">Scroll</span>
-      <button ref="{{ setArrowRightBtn }}" onClick="{{ selRight }}" data-clickable="" data-cursor-label="CHANGE DIRECTION" aria-label="Rotate ring toward bottom-right" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
+      <button ref="{{ setArrowRightBtn }}" onClick="{{ selRight }}" data-clickable="" data-cursor-label="CHANGE DIRECTION" data-cursor-anchor="tr" aria-label="Rotate ring toward bottom-right" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
         <div ref="{{ setArrowRightInner }}" style="width:100%; height:100%; position:relative; transform-style:preserve-3d;"></div>
       </button>
     </div>
@@ -731,15 +731,27 @@ class Component extends DCLogic {
 
     // Custom crosshair cursor that follows the pointer; shows a "CLICK TO VIEW" scramble over devices
     // whose data-href points at a local case-study page (not external links).
+    // Position a cursor label element relative to the crosshair per its target's data-cursor-anchor
+    // (br = default bottom-right, tr = top-right, bl = bottom-left).
+    this._setCursorAnchor = (el, h, v) => {
+      if (!el) return;
+      const a = this._cursorAnchor || 'br';
+      el.style.left = el.style.right = el.style.top = el.style.bottom = 'auto';
+      if (a === 'tr') { el.style.left = h + 'px'; el.style.bottom = v + 'px'; }
+      else if (a === 'bl') { el.style.right = h + 'px'; el.style.top = v + 'px'; }
+      else { el.style.left = h + 'px'; el.style.top = v + 'px'; }
+    };
     // Decide + apply the cursor label from the CURRENT pointer position (via elementFromPoint), so it stays
     // truthful when the ring moves under a stationary cursor (wheel / momentum / auto-spin), not only on move.
     this._refreshCursorLabel = () => {
       const x = this._cursorX, y = this._cursorY;
       let label = null;
+      let anchor = 'br';
       if (x != null) {
         const el = document.elementFromPoint(x, y);
         const t = (el && el.closest) ? el.closest('[data-cursor-label], [data-href], a[href], [data-clickable]') : null;
         if (t) {
+          anchor = t.getAttribute('data-cursor-anchor') || 'br';
           const custom = t.getAttribute('data-cursor-label');
           if (custom != null) label = custom;
           else if (t.tagName !== 'BUTTON') {
@@ -756,6 +768,11 @@ class Component extends DCLogic {
       const prev = this._cursorLabelText;
       if (label !== prev) {
         this._cursorLabelText = label;
+        if (label) {
+          this._cursorAnchor = anchor;
+          this._setCursorAnchor(this.cursorLabel, 33, 30);
+          this._setCursorAnchor(this.cursorTextBgLabel, 26, 26);
+        }
         if (this.cursorScale) this.cursorScale.style.transform = label ? 'scale(0.82)' : 'scale(0.9)';
         if (this.cursorBlur) this.cursorBlur.style.opacity = label ? '1' : '0';
         if (this.cursorTextBg) this.cursorTextBg.style.opacity = label ? '1' : '0';
@@ -764,7 +781,7 @@ class Component extends DCLogic {
         if (this.cursorCorners) this.cursorCorners.style.transform = label ? 'scale(2.0)' : 'scale(1)';
         if (this.cursorLabel) {
           if (label) { cancelAnimationFrame(this._curScrRaf); this.cursorLabel.style.opacity = '1'; this.scramble(this.cursorLabel, label); }
-          else this._labelOut(this.cursorLabel, 220, prev || 'CLICK TO VIEW');
+          else this._labelOut(this.cursorLabel, 110, prev || 'CLICK TO VIEW');
         }
       }
     };
@@ -1741,6 +1758,7 @@ class Component extends DCLogic {
       setUpdatedEl: (el) => { this.updatedEl = el; this._startFooterCycle && this._startFooterCycle(); },
       avatarClick: () => { if (this._aboutOpen && this._aboutReturn) { this._exitAboutToCase(); return; } if (this._aboutOpen) { this.spin = 0; this.dragMomentum = 0; this.closeAbout(); this.setState({ selected: null, hovered: null }); } else { this.openAbout(); } },
       aboutLabel: this.state.aboutOpen ? 'Exit' : 'About',
+      aboutCursorLabel: this.state.aboutOpen ? 'GO BACK' : 'MOI',
       goHome: () => { this._aboutReturn = null; this.spin = 0; this.dragMomentum = 0; this.setState({ selected: null, hovered: null }); if (this._aboutOpen) this.closeAbout(); },
       contact: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } window.location.href = 'mailto:jason.jinulim@gmail.com'; /* external: no backstop */ },
       headerFam, headerWeight, headerSize, headerSpacing, headerCase,
