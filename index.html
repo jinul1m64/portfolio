@@ -369,7 +369,7 @@
         </div>
       </div>
       <div ref="{{ setReachEl }}" style="display:flex; flex-direction:column; gap:76px; width:100%; max-width:{{ aboutBioMax }}; margin:76px 0 0; font-family:{{ aboutBioFam }}; font-weight:{{ aboutBioWeight }}; font-size:{{ aboutBioSize }}; line-height:{{ aboutBioLH }}; letter-spacing:{{ aboutBioSpacing }}; text-transform:{{ aboutBioCase }}; color:#f2f2f5; text-align:justify; text-wrap:pretty;">
-        <p style="margin:0;">I care about keeping technology, and the process of making it, human. That means inviting different voices in, making collaboration feel safe, and designing with people too often treated as edge cases.</p>
+        <p style="margin:0;">I care about keeping technology, and the process of making it, human. That means inviting different voices in, making collaboration feel safe, and designing for people too often treated as edge cases.</p>
         <p style="margin:0;">A few values keep me grounded:</p>
         <div style="display:flex; flex-direction:column; gap:12px;">
           <p style="margin:0; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; text-transform:uppercase; color:#ffffff; text-align:left;">Speak up for who isn&rsquo;t in the room</p>
@@ -1174,7 +1174,7 @@ class Component extends DCLogic {
       '  vec2 p=uv; p.x*=u_res.x/u_res.y; p*=2.2;',
       '  float t=u_time*0.12;',
       '  vec2 wq=vec2(fbm(p+vec2(0.0,t*0.4)), fbm(p+vec2(3.1,1.7)-t*0.28));',
-      '  float h=fbm(p*1.4+wq*2.7+vec2(t*0.65*u_dir,0.0));',
+      '  float h=fbm(p*1.4+wq*2.7+vec2(t*0.28*u_dir,0.0));',
       '  float c1=abs(sin(h*7.4+t));',
       '  float c2=abs(sin(h*14.8-t*0.7));',
       '  float metal=pow(c1,1.9)*0.72+pow(c2,2.5)*0.35;',
@@ -1222,7 +1222,7 @@ class Component extends DCLogic {
     if (this._bgFadeTarget == null) this._bgFadeTarget = _seenBg ? 0 : 1;
     if (this._bgDith == null) this._bgDith = 1;
     if (this._bgDithTarget == null) this._bgDithTarget = 1;
-    const draw = (now) => { const target = -(this.spinDir || 1); this._bgDir += (target - this._bgDir) * 0.05; this._bgFade += (this._bgFadeTarget - this._bgFade) * (this._bgFadeRate || 0.06); this._bgDith += (this._bgDithTarget - this._bgDith) * 0.035; gl.uniform1f(uDith, this._bgDith); gl.uniform1f(uFade, this._bgFade); gl.uniform1f(uDir, this._bgDir); gl.uniform1f(uTime, (now - t0) / 1000); gl.drawArrays(gl.TRIANGLES, 0, 3); if (!reduce && !document.hidden) this._bgRaf = requestAnimationFrame(draw); };
+    const draw = (now) => { const target = -(this.spinDir || 1); this._bgDir += (target - this._bgDir) * 0.025; this._bgFade += (this._bgFadeTarget - this._bgFade) * (this._bgFadeRate || 0.06); this._bgDith += (this._bgDithTarget - this._bgDith) * 0.035; gl.uniform1f(uDith, this._bgDith); gl.uniform1f(uFade, this._bgFade); gl.uniform1f(uDir, this._bgDir); gl.uniform1f(uTime, (now - t0) / 1000); gl.drawArrays(gl.TRIANGLES, 0, 3); if (!reduce && !document.hidden) this._bgRaf = requestAnimationFrame(draw); };
     if (reduce) { gl.uniform1f(uDith, 1); gl.uniform1f(uFade, 1); gl.uniform1f(uDir, -1); gl.uniform1f(uTime, 12.0); gl.drawArrays(gl.TRIANGLES, 0, 3); }
     else this._bgRaf = requestAnimationFrame(draw);
     this._bgVis = () => { if (document.hidden) cancelAnimationFrame(this._bgRaf); else if (!reduce) this._bgRaf = requestAnimationFrame(draw); };
