@@ -15,10 +15,15 @@
   html::-webkit-scrollbar { width: 0; height: 0; display: none; }
   html, body { background: #000000; }
   ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .45s; }
+  /* Dark backstop: the crossfade overlay + incoming snapshot paint on #000000 so any blank
+     pre-paint frame during the cross-document swap shows dark, never a white flash. */
+  ::view-transition { background: #000000; }
+  html::view-transition-new(root) { background: #000000; }
   @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
   /* During a view transition, neutralise the header's mix-blend-mode and the backdrop blur — both
      re-render live against the crossfade and bloom the header text; restored ~0.9s after it settles. */
   html.vt-freeze header, html.vt-freeze footer, html.vt-freeze .m-avatar span { mix-blend-mode: normal !important; }
+  html.vt-freeze [style*="backdrop-filter"] { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
   /* Header font in the real head so the paint-bridge (below) renders correctly on the first frame. */
   @font-face { font-family: 'PP Neue Montreal'; src: url('./assets/fonts/extra3.woff2') format('woff2'); font-weight: 350; font-style: normal; font-display: swap; }
   @font-face { font-family: 'PP Neue Montreal'; src: url('./assets/fonts/extra4.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
@@ -32,10 +37,48 @@
      avatar are React-mounted on DOMContentLoaded, a frame after first paint, which flickered the
      header text and the centre "about"/"exit" button. This static copy paints on the first frame and
      is removed once the real chrome mounts. Skipped on a first visit (the loader plays instead). */
+  window.__NO_WEBGL = false;   // WebGL background enabled. Set true to disable.
   addEventListener('unhandledrejection', function (e) {
     var r = e && e.reason; var m = (r && r.message) || String(r || '');
     if (/transition was (skipped|aborted)/i.test(m)) e.preventDefault();
   });
+  /* Dark nav backstop: paint an opaque #000000 cover the instant any same-tab navigation starts,
+     so the unload gap / VT snapshot / incoming blank first-frame can never flash white. */
+  window.__BACKSTOP_OFF = false;   // dark nav backstop enabled. Set to true to disable.
+  window.__navCover = function () {
+    if (window.__BACKSTOP_OFF) return;
+    if (document.getElementById('__nav-cover')) return;
+    var c = document.createElement('div');
+    c.id = '__nav-cover';
+    c.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#000000;pointer-events:none;overflow:hidden;';
+    var grid = document.createElement('div');
+    grid.style.cssText = `position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.16)' stroke-width='1'/%3E%3C/svg%3E"),linear-gradient(to right,rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.08) 1px,transparent 1px);background-size:128px 128px,128px 128px,128px 128px;background-position:50% 50%,calc(50% + 64px) calc(50% + 64px),calc(50% + 64px) calc(50% + 64px);-webkit-mask-image:radial-gradient(120% 110% at 50% 50%,#000 40%,rgba(0,0,0,0) 92%);mask-image:radial-gradient(120% 110% at 50% 50%,#000 40%,rgba(0,0,0,0) 92%);`;
+    c.appendChild(grid);
+    var vig = document.createElement('div');
+    vig.style.cssText = 'position:absolute;inset:0;background:linear-gradient(to right, rgba(0,0,0,.72) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,.72) 100%), radial-gradient(120% 100% at 50% 50%, rgba(0,0,0,0) 36%, rgba(0,0,0,.86) 100%);';
+    c.appendChild(vig);
+    var hb = document.createElement('div');
+    hb.style.cssText = 'position:absolute;top:0;left:0;right:0;height:172px;backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);-webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%);background:linear-gradient(to bottom,rgba(0,0,0,.72),rgba(0,0,0,0));';
+    c.appendChild(hb);
+    var fb = document.createElement('div');
+    fb.style.cssText = 'position:absolute;bottom:0;left:0;right:0;height:160px;backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);-webkit-mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%);background:linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,0));';
+    c.appendChild(fb);
+    var lower = "font-family:'PP Neue Montreal';font-weight:350;font-size:40px;line-height:.94;letter-spacing:-1.5px;text-transform:lowercase;";
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'position:absolute;top:0;left:0;right:0;height:52px;display:flex;justify-content:space-between;align-items:center;padding:0 16px;color:#e2e1e2;';
+    hdr.innerHTML = '<span style="' + lower + '">jason lim</span><span style="' + lower + '">contact</span><div style="position:absolute;left:0;right:0;top:0;height:52px;display:flex;justify-content:center;align-items:center;gap:12px;color:#ffffff;"><img src="./assets/profile.png" alt="" draggable="false" style="width:52px;height:52px;object-fit:cover;display:block;" /><span style="' + lower + 'color:#ffffff;">about</span></div>';
+    c.appendChild(hdr);
+    (document.body || document.documentElement).appendChild(c);
+  };
+  addEventListener('click', function (e) {
+    var a = e.target && e.target.closest && e.target.closest('a[href]');
+    if (!a) return;
+    var href = a.getAttribute('href') || '';
+    if (a.target === '_blank' || /^(mailto:|tel:|#)/i.test(href) || /^https?:/i.test(href)) return;
+    window.__navCover();
+  }, true);
+  addEventListener('pageswap', function () { window.__navCover(); });
+  addEventListener('pageshow', function () { var c = document.getElementById('__nav-cover'); if (c) c.remove(); });
   addEventListener('pageswap', function (e) { if (e && e.viewTransition) document.documentElement.classList.add('vt-freeze'); });
   addEventListener('pagereveal', function (e) {
     if (!e || !e.viewTransition) return;
@@ -63,13 +106,13 @@
       // snapshot then shows an identical grid, so the root crossfade of grid→grid is invisible (no flicker).
       var g = document.createElement('div');
       g.id = 'vt-grid-bridge'; g.setAttribute('aria-hidden', 'true');
-      g.style.cssText = `position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.16)' stroke-width='1'/%3E%3C/svg%3E"),linear-gradient(to right,rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.08) 1px,transparent 1px);background-size:128px 128px,128px 128px,128px 128px;background-position:50% 50%,calc(50% + 64px) calc(50% + 64px),calc(50% + 64px) calc(50% + 64px);-webkit-mask-image:radial-gradient(120% 110% at 50% 50%,#000 40%,rgba(0,0,0,0) 92%);mask-image:radial-gradient(120% 110% at 50% 50%,#000 40%,rgba(0,0,0,0) 92%);`;
+      g.style.cssText = `position:fixed;inset:0;z-index:15;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.16)' stroke-width='1'/%3E%3C/svg%3E"),linear-gradient(to right,rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.08) 1px,transparent 1px);background-size:128px 128px,128px 128px,128px 128px;background-position:50% 50%,calc(50% + 64px) calc(50% + 64px),calc(50% + 64px) calc(50% + 64px);-webkit-mask-image:radial-gradient(120% 110% at 50% 50%,#000 40%,rgba(0,0,0,0) 92%);mask-image:radial-gradient(120% 110% at 50% 50%,#000 40%,rgba(0,0,0,0) 92%);`;
       (document.body || document.documentElement).appendChild(g);
-      // Header blur backdrop bridge: the DC blur layer mounts late, so paint a matching one now
-      // so the progressive blur persists through the crossfade instead of dropping out.
+      // Header darkening scrim bridge: the DC scrim mounts late, so paint a matching one now
+      // so the header/footer darkening persists through the crossfade instead of dropping out.
       var bf = document.createElement('div');
       bf.id = 'vt-blur-bridge'; bf.setAttribute('aria-hidden', 'true');
-      bf.style.cssText = "position:fixed;top:0;left:0;right:0;height:172px;z-index:6;pointer-events:none;backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);-webkit-mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,0) 100%);background:linear-gradient(to bottom,rgba(10,11,14,.72),rgba(10,11,14,0));";
+      bf.style.cssText = "position:fixed;top:0;left:0;right:0;height:172px;z-index:55;pointer-events:none;-webkit-mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,0) 100%);background:linear-gradient(to bottom,rgba(0,0,0,.72),rgba(0,0,0,0));";
       (document.body || document.documentElement).appendChild(bf);
       (document.body || document.documentElement).appendChild(b);
       addEventListener('DOMContentLoaded', function () {
@@ -116,12 +159,11 @@
   @font-face { font-family: 'Doto'; src: url('./assets/fonts/Doto-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
   * { box-sizing: border-box; }
   * { cursor: none !important; }
-  html, body { margin: 0; height: 100%; background: #000000; overflow: hidden; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
   .m-about-scroll::-webkit-scrollbar { width: 0; height: 0; display: none; }
   a { color: #8aa0ff; text-decoration: none; transition: filter .26s ease, opacity .26s ease; }
   a:hover { color: #ffffff; }
   ::selection { background: #8aa0ff; color: #000000; }
-  @keyframes crtSweep { 0% { transform: translateY(-14vh); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(112vh); opacity: 0; } }
   @keyframes scanMove { from { background-position: 0 0; } to { background-position: 0 60px; } }
   @keyframes colonBlink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
   @keyframes marquee { from { transform: translateX(-50%); } to { transform: translateX(0); } }
@@ -146,31 +188,12 @@
 <div ref="{{ setRoot }}" style="position: fixed; inset: 0; background: #000000; font-family: PP Neue Montreal; color: #ececf0; overflow: hidden; cursor: grab; user-select: none; font-weight: 300; text-transform: uppercase; font-size: 32px; line-height: 1" onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" onPointerLeave="{{ onUp }}" onWheel="{{ onWheel }}">
 
   <!-- Animated grainy mesh-gradient (WebGL) — bottom layer, beneath the grid -->
-  <canvas ref="{{ setBgCanvas }}" style="position:absolute; inset:0; z-index:0; width:100%; height:100%; display:block; pointer-events:none;"></canvas>
+  <canvas ref="{{ setBgCanvas }}" style="position:absolute; inset:0; z-index:10; width:100%; height:100%; display:block; pointer-events:none;"></canvas>
 
   <!-- Gridded background (haoqi-style): faint fixed lattice behind everything -->
-  <div style="position:fixed; inset:0; z-index:0; pointer-events:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.16)' stroke-width='1'/%3E%3C/svg%3E&quot;), linear-gradient(to right, rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.08) 1px, transparent 1px); background-size:128px 128px, 128px 128px, 128px 128px; background-position:50% 50%, calc(50% + 64px) calc(50% + 64px), calc(50% + 64px) calc(50% + 64px); -webkit-mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%); mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%);"></div>
+  <div style="position:fixed; inset:0; z-index:15; pointer-events:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cpath d='M64 60v8M60 64h8' stroke='rgba(255,255,255,0.16)' stroke-width='1'/%3E%3C/svg%3E&quot;), linear-gradient(to right, rgba(255,255,255,.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.08) 1px, transparent 1px); background-size:128px 128px, 128px 128px, 128px 128px; background-position:50% 50%, calc(50% + 64px) calc(50% + 64px), calc(50% + 64px) calc(50% + 64px); -webkit-mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%); mask-image:radial-gradient(120% 110% at 50% 50%, #000 40%, rgba(0,0,0,0) 92%);"></div>
 
-  <!-- "Slurbt"-style glitch: stepped horizontal tear + RGB split (applied to non-hovered devices) -->
   <svg width="0" height="0" style="position:absolute; width:0; height:0; pointer-events:none;" aria-hidden="true">
-    <filter id="slurbt" x="-30%" y="-6%" width="160%" height="112%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0 0.07" numOctaves="1" seed="2" result="n0">
-        <animate attributeName="seed" values="2;11;5;14;7;1;9;3" dur="0.5s" calcMode="discrete" repeatCount="indefinite"></animate>
-        <animate attributeName="baseFrequency" values="0 0.05; 0 0.13; 0 0.07" dur="1.8s" repeatCount="indefinite"></animate>
-      </feTurbulence>
-      <feComponentTransfer in="n0" result="n">
-        <feFuncB type="discrete" tableValues="0.5"></feFuncB>
-      </feComponentTransfer>
-      <feDisplacementMap in="SourceGraphic" in2="n" scale="0" ref="{{ setSlurDisp }}" xChannelSelector="R" yChannelSelector="B" result="disp"></feDisplacementMap>
-      <feColorMatrix in="disp" type="saturate" values="0" result="gray"></feColorMatrix>
-      <!-- Grainy pixelation: chunky animated noise, clipped to the device, blended over -->
-      <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="2" seed="4" stitchTiles="stitch" result="gn">
-        <animate attributeName="seed" values="1;6;3;9;2;7" dur="0.28s" calcMode="discrete" repeatCount="indefinite"></animate>
-      </feTurbulence>
-      <feColorMatrix in="gn" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.26 0" ref="{{ setSlurGrain }}" result="grain"></feColorMatrix>
-      <feComposite in="grain" in2="gray" operator="in" result="grainClipped"></feComposite>
-      <feBlend in="gray" in2="grainClipped" mode="overlay"></feBlend>
-    </filter>
     <filter id="goo" x="-90%" y="-90%" width="280%" height="280%" color-interpolation-filters="sRGB">
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGoo }}" result="blur"></feGaussianBlur>
       <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 16 -6"></feColorMatrix>
@@ -185,26 +208,25 @@
     </filter>
   </svg>
 
-  <!-- Spiral scene -->
-  <div ref="{{ setScene }}" style="position:absolute; inset:0; z-index:2; opacity:0;">
-    <!-- Company names (mirrored) + L/R numerators overlay ON TOP of the spiral, blended (difference) like the header -->
-    <div style="position:absolute; inset:0; z-index:4000; pointer-events:none; mix-blend-mode:difference; opacity:0.6;">
-      <div ref="{{ setBgCompanyLWrap }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; text-transform:uppercase; white-space:nowrap; line-height:1; color:#ececf0;">[&nbsp;<span ref="{{ setBgCompanyL }}">DoorDash</span>&nbsp;]</div>
-      <div ref="{{ setBgCompanyRWrap }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; text-transform:uppercase; white-space:nowrap; line-height:1; color:#ececf0;">[&nbsp;<span ref="{{ setBgCompanyR }}">DoorDash</span>&nbsp;]</div>
-      <div ref="{{ setBgNumL }}" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; line-height:1; color:#ececf0;">001</div>
-      <div ref="{{ setBgNumR }}" style="position:absolute; right:16px; top:50%; transform:translateY(-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; line-height:1; color:#ececf0; text-align:right;">001</div>
+  <!-- Ring scene -->
+  <div ref="{{ setScene }}" style="position:absolute; inset:0; z-index:40; opacity:0;">
+    <!-- Company names (mirrored) + L/R numerators overlay ON TOP of the ring, blended (difference) like the header -->
+    <div style="position:absolute; inset:0; z-index:4000; pointer-events:none; mix-blend-mode:difference;">
+      <div ref="{{ setBgCompanyLWrap }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; text-transform:uppercase; white-space:nowrap; line-height:1; color:#8e8e90;">[&nbsp;<span ref="{{ setBgCompanyL }}">DoorDash</span>&nbsp;]</div>
+      <div ref="{{ setBgCompanyRWrap }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; text-transform:uppercase; white-space:nowrap; line-height:1; color:#8e8e90;">[&nbsp;<span ref="{{ setBgCompanyR }}">DoorDash</span>&nbsp;]</div>
+      <div ref="{{ setBgNumL }}" style="position:absolute; left:16px; top:50%; transform:translateY(-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; line-height:1; color:#8e8e90;">001</div>
+      <div ref="{{ setBgNumR }}" style="position:absolute; right:16px; top:50%; transform:translateY(-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; line-height:1; color:#8e8e90; text-align:right;">001</div>
     </div>
     <!-- Company logos, one meridian line in from each number — white, difference-blended. Fixed box keeps the flip axis constant across marks. -->
     <div style="position:absolute; inset:0; z-index:4001; pointer-events:none; mix-blend-mode:difference; opacity:1;">
       <div ref="{{ setBgLogoLWrap }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:34px; height:20px; perspective:340px;"><div ref="{{ setBgLogoLFlip }}" style="position:absolute; inset:0;"><img ref="{{ setBgLogoL }}" alt="" draggable="false" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); height:16px; width:auto; filter:brightness(0) invert(1);" /></div></div>
       <div ref="{{ setBgLogoRWrap }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:34px; height:20px; perspective:340px;"><div ref="{{ setBgLogoRFlip }}" style="position:absolute; inset:0;"><img ref="{{ setBgLogoR }}" alt="" draggable="false" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); height:16px; width:auto; filter:brightness(0) invert(1);" /></div></div>
     </div>
-    <div ref="{{ setHelix }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); will-change:transform;">
+    <div ref="{{ setRing }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); will-change:transform;">
       <sc-for list="{{ cards }}" as="card" hint-placeholder-count="0">
         <div ref="{{ card.ref }}" style="{{ card.style }}">
-          <div style="{{ card.innerStyle }}" data-href="{{ card.href }}" onMouseEnter="{{ card.onEnter }}" onMouseLeave="{{ card.onLeave }}" onClick="{{ card.onOpen }}">
+          <div style="{{ card.innerStyle }}" data-href="{{ card.href }}" data-title="{{ card.title }}" onMouseEnter="{{ card.onEnter }}" onMouseLeave="{{ card.onLeave }}" onClick="{{ card.onOpen }}">
             {{ card.body }}
-            <div style="{{ card.cardScan }}"></div>
           </div>
         </div>
       </sc-for>
@@ -212,19 +234,17 @@
   </div>
 
   <!-- Subtle darkened vignette -->
-  <div style="position:absolute; inset:0; z-index:0; pointer-events:none; background:linear-gradient(to right, rgba(0,0,0,.72) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,.72) 100%), radial-gradient(120% 100% at 50% 50%, rgba(0,0,0,0) 36%, rgba(0,0,0,.86) 100%);"></div>
+  <div style="position:absolute; inset:0; z-index:20; pointer-events:none; background:linear-gradient(to right, rgba(0,0,0,.72) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,.72) 100%), radial-gradient(120% 100% at 50% 50%, rgba(0,0,0,0) 36%, rgba(0,0,0,.86) 100%);"></div>
 
-  <!-- CRT scanline overlay + occasional bright sweep line (hidden on hover) -->
-  <div ref="{{ setScanEl }}" style="{{ scanStyle }}">
-    <div ref="{{ setSweep }}" style="position:absolute; left:0; right:0; top:0; height:5px; background:linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.14) 50%, rgba(255,255,255,0)); filter:blur(1px); box-shadow:0 0 16px rgba(255,255,255,.16); opacity:0; will-change:transform;"></div>
-  </div>
+  <!-- CRT scanline overlay -->
+  <div ref="{{ setScanEl }}" style="{{ scanStyle }}"></div>
 
   <!-- Progressive-blur header & footer backdrops (blur strong at the edge, unblurs inward) -->
-  <div style="position:absolute; top:0; left:0; right:0; height:172px; z-index:6; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,0) 100%); background:linear-gradient(to bottom,rgba(10,11,14,.72),rgba(10,11,14,0));"></div>
-  <div style="position:absolute; bottom:0; left:0; right:0; height:160px; z-index:6; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to top,#000 0%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to top,#000 0%,rgba(0,0,0,0) 100%); background:linear-gradient(to top,rgba(10,11,14,.72),rgba(10,11,14,0));"></div>
+  <div style="position:absolute; top:0; left:0; right:0; height:172px; z-index:55; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to bottom,rgba(0,0,0,.72),rgba(0,0,0,0));"></div>
+  <div style="position:absolute; bottom:0; left:0; right:0; height:160px; z-index:55; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,0));"></div>
 
   <!-- Header -->
-  <header ref="{{ setHeaderEl }}" style="position:fixed; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:16; pointer-events:none; mix-blend-mode:difference; opacity:0;">
+  <header ref="{{ setHeaderEl }}" style="position:fixed; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:60; pointer-events:none; opacity:0;">
     <div style="pointer-events:auto;">
       <h1 style="margin:0; font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; cursor:pointer;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goHome }}">Jason Lim</h1>
     </div>
@@ -234,17 +254,17 @@
   </header>
 
   <!-- Center avatar (kept out of the header's difference blend so the photo stays true colour) -->
-  <div ref="{{ setAvatarEl }}" class="m-avatar" style="position:fixed; top:0px; left:0; right:0; z-index:16; display:flex; justify-content:center; pointer-events:none; opacity:0;">
+  <div ref="{{ setAvatarEl }}" class="m-avatar" style="position:fixed; top:0px; left:0; right:0; z-index:60; display:flex; justify-content:center; pointer-events:none; opacity:0;">
     <div style="position:relative; height:52px; display:flex; align-items:center; gap:12px;">
       <div ref="{{ setProfileWrap }}" style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer; pointer-events:auto; transition:opacity .5s ease;" data-clickable="true" onClick="{{ avatarClick }}">
         <img ref="{{ setProfileImg }}" src="./assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block; transition:opacity .5s ease;" />
       </div>
-      <span ref="{{ setAboutLabelEl }}" style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ececf0; pointer-events:auto; mix-blend-mode:difference; cursor:pointer; transition:opacity .5s ease;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ avatarClick }}">{{ aboutLabel }}</span>
+      <span ref="{{ setAboutLabelEl }}" style="font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; color:#ececf0; pointer-events:auto; cursor:pointer; transition:opacity .5s ease;" data-clickable="true" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ avatarClick }}">{{ aboutLabel }}</span>
     </div>
   </div>
 
   <!-- Footer hint -->
-  <footer ref="{{ setFooterEl }}" style="position:absolute; bottom:0; left:0; right:0; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px; z-index:16; pointer-events:none; font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff; mix-blend-mode:difference; opacity:0;">
+  <footer ref="{{ setFooterEl }}" style="position:absolute; bottom:0; left:0; right:0; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px; z-index:60; pointer-events:none; font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff; opacity:0;">
     <span ref="{{ setUpdatedEl }}" class="m-hide-mobile" style="justify-self:start;">Last updated 2026</span>
     <div ref="{{ setScrollEl }}" style="justify-self:center; display:flex; align-items:center; gap:8px; transition:opacity .5s ease;">
       <button ref="{{ setArrowLeftBtn }}" onClick="{{ selLeft }}" data-clickable="" data-cursor-label="CHANGE DIRECTION" aria-label="Rotate ring toward top-left" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
@@ -259,9 +279,9 @@
   </footer>
 
   <!-- Custom crosshair cursor + "CLICK TO VIEW" scramble over navigable devices -->
-  <div ref="{{ setCursorBlur }}" class="m-hide-mobile" style="position:fixed; left:0; top:0; z-index:8999; pointer-events:none; mix-blend-mode:difference; opacity:0; will-change:transform; transition:opacity .18s ease, transform .25s cubic-bezier(.22,.61,.36,1);"><div ref="{{ setCursorBlurInner }}" style="position:absolute; left:-26px; top:-26px; width:52px; height:52px; border-radius:0; background:#ffffff; transform:scale(.55); transition:transform .2s cubic-bezier(.22,.61,.36,1);"></div></div>
-  <div ref="{{ setCursorTextBg }}" class="m-hide-mobile" style="position:fixed; left:0; top:0; z-index:8998; pointer-events:none; mix-blend-mode:difference; opacity:0; will-change:transform; transition:opacity .18s ease, transform .25s cubic-bezier(.22,.61,.36,1);"><span ref="{{ setCursorTextBgLabel }}" style="position:absolute; left:26px; top:26px; display:inline-block; padding:4px 7px; background:#ffffff; color:transparent; border-radius:0; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; white-space:nowrap;"></span></div>
-  <div ref="{{ setCursorEl }}" class="m-hide-mobile" style="position:fixed; left:0; top:0; z-index:9000; pointer-events:none; mix-blend-mode:difference; opacity:0; will-change:transform;">
+  <div ref="{{ setCursorBlur }}" class="m-hide-mobile" style="position:fixed; left:0; top:0; z-index:91; pointer-events:none; mix-blend-mode:difference; opacity:0; will-change:transform; transition:opacity .18s ease, transform .25s cubic-bezier(.22,.61,.36,1);"><div ref="{{ setCursorBlurInner }}" style="position:absolute; left:-26px; top:-26px; width:52px; height:52px; border-radius:0; background:#ffffff; transform:scale(.55); transition:transform .2s cubic-bezier(.22,.61,.36,1);"></div></div>
+  <div ref="{{ setCursorTextBg }}" class="m-hide-mobile" style="position:fixed; left:0; top:0; z-index:90; pointer-events:none; mix-blend-mode:difference; opacity:0; will-change:transform; transition:opacity .18s ease, transform .25s cubic-bezier(.22,.61,.36,1);"><span ref="{{ setCursorTextBgLabel }}" style="position:absolute; left:26px; top:26px; display:inline-block; padding:4px 7px; background:#ffffff; color:transparent; border-radius:0; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; white-space:nowrap;"></span></div>
+  <div ref="{{ setCursorEl }}" class="m-hide-mobile" style="position:fixed; left:0; top:0; z-index:92; pointer-events:none; mix-blend-mode:difference; opacity:0; will-change:transform;">
     <svg width="40" height="40" style="position:absolute; left:-20px; top:-20px; display:block; overflow:visible;">
       <g ref="{{ setCursorScale }}" style="transition:transform .2s cubic-bezier(.22,.61,.36,1); transform-box:fill-box; transform-origin:center; transform:scale(0.9);">
         <path d="M20 14 V26 M14 20 H26" stroke="#ffffff" stroke-width="1"></path>
@@ -274,8 +294,8 @@
   </div>
 
   <!-- Ring minimap (top-right HUD): faint tilted orbit (masked inside the window), small upright poster-devices, dark base + window-clipped bright layer -->
-  <div ref="{{ setMiniWrap }}" class="m-hide-mobile" style="position:absolute; top:84px; left:0; width:150px; height:104px; z-index:1; pointer-events:none; opacity:0; transition:opacity .8s ease; transform:scale(1.47,1.25); transform-origin:164px 0;">
-    <div style="position:absolute; left:72px; top:77px; width:63px; height:48px; transform:translate(-50%,-50%); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); background:rgba(10,11,14,0.35);"></div>
+  <div ref="{{ setMiniWrap }}" class="m-hide-mobile" style="position:absolute; top:84px; left:0; width:150px; height:104px; z-index:30; pointer-events:none; opacity:0; transition:opacity .8s ease; transform:scale(1.47,1.25); transform-origin:164px 0;">
+    <div style="position:absolute; left:72px; top:77px; width:63px; height:48px; transform:translate(-50%,-50%); background:rgba(0,0,0,0.35);"></div>
     <svg width="150" height="104" style="position:absolute; inset:0; overflow:visible;">
       <g ref="{{ setMiniRing }}"></g>
     </svg>
@@ -289,7 +309,7 @@
 
   <!-- Hover caption (flat text, scramble-in on hover, above the footer) -->
   <sc-if value="{{ hasHover }}" hint-placeholder-val="{{ false }}">
-    <div style="position:absolute; left:0; right:0; bottom:74px; z-index:16; display:flex; flex-direction:column; align-items:flex-start; text-align:left; padding-left:16px; gap:{{ hoverGap }}; pointer-events:none; mix-blend-mode:difference; animation:spiralFadeIn .2s ease both;">
+    <div style="position:absolute; left:0; right:0; bottom:74px; z-index:80; display:flex; flex-direction:column; align-items:flex-start; text-align:left; padding-left:16px; gap:{{ hoverGap }}; pointer-events:none; mix-blend-mode:difference; animation:spiralFadeIn .2s ease both;">
       <span ref="{{ setCompanyEl }}" style="display:none; font-family:'Doto'; font-weight:{{ eyebrowWeight }}; font-size:{{ eyebrowSize }}; letter-spacing:{{ eyebrowSpacing }}; text-transform:{{ eyebrowCase }}; color:#ffffff; opacity:0;">{{ hover.company }}</span>
       <span ref="{{ setTitleEl }}" style="font-family:{{ hoverFam }}; font-weight:{{ hoverWeight }}; font-size:{{ hoverSize }}; line-height:1; letter-spacing:{{ hoverSpacing }}; text-transform:{{ hoverCase }}; color:#f2f2f5; opacity:0;">{{ hover.title }}</span>
     </div>
@@ -299,10 +319,7 @@
   {{ overlayEl }}
 
   <!-- About page (sits below the shared chrome: header, footer, scanlines + vignette all render over it) -->
-  <div ref="{{ setAboutEl }}" class="m-about-scroll" style="position:absolute; inset:0; z-index:3; opacity:0; pointer-events:none; overflow-y:auto; scrollbar-width:none; transition:opacity .7s ease; background:transparent;">
-    <div style="position:sticky; top:0; height:100vh; margin-bottom:-100vh; z-index:5; pointer-events:none; overflow:hidden;">
-      <div style="position:absolute; left:0; right:0; top:0; height:2px; background:linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.12) 50%, rgba(255,255,255,0)); filter:blur(.6px); box-shadow:0 0 8px rgba(255,255,255,.12); animation:crtSweep 7s linear infinite;"></div>
-    </div>
+  <div ref="{{ setAboutEl }}" class="m-about-scroll" style="position:absolute; inset:0; z-index:50; opacity:0; pointer-events:none; overflow-y:auto; scrollbar-width:none; transition:opacity .7s ease; background:transparent;">
     <div ref="{{ setAboutInner }}" style="box-sizing:border-box; padding:0 48px 150px; display:flex; flex-direction:column; align-items:center;">
       <div ref="{{ setMoiWrap }}" style="position:relative; width:{{ aboutImgW }}; max-width:100%; flex:0 0 auto; overflow:hidden;">
         <img ref="{{ setMoiImg }}" alt="Jason Lim" draggable="false" style="width:100%; height:100%; object-fit:cover; object-position:50% 100%; display:block;" />
@@ -353,13 +370,13 @@
   </div>
 
   <!-- Boot loader: black + scanlines, centred count-up, melts out on complete -->
-  <div ref="{{ setLoader }}" style="position:absolute; inset:0; z-index:40; background:transparent; display:flex; align-items:center; justify-content:center; pointer-events:auto;">
+  <div ref="{{ setLoader }}" style="position:absolute; inset:0; z-index:60; background:transparent; display:flex; align-items:center; justify-content:center; pointer-events:auto;">
     <span ref="{{ setLoaderPct }}" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff;">0%</span>
   </div>
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;autoSpinSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:0,&quot;max&quot;:26,&quot;step&quot;:1,&quot;unit&quot;:&quot;°/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;spiralWidth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.6,&quot;max&quot;:1.15,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#8aa0ff&quot;,&quot;options&quot;:[&quot;#8aa0ff&quot;,&quot;#e0a86b&quot;,&quot;#8fd3b8&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Style&quot;},&quot;slurScale&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:120,&quot;min&quot;:0,&quot;max&quot;:120,&quot;step&quot;:5,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;slurSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.45,&quot;min&quot;:0.15,&quot;max&quot;:1.6,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;gooStrength&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.3,&quot;min&quot;:0.5,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;gooThresh&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:35,&quot;min&quot;:6,&quot;max&quot;:40,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;headerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:16,&quot;max&quot;:72,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1.5,&quot;min&quot;:-3,&quot;max&quot;:12,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;lowercase&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;footerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:8,&quot;max&quot;:28,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-0.4,&quot;min&quot;:-1,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;UPPERCASE&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;eyebrowFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:400,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:8,&quot;max&quot;:32,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-0.5,&quot;min&quot;:-1,&quot;max&quot;:10,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;UPPERCASE&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;hoverFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:300,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:104,&quot;min&quot;:20,&quot;max&quot;:160,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-4,&quot;min&quot;:-4,&quot;max&quot;:10,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;lowercase&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverGap&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-52,&quot;min&quot;:-60,&quot;max&quot;:24,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;aboutBioSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:20,&quot;max&quot;:64,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioLineHeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.9,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1,&quot;min&quot;:-3,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioWeight&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;300&quot;,&quot;options&quot;:[&quot;300&quot;,&quot;400&quot;,&quot;500&quot;,&quot;700&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;As typed&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutImgW&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:452,&quot;min&quot;:300,&quot;max&quot;:760,&quot;step&quot;:10,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;autoSpinSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:0,&quot;max&quot;:26,&quot;step&quot;:1,&quot;unit&quot;:&quot;°/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;ringWidth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.6,&quot;max&quot;:1.15,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#8aa0ff&quot;,&quot;options&quot;:[&quot;#8aa0ff&quot;,&quot;#e0a86b&quot;,&quot;#8fd3b8&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Style&quot;},&quot;slurScale&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:120,&quot;min&quot;:0,&quot;max&quot;:120,&quot;step&quot;:5,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;slurSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.45,&quot;min&quot;:0.15,&quot;max&quot;:1.6,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;gooStrength&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.3,&quot;min&quot;:0.5,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;gooThresh&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:35,&quot;min&quot;:6,&quot;max&quot;:40,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;headerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:16,&quot;max&quot;:72,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1.5,&quot;min&quot;:-3,&quot;max&quot;:12,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;lowercase&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;footerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:8,&quot;max&quot;:28,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-0.4,&quot;min&quot;:-1,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;UPPERCASE&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;eyebrowFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:400,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:8,&quot;max&quot;:32,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-0.5,&quot;min&quot;:-1,&quot;max&quot;:10,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;UPPERCASE&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;hoverFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:300,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:104,&quot;min&quot;:20,&quot;max&quot;:160,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-4,&quot;min&quot;:-4,&quot;max&quot;:10,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;lowercase&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverGap&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-52,&quot;min&quot;:-60,&quot;max&quot;:24,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;aboutBioSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:20,&quot;max&quot;:64,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioLineHeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.9,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1,&quot;min&quot;:-3,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioWeight&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;300&quot;,&quot;options&quot;:[&quot;300&quot;,&quot;400&quot;,&quot;500&quot;,&quot;700&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;As typed&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutImgW&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:452,&quot;min&quot;:300,&quot;max&quot;:760,&quot;step&quot;:10,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;}}">
 class Component extends DCLogic {
   state = { hovered: null, selected: null, spinSel: 'right' };
   cardEls = [];   // must exist before ref callbacks fire (they run before componentDidMount)
@@ -367,19 +384,17 @@ class Component extends DCLogic {
 
   // shared geometry constants (used by both render + animation loop)
   PER_TURN = 6;
-  Y_STEP = 118;
-  ANG = 36;
   FROM = 0;
   TO = 5;   // single tilted ring (Saturn-style): one instance of each of the 6 mocks
   TILT = 1;
   ROLL = -18;   // diagonal roll of the whole ring (top-left high → bottom-right low, steeper on exit)
   DEVICE_SS = 2;   // supersample: build devices at SSx then counter-scale, so the 3D-layer texture is hi-res (crisp video on low-DPR/large monitors)
 
-  // Radius so the spiral spans from the header logo to the "Site" link.
+  // Radius so the ring spans from the header logo to the "Site" link.
   radius() {
     const w = (typeof window !== 'undefined' ? window.innerWidth : 1200);
     const span = Math.max(320, w - 96);           // header inner width (40px pad each side)
-    const factor = this.props.spiralWidth ?? 1;
+    const factor = this.props.ringWidth ?? 1;
     return Math.min(980, Math.max(300, (span / 2) * factor * 0.9));
   }
 
@@ -417,39 +432,19 @@ class Component extends DCLogic {
     if (this._booting) return;
     this._booting = true;
     const dest = href || './case-study.dc.html';
-    // The clicked device's scaled body wrapper (outer .el → inner rotateY div → body).
-    const dev = this._downDevice;
-    const body = dev && dev.firstElementChild;
-    // Step 2: once the device has popped, fade the ring, minimap, scanlines/sweep and
-    // footer, then navigate so the case study starts its own reveal.
-    const fadeChrome = () => {
-      // Minimap leaves first: fade out while inverse-scaling UP (grows as the big ring shrinks).
-      if (this.miniWrap) { this.miniWrap.style.transition = 'opacity .45s ease, transform .45s cubic-bezier(.22,.61,.36,1)'; this.miniWrap.style.opacity = '0'; this.miniWrap.style.transform = (this._miniScaleTf || 'scale(1)') + ' scale(1.3)'; }
-      // Then the large ring scales DOWN as it fades.
-      setTimeout(() => {
-        if (this.sceneEl) { this.sceneEl.style.transition = 'opacity .6s ease'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
-        this._ringKTarget = 0.9;   // large ring scales down as it fades
-      }, 200);
-      this._bgFadeTarget = 0; this._bgFadeRate = 0.06;   // dither the WebGL background completely away
-      if (this.scanEl) { this.scanEl.style.transition = 'opacity .6s ease'; this.scanEl.style.opacity = '0'; }
-      if (this.footerEl) { this.footerEl.style.transition = 'opacity .6s ease'; this.footerEl.style.opacity = '0'; }
-      if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .6s ease'; this.scrollEl.style.opacity = '0'; }
-      // Hold on just the gridded background + header before the next screen loads.
-      setTimeout(() => { window.location.href = dest; }, 200 + 600 + 300);
-    };
-    // Step 1: slowly scale the device down, then back up — using the exact same easing and
-    // scale values as the hover transition (1.1 hovered → 1.0 → 1.1).
-    if (body) {
-      body.style.transition = 'transform .24s cubic-bezier(.22,.61,.36,1)';
-      body.style.transform = 'scale(1)';
-      setTimeout(() => { body.style.transform = 'scale(1.1)'; }, 240);
-      setTimeout(fadeChrome, 500);
-    } else {
-      fadeChrome();
-    }
+    // Same exit as index→About: gentle .8s opacity fades of the ring chrome (scene, minimap, footer,
+    // scroll hint, scanlines) + dither the WebGL away, then navigate. Header stays (persistent nav);
+    // the case study runs its own entry reveal on arrival.
+    if (this.sceneEl) { this.sceneEl.style.transition = 'opacity .8s ease'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
+    if (this.miniWrap) { this.miniWrap.style.transition = 'opacity .8s ease'; this.miniWrap.style.opacity = '0'; }
+    if (this.footerEl) { this.footerEl.style.transition = 'opacity .8s ease'; this.footerEl.style.opacity = '0'; }
+    if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .8s ease'; this.scrollEl.style.opacity = '0'; }
+    if (this.scanEl) { this.scanEl.style.transition = 'opacity .8s ease'; this.scanEl.style.opacity = '0'; }
+    this._bgFadeTarget = 0; this._bgFadeRate = 0.06;
+    setTimeout(() => { window.location.href = dest; }, 900);
   }
 
-  // Reveal the About page: spiral + "Scroll" hint fade out, content fades in.
+  // Reveal the About page: ring + "Scroll" hint fade out, content fades in.
   openAbout() {
     this._aboutOpen = true;
     this._aboutReturn = null;   // normal About (from the ring) always Exits back to the ring
@@ -459,7 +454,7 @@ class Component extends DCLogic {
     if (this.profileWrap) this.profileWrap.style.opacity = '0';
     setTimeout(() => { if (this._aboutOpen && this.profileWrap) this.profileWrap.style.display = 'none'; }, 520);
     setTimeout(() => { if (this._aboutOpen) { this.setState({ aboutOpen: true }); if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '1'; } }, 800);
-    // Longer fade of the spiral + Scroll hint, then the empty page holds ~1s before the About page goo-reveals in.
+    // Longer fade of the ring + Scroll hint, then the empty page holds ~1s before the About page goo-reveals in.
     if (this.sceneEl) { this.sceneEl.style.transition = 'opacity .8s ease'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
     if (this.miniWrap) { this.miniWrap.style.opacity = '0'; }
     if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .8s ease'; this.scrollEl.style.opacity = '0'; }
@@ -604,29 +599,14 @@ class Component extends DCLogic {
     this._onResize = () => { this.forceUpdate(); this._sizeMoi && this._sizeMoi(); this._alignMini && this._alignMini(); };
     window.addEventListener('resize', this._onResize);
     this._alignMini && this._alignMini();
-    // Randomised CRT sweep: fires at uneven, infrequent intervals.
-    this._runSweep = () => {
-      const b = this.sweepEl;
-      if (!b) return;
-      b.style.animation = 'none';
-      void b.offsetWidth;            // force reflow so it restarts
-      b.style.animation = 'crtSweep 3s linear forwards';
-    };
-    this._scheduleSweep = () => {
-      const delay = 8000 + Math.random() * 13000;   // 8–21s, uneven
-      this._sweepTimer = setTimeout(() => { this._runSweep(); this._scheduleSweep(); }, delay);
-    };
-    this._scheduleSweep();
-    // Autoplay + hover-isolation: normally all videos loop; while a mock is hovered, only that one plays.
+    // All clips stay loaded AND stay playing while on-screen — never pause per-roll, so a video rolling in/out
+    // next to a static image causes no play/pause or poster swap (that start/stop was flashing the difference readouts
+    // on smooth auto-spin). Only a hidden tab / off-screen ring pauses everything, for battery.
     this._applyVideoPlayback = () => {
       if (!this._running) { this.videoEls.forEach(v => { if (v && !v.paused) v.pause(); }); return; }
-      const hov = this.state.hovered;
-      // Active set is chosen in the tick loop (most on-screen cards); hover isolates to one.
-      const active = (hov != null) ? new Set([String(hov)]) : (this._activeSlots || new Set());
       this.videoEls.forEach(v => {
         if (!v) return;
-        if (active.has(v.dataset.slot)) { if (v._loaded !== false && v.paused) { v.muted = true; const p = v.play(); if (p && p.catch) p.catch(() => {}); } }
-        else if (!v.paused) { v.pause(); }
+        if (v.paused) { v.muted = true; const p = v.play(); if (p && p.catch) p.catch(() => {}); }
       });
     };
     this._playAll = this._applyVideoPlayback;
@@ -639,7 +619,7 @@ class Component extends DCLogic {
     const unlock = () => { this._playAll && this._playAll(); };
     ['pointermove', 'pointerdown', 'keydown', 'touchstart', 'wheel'].forEach(ev => window.addEventListener(ev, unlock, { once: true, passive: true }));
 
-    // Pause the RAF loop + videos when the tab is hidden or the spiral is scrolled off-screen.
+    // Pause the RAF loop + videos when the tab is hidden or the ring is scrolled off-screen.
     this._onScreen = true;      // set by IntersectionObserver
     this._visible = !document.hidden;
     this._syncRunning = () => {
@@ -731,24 +711,28 @@ class Component extends DCLogic {
 
     // Custom crosshair cursor that follows the pointer; shows a "CLICK TO VIEW" scramble over devices
     // whose data-href points at a local case-study page (not external links).
-    this._onCursorMove = (e) => {
-      if (this.cursorEl) {
-        this.cursorEl.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
-        if (this.cursorEl.style.opacity !== '1') this.cursorEl.style.opacity = '1';
-      }
-      if (this.cursorBlur) this.cursorBlur.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
-      if (this.cursorTextBg) this.cursorTextBg.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
-      const t = (e.target && e.target.closest) ? e.target.closest('[data-cursor-label], [data-href], a[href], [data-clickable]') : null;
+    // Decide + apply the cursor label from the CURRENT pointer position (via elementFromPoint), so it stays
+    // truthful when the ring moves under a stationary cursor (wheel / momentum / auto-spin), not only on move.
+    this._refreshCursorLabel = () => {
+      const x = this._cursorX, y = this._cursorY;
       let label = null;
-      if (t) {
-        const custom = t.getAttribute('data-cursor-label');
-        if (custom != null) label = custom;
-        else if (t.tagName !== 'BUTTON') {
-          const href = t.getAttribute('data-href');
-          if (href != null) label = /^https?:/i.test(href) ? 'COMING SOON' : 'CLICK TO VIEW';   // external = unlinked placeholder
-          else label = 'CLICK TO VIEW';                             // header <a> / [data-clickable]
+      if (x != null) {
+        const el = document.elementFromPoint(x, y);
+        const t = (el && el.closest) ? el.closest('[data-cursor-label], [data-href], a[href], [data-clickable]') : null;
+        if (t) {
+          const custom = t.getAttribute('data-cursor-label');
+          if (custom != null) label = custom;
+          else if (t.tagName !== 'BUTTON') {
+            const href = t.getAttribute('data-href');
+            if (href != null) {
+              if (/^https?:/i.test(href)) label = '[ COMING SOON ]';   // external = unbuilt, no title
+              else label = '[ VIEW ] ' + (t.getAttribute('data-title') || '').toUpperCase();
+            }
+            else label = 'CLICK TO VIEW';                             // header <a> / [data-clickable]
+          }
         }
       }
+      if (this._booting) label = null;   // no click-to-view label during the boot loader / navigation
       const prev = this._cursorLabelText;
       if (label !== prev) {
         this._cursorLabelText = label;
@@ -763,6 +747,16 @@ class Component extends DCLogic {
           else this._labelOut(this.cursorLabel, 220, prev || 'CLICK TO VIEW');
         }
       }
+    };
+    this._onCursorMove = (e) => {
+      this._cursorX = e.clientX; this._cursorY = e.clientY;
+      if (this.cursorEl) {
+        this.cursorEl.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
+        if (this.cursorEl.style.opacity !== '1') this.cursorEl.style.opacity = '1';
+      }
+      if (this.cursorBlur) this.cursorBlur.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
+      if (this.cursorTextBg) this.cursorTextBg.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
+      this._refreshCursorLabel();
     };
     window.addEventListener('pointermove', this._onCursorMove, { passive: true });
     this._onCursorLeaveWin = () => { if (this.cursorEl) this.cursorEl.style.opacity = '0'; };
@@ -812,7 +806,7 @@ class Component extends DCLogic {
     // Header + avatar are the persistent chrome carried across the navigation — show them at once,
     // no fade, so they feel continuous with the case study we came from.
     [this.headerEl, this.avatarEl].filter(Boolean).forEach(el => { el.style.transition = 'none'; el.style.opacity = '1'; el.style.filter = ''; });
-    // Everything the ring view adds (footer, spiral, minimap, scanlines + sweep) fades in like the
+    // Everything the ring view adds (footer, ring, minimap, scanlines + sweep) fades in like the
     // loader-finish reveal, starting from 0 with a gentle stagger.
     const fadeIn = (el, dur, delay) => {
       if (!el) return;
@@ -823,7 +817,7 @@ class Component extends DCLogic {
     };
     // Scanlines exist on both pages, so they persist through the root crossfade (don't fade them
     // from 0 here — that dipped them out then in). Ring, footer and minimap are new to this view, fade in.
-    // Footer fades in fast; the spiral + minimap fade in slowly (mirrors how they fade OUT on the
+    // Footer fades in fast; the ring + minimap fade in slowly (mirrors how they fade OUT on the
     // way into a case study).
     if (this.footerEl) fadeIn(this.footerEl, 450, 100);
     if (this.sceneEl) { this.sceneEl.style.pointerEvents = ''; this._revealScene(1500, 250); }
@@ -882,8 +876,8 @@ class Component extends DCLogic {
     this._loadRaf = requestAnimationFrame(step);
   }
 
-  // Fade the scene in on arrival; the RING (helix) also scales in via _ringK, but the background
-  // numerators / logo / company name only fade (they live in the scene but outside the helix).
+  // Fade the scene in on arrival; the ring also scales in via _ringK, but the background
+  // numerators / logo / company name only fade (they live in the scene but outside the ring).
   _revealScene(dur, delay) {
     const s = this.sceneEl;
     if (!s) return;
@@ -913,7 +907,7 @@ class Component extends DCLogic {
       this.miniWrap.style.opacity = '1';
       this.miniWrap.style.transform = tf;
       if (!this._dotSweepTimer) {              // then re-fire once in a while
-        const schedule = () => { this._dotSweepTimer = setTimeout(() => { this._fireSweep(); if (Math.random() < 0.4) setTimeout(() => this._fireSweep(), 850); schedule(); }, 8000 + Math.random() * 8000); };
+        const schedule = () => { this._dotSweepTimer = setTimeout(() => { this._fireSweep(); schedule(); }, 8000 + Math.random() * 8000); };
         schedule();
       }
       setTimeout(() => { this._miniIntro = false; this._fireSweep(); }, 520);   // fire the first lidar sweep right after the minimap finishes revealing
@@ -933,14 +927,14 @@ class Component extends DCLogic {
       loader.style.transition = 'opacity .5s ease';
       loader.style.opacity = '0';
       setTimeout(() => { if (loader) { loader.style.display = 'none'; loader.style.visibility = 'hidden'; } }, 520);
-      // 3) staggered reveal: header (+avatar) first, then footer, then spiral fades in
+      // 3) staggered reveal: header (+avatar) first, then footer, then ring fades in
       const head = [this.headerEl, this.avatarEl].filter(Boolean);
       head.forEach(el => { el.style.opacity = ''; });
       this.meltRevealMany(head, () => {
         const foot = [this.footerEl].filter(Boolean);
         foot.forEach(el => { el.style.opacity = ''; });
         this.meltRevealMany(foot, () => {
-          // 4) spiral fades in (opacity only) over 1s — enable device hovers once it's fully in
+          // 4) ring fades in (opacity only) over 1s — enable device hovers once it's fully in
           if (this.sceneEl) { this._revealScene(1000, 0); }
           if (this.miniWrap) this._revealMini(1000);
           setTimeout(() => { this._booting = false; }, 1000);
@@ -1088,7 +1082,7 @@ class Component extends DCLogic {
         const av = a * (0.72 + 0.28 * depth);   // and slightly brighter than the ones in back
         d.r.setAttribute('x', (x - sz / 2).toFixed(2)); d.r.setAttribute('y', (y - sz / 2).toFixed(2));
         d.r.setAttribute('width', sz.toFixed(2)); d.r.setAttribute('height', sz.toFixed(2));
-        d.r.setAttribute('fill', 'rgba(255,255,255,' + av.toFixed(3) + ')');
+        const gv = Math.round(255 * av); d.r.setAttribute('fill', 'rgb(' + gv + ',' + gv + ',' + gv + ')');
       }
     }
     if (!this._miniMarks) return;
@@ -1174,7 +1168,7 @@ class Component extends DCLogic {
       '  float vig=smoothstep(1.3,0.2,length(uv-0.5));',
       '  col*=mix(0.55,1.0,vig);',
       '  float g=hash(gl_FragCoord.xy+fract(u_time)*vec2(91.7,47.3));',
-      '  col+=(g-0.5)*0.05;',
+      '  col+=(g-0.5)*0.015;',
       '  gl_FragColor=vec4(col,1.0);',
       '}',
     ].join('\n');
@@ -1454,7 +1448,7 @@ class Component extends DCLogic {
   tick(now) {
     const dt = Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
-    if (this.sceneEl) this.sceneEl.style.zIndex = (this.state.hovered != null || (this.slurProg || 0) > 0.02) ? '14' : '2';
+    if (this.sceneEl) this.sceneEl.style.zIndex = '40';
     const auto = this.props.autoSpinSpeed ?? 8;
     const paused = this.state.selected != null || (this.state.hovered != null && !this.dragging);
     if (!paused && !this.dragging) {
@@ -1487,7 +1481,6 @@ class Component extends DCLogic {
     const P = 2500;                       // larger → gentler foreshortening (camera further back)
     const GSCALE = 0.91;                  // global device shrink → devices sit a bit further back
     const cosT = Math.cos(this.TILT * rad), sinT = Math.sin(this.TILT * rad);
-    const turnH = this.PER_TURN * this.Y_STEP;
     const cosR = Math.cos(this.ROLL * rad), sinR = Math.sin(this.ROLL * rad);
     // The RING lives in a plane that is pitched (TILT) and rolled (ROLL) so the PATH is a
     // diagonal ellipse. But each device is only translated/scaled and given a rotateY turn
@@ -1495,7 +1488,7 @@ class Component extends DCLogic {
     // rotates in 3D as it travels the ellipse.
     if (this._ringK == null) { this._ringK = 1; this._ringKTarget = 1; }
     this._ringK += (this._ringKTarget - this._ringK) * 0.08;
-    if (this.helixEl) this.helixEl.style.transform = 'translate(-50%,-50%) scale(' + this._ringK.toFixed(4) + ')';
+    if (this.ringEl) this.ringEl.style.transform = 'translate(-50%,-50%) scale(' + this._ringK.toFixed(4) + ')';
     const ringPt = (th) => {
       const x0 = R * Math.sin(th), z0 = R * Math.cos(th);          // th=0 → front (0,0,R)
       const y1 = -z0 * sinT, z1 = z0 * cosT, x1 = x0;              // pitch about X
@@ -1508,33 +1501,10 @@ class Component extends DCLogic {
 
     const vw = window.innerWidth, cx = vw / 2;
     const hovered = this.state.hovered;
-    if (this.slurProg == null) this.slurProg = 0;
-    if (hovered != null) this.slurProg += (1 - this.slurProg) * Math.min(1, dt * 9);
-    else this.slurProg = 0;   // devices return immediately on un-hover
-    if (this.slurProg < 0.0005) this.slurProg = 0;
     const hoveredIdx = (hovered != null) ? (hovered - this.FROM) : -1;
-    if (hovered != null) this._lastHovIdx = hoveredIdx;
-    const slurScaleMax = this.props.slurScale ?? 55;
-    if (this.slurDispEl) this.slurDispEl.setAttribute('scale', (slurScaleMax * this.slurProg).toFixed(2));
-    if (this.slurGrainEl) this.slurGrainEl.setAttribute('values', '0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 ' + (0.26 * this.slurProg).toFixed(3) + ' 0');
-    // Exempt the hovered card by INDEX (ref objects are recreated on re-render).
-    const exemptIdx = (hovered != null) ? hoveredIdx : (this._lastHovIdx != null ? this._lastHovIdx : -1);
-    const slurActive = this.slurProg > 0.002;
-    // Warm-band lazy loading: attach a clip's src only when it's near the front, detach when deep back-facing to free decoder RAM.
-    const setWarm = (v, warm) => {
-      if (!v) return;
-      if (warm) {
-        if (!v.getAttribute('src')) { v.setAttribute('src', v.dataset.vsrc); try { v.load(); } catch (e) {} }
-        v._loaded = true;
-      } else if (v.getAttribute('src')) {
-        try { v.pause(); } catch (e) {}
-        v.removeAttribute('src'); try { v.load(); } catch (e) {}
-        v._loaded = false;
-        const p = (v.parentNode && v.parentNode.firstChild !== v) ? v.parentNode.firstChild : null;
-        if (p && p.tagName === 'IMG') p.style.opacity = '1';   // bring the poster back while cold
-      }
-    };
-    const cand = [];   // visible cards ranked by prominence, to pick which few decode
+    // All clips stay loaded (only 4 videos), so there is no warm-band attach/detach. Just collect which
+    // slots are visible enough to play; back-facing ones pause (src is never removed → no layer churn).
+    const activeSlots = [];
     let frontC = -1, frontSlot = -1;   // most front-facing visible device = current case study
     for (let k = 0; k < this.cardEls.length; k++) {
       const e = this.cardEls[k];
@@ -1543,7 +1513,7 @@ class Component extends DCLogic {
       const phi = e.a + this.spin;          // device turn angle (deg)
       const th = phi * rad;
       const c = Math.cos(th);
-      if (c <= 0.08) { e.el.style.visibility = 'hidden'; continue; }
+      if (c <= 0.08) { e.el.style.visibility = 'visible'; e.el.style.pointerEvents = 'none'; e.el.style.setProperty('--f', '0'); continue; }   // composited but not interactive (opacity 0)he difference readouts
       if (c > frontC) { frontC = c; frontSlot = this.FROM + k; }
       const p = ringPt(th);
       const dx = p.dx + ox, dy = p.dy + oy;
@@ -1558,40 +1528,12 @@ class Component extends DCLogic {
       const edge = 0.30;
       const span = (sinth < 0) ? 0.20 : 0.13;   // outgoing (steeper path) fades over a tighter arc so it matches the incoming timing
       let op = Math.min(1, Math.max(0, (c - edge) / span));
-      if (slurActive && k !== exemptIdx) {
-        op *= (1 - 0.7 * this.slurProg);       // eases 1 → 0.3
-        e.el.style.filter = 'url(#slurbt)';    // scale ramps via slurProg
-      } else {
-        e.el.style.filter = 'none';
-      }
-      e.el.style.visibility = op < 0.012 ? 'hidden' : 'visible';
+      e.el.style.visibility = 'visible';   // never toggle visibility (layer add/remove flashes the difference readouts); opacity via --f hides it
+      e.el.style.pointerEvents = op > 0.5 ? 'auto' : 'none';   // only the clearly-visible front devices are hoverable/clickable
       e.el.style.setProperty('--f', op.toFixed(3));
-      if (op > 0.04) cand.push({ e, slot: this.FROM + k, k, op, c });
+      if (op > 0.06) activeSlots.push(String(this.FROM + k));
     }
-    // Choose which clips decode. Aim to cover the whole visible arc; if the browser's
-    // concurrent-decoder limit is lower, excess videos hit 'error' and gracefully fall back
-    // to their poster (see the video ref), freeing the slot. Rank by how FRONT-FACING each
-    // card is (c = cos of its angle, peaks dead-center) so warming tracks rotation smoothly.
-    // Skip cards in post-error cooldown so a decodable card takes the budget instead.
-    const MAXDEC = 14, WARM_BONUS = 0.04, tnow = performance.now();
-    const scored = cand.map((it) => ({ it, score: it.c + ((it.e.vid && it.e.vid.getAttribute('src')) ? WARM_BONUS : 0) }));
-    scored.sort((a, b) => b.score - a.score);
-    const warmSet = new Set();
-    let filled = 0;
-    for (let i = 0; i < scored.length && filled < MAXDEC; i++) {
-      const it = scored[i].it, v = it.e.vid;
-      if (v && v._decErr && tnow - v._decErr < 5000) continue;
-      setWarm(v, true); warmSet.add(it.slot); filled++;
-    }
-    for (let k = 0; k < this.cardEls.length; k++) {
-      const e = this.cardEls[k];
-      if (!e || !e.el) continue;
-      if (e.vid === undefined) e.vid = e.el.querySelector('video');
-      if (!warmSet.has(this.FROM + k)) setWarm(e.vid, false);
-    }
-    const active = [];
-    for (const it of cand) { if (warmSet.has(it.slot) && it.op > 0.06) active.push(String(it.slot)); }
-    this._activeSlots = new Set(active);
+    this._activeSlots = new Set(activeSlots);
     // Update the background readout (title + L/R numerator) when the front-most device changes.
     if (frontSlot >= 0 && frontSlot !== this._curSlot) {
       this._curSlot = frontSlot;
@@ -1612,6 +1554,7 @@ class Component extends DCLogic {
       if (this.bgNumREl) this.scramble(this.bgNumREl, num);
     }
     if (this._applyVideoPlayback) this._applyVideoPlayback();
+    if (this._cursorX != null && !this.dragging) this._refreshCursorLabel();   // keep label truthful as the ring moves under a still cursor
     if (this._running) this.raf = requestAnimationFrame(this.tick);
   }
 
@@ -1704,17 +1647,16 @@ class Component extends DCLogic {
         const showPoster = true;
         return h('div', { key: 'face', style: Object.assign({}, style, { position: style.position || 'relative', overflow: 'hidden', background: '#000' }) }, [
           showPoster ? h('img', { key: 'poster', src: base.img, alt: '', draggable: false, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: fit, display: 'block' } }) : null,
-          h('video', { key: 'vid', loop: true, muted: true, playsInline: true, preload: 'none', draggable: false,
+          h('video', { key: 'vid', loop: true, muted: true, playsInline: true, preload: 'auto', draggable: false,
+            src: base.video,
             'data-slot': String(i), 'data-vsrc': base.video, 'data-tablet': base.o === 'landscape' ? '1' : '0',
             ref: (v) => { if (v) { v.defaultMuted = true; v.muted = true; v.setAttribute('muted', ''); v.loop = true; v.dataset.slot = String(i); v.dataset.vsrc = base.video; v.dataset.tablet = base.o === 'landscape' ? '1' : '0'; this.videoEls.add(v);
               if (!v._posterWired) { v._posterWired = true; const pos = () => (v.parentNode && v.parentNode.firstChild !== v ? v.parentNode.firstChild : null);
                 const hide = () => { const p = pos(); if (p && p.tagName === 'IMG') { p.style.transition = 'opacity .25s ease'; p.style.opacity = '0'; } };
                 const showP = () => { const p = pos(); if (p && p.tagName === 'IMG') p.style.opacity = '1'; };
                 v.addEventListener('playing', hide); v.addEventListener('timeupdate', () => { if (!v.paused && v.currentTime > 0) hide(); }); v.addEventListener('pause', showP);
-                // Graceful decoder-limit fallback: if the browser can't decode this clip, free the
-                // decoder and show the poster instead of a broken/black frame. A cooldown stops the
-                // selector from immediately re-attaching it, so a decodable card gets the slot.
-                v.addEventListener('error', () => { v._decErr = performance.now(); try { v.removeAttribute('src'); v.load(); } catch (e) {} v._loaded = false; showP(); }); }
+                // All 4 clips stay loaded (no warm-band). If the browser can't decode one, just fall back to its poster.
+                v.addEventListener('error', showP); }
               this._applyVideoPlayback && this._applyVideoPlayback(); } },
             style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: fit, display: 'block' } }),
         ]);
@@ -1783,10 +1725,11 @@ class Component extends DCLogic {
         key: i,
         body,
         ref: (el) => { this.cardEls[idx] = el ? { el, a, isTablet, W, rad: cardR } : null; },
-        onEnter: () => { if (this._booting) return; this.setState({ hovered: i }); },
-        onLeave: () => this.setState(s => (s.hovered === i ? { hovered: null } : null)),
+        onEnter: () => {},
+        onLeave: () => {},
         onOpen: () => { if (!/^https?:/i.test(base.href || '')) this.openCase(base.href); },
         href: base.href,
+        title: base.title,
         style: {
           position: 'absolute', top: 0, left: 0, width: '1px', height: '1px',
           transform: 'none',   // billboard position/scale driven per-frame in tick()
@@ -1799,13 +1742,6 @@ class Component extends DCLogic {
           transform: `perspective(${1200 * SS}px) translate(-50%,-50%) scale(${scv / SS})`,   // tick() overwrites rotateY each frame
           transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
           cursor: 'pointer',
-        },
-        cardScan: {
-          position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: '26px',
-          opacity: (!isHov && hovered != null) ? 1 : 0,
-          transition: 'opacity .3s ease',
-          backgroundImage: 'repeating-linear-gradient(to bottom, rgba(128,128,128,0.07) 0px, rgba(128,128,128,0.07) 3px, transparent 3px, transparent 6px)',
-          animation: 'scanMove 1.2s linear infinite',
         },
       });
     }
@@ -1824,7 +1760,7 @@ class Component extends DCLogic {
     if (selected) {
       overlayEl = H('div', {
         onClick: (e) => { if (e.target === e.currentTarget) close(); },
-        style: { position: 'absolute', inset: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '56px', background: 'rgba(6,7,9,.72)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', animation: 'spiralFadeIn .3s ease', cursor: 'auto' },
+        style: { position: 'absolute', inset: 0, zIndex: 85, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '56px', background: 'rgba(6,7,9,.82)', animation: 'spiralFadeIn .3s ease', cursor: 'auto' },
       },
         H('div', { style: { position: 'relative', display: 'flex', gap: '56px', alignItems: 'center', maxWidth: '1000px', width: '100%' } },
           H('div', { style: { flex: '0 0 auto', maxWidth: '46%', display: 'flex', justifyContent: 'center' } },
@@ -1850,24 +1786,21 @@ class Component extends DCLogic {
       estHours,
       estMinutes,
       setRoot: this.setRoot,
-      setBgCanvas: (el) => { if (el && !this._bgInit) { this._bgInit = true; this._initBg(el); } },
+      setBgCanvas: (el) => { if (el && !this._bgInit && !window.__NO_WEBGL) { this._bgInit = true; this._initBg(el); } if (el && window.__NO_WEBGL) el.style.display = 'none'; },
       overlayEl,
       scanStyle: {
-        position: 'absolute', inset: 0, zIndex: 17, pointerEvents: 'none', overflow: 'hidden',
+        position: 'absolute', inset: 0, zIndex: 70, pointerEvents: 'none', overflow: 'hidden',
         opacity: 1,
-        backgroundImage: 'repeating-linear-gradient(to bottom, rgba(128,128,128,0.075) 0px, rgba(128,128,128,0.075) 3px, transparent 3px, transparent 6px)',
+        backgroundImage: 'repeating-linear-gradient(to bottom, rgba(128,128,128,0.09) 0px, rgba(128,128,128,0) 3px, rgba(128,128,128,0.09) 6px)',
         animation: 'scanMove 1.2s linear infinite',
       },
-      setSweep: (el) => { this.sweepEl = el; },
       setScanEl: (el) => { this.scanEl = el; },
       setGoo: (el) => { this.gooBlurEl = el; },
       setGooReveal: (el) => { this.gooRevealBlurEl = el; },
       setGooReveal2: (el) => { this.gooRevealBlurEl2 = el; },
-      setSlurDisp: (el) => { this.slurDispEl = el; },
-      setSlurGrain: (el) => { this.slurGrainEl = el; },
       meltIn: (e) => this.animateMelt(e.currentTarget, true),
       meltOut: (e) => this.animateMelt(e.currentTarget, false),
-      setScene: (el) => { this.sceneEl = el; if (el) el.style.zIndex = this.state.hovered != null ? '14' : '2'; },
+      setScene: (el) => { this.sceneEl = el; if (el) el.style.zIndex = '40'; },
       setHeaderEl: (el) => { this.headerEl = el; },
       setFooterEl: (el) => { this.footerEl = el; },
       setAvatarEl: (el) => { this.avatarEl = el; },
@@ -1906,7 +1839,7 @@ class Component extends DCLogic {
       aboutBioFam, aboutBioWeight, aboutBioSize, aboutBioLH, aboutBioSpacing, aboutBioCase, aboutImgW, aboutBioMax, aboutBioTop,
       hasHover: shownHov != null,
       hover: shownHov ? { company: shownHov.company, title: shownHov.title } : {},
-      setHelix: (el) => { this.helixEl = el; },
+      setRing: (el) => { this.ringEl = el; },
       setBgCompanyL: (el) => { this.bgCompanyLEl = el; },
       setBgCompanyR: (el) => { this.bgCompanyREl = el; },
       setBgCompanyLWrap: (el) => { this.bgCompanyLWrapEl = el; },
