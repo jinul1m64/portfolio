@@ -168,6 +168,8 @@
   .m-about-scroll::-webkit-scrollbar { width: 0; height: 0; display: none; }
   a { color: #8aa0ff; text-decoration: none; transition: filter .26s ease, opacity .26s ease; }
   a:hover { color: #ffffff; }
+  .m-mobile-only { display: none; }
+  .m-mobile-only.m-force-hide { display: none !important; }
   ::selection { background: #8aa0ff; color: #000000; }
   @keyframes scanMove { from { background-position: 0 0; } to { background-position: 0 60px; } }
   @keyframes loaderWaitPulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.75; } }
@@ -176,7 +178,18 @@
   /* Mobile breakpoint: drop the contact button, minimap, and footer meta; flush the About toggle to the right */
   @media (max-width: 640px) {
     .m-hide-mobile { display: none !important; }
+    .m-mobile-only { display: flex !important; padding-left: 16px !important; padding-right: 16px !important; }
+    .m-mobile-only p { max-width: none !important; }
     .m-avatar { justify-content: flex-end !important; padding-right: 16px; }
+    /* Profile image sits to the RIGHT of the About label on mobile */
+    .m-avatar > div { flex-direction: row-reverse !important; }
+    /* Compact header + About-toggle type */
+    header h1, .m-avatar span { font-size: 22px !important; letter-spacing: -0.8px !important; }
+    /* About page: tighter type + rhythm, less side padding, ragged-right (no justify gaps) */
+    .m-about-inner { padding-left: 16px !important; padding-right: 16px !important; padding-bottom: 110px !important; }
+    .m-about-copy { gap: 40px !important; font-size: 19px !important; line-height: 1.45 !important; letter-spacing: -0.1px !important; text-align: justify !important; max-width: none !important; }
+    .m-about-copy p[style*="Doto"] { font-size: 16px !important; }
+    .m-about-reach { margin-top: 40px !important; }
   }
 </style>
 <script>
@@ -211,7 +224,7 @@
   </svg>
 
   <!-- Ring scene -->
-  <div ref="{{ setScene }}" style="position:absolute; inset:0; z-index:40; opacity:0;">
+  <div ref="{{ setScene }}" class="m-hide-mobile" style="position:absolute; inset:0; z-index:40; opacity:0;">
     <!-- Company names (mirrored) + L/R numerators overlay ON TOP of the ring, blended (difference) like the header -->
     <div style="position:absolute; inset:0; z-index:4000; pointer-events:none; mix-blend-mode:difference;">
       <div ref="{{ setBgCompanyLWrap }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:normal; text-transform:uppercase; white-space:nowrap; line-height:1; color:#8e8e90;">[&nbsp;<span ref="{{ setBgCompanyL }}">DoorDash</span>&nbsp;]</div>
@@ -243,7 +256,7 @@
 
   <!-- Progressive-blur header & footer backdrops (blur strong at the edge, unblurs inward) -->
   <div style="position:absolute; top:0; left:0; right:0; height:172px; z-index:55; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to bottom,rgba(0,0,0,.72),rgba(0,0,0,0));"></div>
-  <div style="position:absolute; bottom:0; left:0; right:0; height:160px; z-index:55; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,0));"></div>
+  <div class="m-hide-mobile" style="position:absolute; bottom:0; left:0; right:0; height:160px; z-index:55; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,0));"></div>
 
   <!-- Header -->
   <header ref="{{ setHeaderEl }}" style="position:fixed; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:60; pointer-events:none; opacity:0;">
@@ -266,7 +279,7 @@
   </div>
 
   <!-- Footer hint -->
-  <footer ref="{{ setFooterEl }}" style="position:absolute; bottom:0; left:0; right:0; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px; z-index:60; pointer-events:none; font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff; opacity:0;">
+  <footer ref="{{ setFooterEl }}" class="m-hide-mobile" style="position:absolute; bottom:0; left:0; right:0; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px; z-index:60; pointer-events:none; font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff; opacity:0;">
     <span ref="{{ setUpdatedEl }}" class="m-hide-mobile" style="justify-self:start;">Last updated 2026</span>
     <div ref="{{ setScrollEl }}" style="justify-self:center; display:flex; align-items:center; gap:8px; transition:opacity .5s ease;">
       <button ref="{{ setArrowLeftBtn }}" onClick="{{ selLeft }}" data-clickable="" data-cursor-label="CHANGE DIRECTION" data-cursor-anchor="tl" aria-label="Rotate ring toward top-left" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
@@ -312,15 +325,20 @@
   <!-- Case-study overlay (built in renderVals so no img-src hole streams) -->
   {{ overlayEl }}
 
+  <!-- Mobile-only notice (desktop hidden): only the index chrome is shown on phones -->
+  <div class="m-mobile-only {{ noticeHide }}" style="position:fixed; inset:0; z-index:40; align-items:center; justify-content:center; padding:0 40px; pointer-events:none;">
+    <p style="margin:0; max-width:18ch; text-align:center; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; text-transform:uppercase; color:#ffffff; line-height:1.55;">Please view work on a<br>laptop or desktop</p>
+  </div>
+
   <!-- About page (sits below the shared chrome: header, footer, scanlines + vignette all render over it) -->
   <div ref="{{ setAboutEl }}" class="m-about-scroll" style="position:absolute; inset:0; z-index:50; opacity:0; pointer-events:none; overflow-y:auto; scrollbar-width:none; transition:opacity .7s ease; background:transparent;">
-    <div ref="{{ setAboutInner }}" style="box-sizing:border-box; padding:0 48px 150px; display:flex; flex-direction:column; align-items:center;">
+    <div ref="{{ setAboutInner }}" class="m-about-inner" style="box-sizing:border-box; padding:0 48px 150px; display:flex; flex-direction:column; align-items:center;">
       <div ref="{{ setMoiWrap }}" style="position:relative; width:{{ aboutImgW }}; max-width:100%; flex:0 0 auto; overflow:hidden;">
         <img ref="{{ setMoiImg }}" alt="Jason Lim" draggable="false" style="width:100%; height:100%; object-fit:cover; object-position:50% 100%; display:block;" />
       </div>
       <!-- About copy uses one spacing system: 76px between blocks (paragraphs / lead-ins / label groups),
            12px to bind a label to the text or logos directly beneath it. -->
-      <div ref="{{ setBioEl }}" style="display:flex; flex-direction:column; gap:76px; width:100%; max-width:{{ aboutBioMax }}; margin:{{ aboutBioTop }} 0 0; font-family:{{ aboutBioFam }}; font-weight:{{ aboutBioWeight }}; font-size:{{ aboutBioSize }}; line-height:{{ aboutBioLH }}; letter-spacing:{{ aboutBioSpacing }}; text-transform:{{ aboutBioCase }}; color:#f2f2f5; text-align:justify; text-wrap:pretty;">
+      <div ref="{{ setBioEl }}" class="m-about-copy" style="display:flex; flex-direction:column; gap:76px; width:100%; max-width:{{ aboutBioMax }}; margin:{{ aboutBioTop }} 0 0; font-family:{{ aboutBioFam }}; font-weight:{{ aboutBioWeight }}; font-size:{{ aboutBioSize }}; line-height:{{ aboutBioLH }}; letter-spacing:{{ aboutBioSpacing }}; text-transform:{{ aboutBioCase }}; color:#f2f2f5; text-align:justify; text-wrap:pretty;">
         <p style="margin:0;">I&rsquo;m a product designer who has worked across consumer and enterprise products, from complex systems to everyday experiences, for companies large and small.</p>
         <p style="margin:0; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; text-transform:uppercase; color:#ffffff; text-align:left;">Selected companies and clients include:</p>
       </div>
@@ -364,7 +382,7 @@
           </div>
         </div>
       </div>
-      <div ref="{{ setReachEl }}" style="display:flex; flex-direction:column; gap:76px; width:100%; max-width:{{ aboutBioMax }}; margin:76px 0 0; font-family:{{ aboutBioFam }}; font-weight:{{ aboutBioWeight }}; font-size:{{ aboutBioSize }}; line-height:{{ aboutBioLH }}; letter-spacing:{{ aboutBioSpacing }}; text-transform:{{ aboutBioCase }}; color:#f2f2f5; text-align:justify; text-wrap:pretty;">
+      <div ref="{{ setReachEl }}" class="m-about-copy m-about-reach" style="display:flex; flex-direction:column; gap:76px; width:100%; max-width:{{ aboutBioMax }}; margin:76px 0 0; font-family:{{ aboutBioFam }}; font-weight:{{ aboutBioWeight }}; font-size:{{ aboutBioSize }}; line-height:{{ aboutBioLH }}; letter-spacing:{{ aboutBioSpacing }}; text-transform:{{ aboutBioCase }}; color:#f2f2f5; text-align:justify; text-wrap:pretty;">
         <p style="margin:0;">I care about keeping technology, and the process of making it, human. That means inviting different voices in, making collaboration feel safe, and designing for people too often treated as edge cases.</p>
         <p style="margin:0;">A few values keep me grounded:</p>
         <div style="display:flex; flex-direction:column; gap:12px;">
@@ -1751,6 +1769,7 @@ class Component extends DCLogic {
       avatarClick: () => { if (this._aboutOpen && this._aboutReturn) { this._exitAboutToCase(); return; } if (this._aboutOpen) { this.spin = 0; this.dragMomentum = 0; this.closeAbout(); this.setState({ selected: null, hovered: null }); } else { this.openAbout(); } },
       aboutLabel: this.state.aboutOpen ? 'Exit' : 'About',
       aboutCursorLabel: this.state.aboutOpen ? 'GO BACK' : 'MOI',
+      noticeHide: this.state.aboutOpen ? 'm-force-hide' : '',
       goHome: () => { try { sessionStorage.removeItem('om_seen'); } catch (e) {} window.__navCover && window.__navCover(); window.location.href = window.location.pathname; },
       contact: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } window.location.href = 'mailto:jason.jinulim@gmail.com'; /* external: no backstop */ },
       headerFam, headerWeight, headerSize, headerSpacing, headerCase,
