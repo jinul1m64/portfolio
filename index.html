@@ -208,10 +208,6 @@
       <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal }}" result="blur"></feGaussianBlur>
       <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11"></feColorMatrix>
     </filter>
-    <filter id="gooReveal2" x="-90%" y="-90%" width="280%" height="280%" color-interpolation-filters="sRGB">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" ref="{{ setGooReveal2 }}" result="blur"></feGaussianBlur>
-      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -11"></feColorMatrix>
-    </filter>
   </svg>
 
   <!-- Ring scene -->
@@ -1529,13 +1525,10 @@ class Component extends DCLogic {
     const footerCase = cap(this.props.footerCase ?? 'UPPERCASE');
     const hoverFam = fam(this.props.hoverFont, 'PP Neue Montreal');
     const hoverWeight = this.props.hoverWeight ?? 400;
-    const hoverSize = '82px';   // fixed caption-title size (was picking up a stale injected hoverSize prop)
     const hoverSpacing = (this.props.hoverSpacing ?? -0.3) + 'px';
     const hoverCase = cap(this.props.hoverCase);
-    const hoverGap = (this.props.hoverGap ?? -11) + 'px';
     const eyebrowFam = fam(this.props.eyebrowFont, 'PP Neue Montreal');
     const eyebrowWeight = this.props.eyebrowWeight ?? 400;
-    const eyebrowSize = (this.props.eyebrowSize ?? 22) + 'px';
     const eyebrowSpacing = (this.props.eyebrowSpacing ?? 3.5) + 'px';
     const eyebrowCase = cap(this.props.eyebrowCase);
     // About-page bio typography (all tweakable)
@@ -1680,8 +1673,7 @@ class Component extends DCLogic {
 
     const selected = this.state.selected;
     const H = React.createElement;
-    // Shared type treatments — single source for the eyebrow + title styles used
-    // by BOTH the hover caption and the case-study overlay below (size set per use).
+    // Shared type treatments — the eyebrow + title styles used by the case-study overlay (size set per use).
     const eyebrowStyle = { fontFamily: eyebrowFam, fontWeight: eyebrowWeight, letterSpacing: eyebrowSpacing, textTransform: eyebrowCase };
     const titleStyle = { fontFamily: hoverFam, fontWeight: hoverWeight, lineHeight: 1, letterSpacing: hoverSpacing, textTransform: hoverCase };
     const close = () => this.setState({ selected: null });
@@ -1726,7 +1718,6 @@ class Component extends DCLogic {
       setScanEl: (el) => { this.scanEl = el; },
       setGoo: (el) => { this.gooBlurEl = el; },
       setGooReveal: (el) => { this.gooRevealBlurEl = el; },
-      setGooReveal2: (el) => { this.gooRevealBlurEl2 = el; },
       meltIn: (e) => this.animateMelt(e.currentTarget, true),
       meltOut: (e) => this.animateMelt(e.currentTarget, false),
       setScene: (el) => { this.sceneEl = el; if (el) el.style.zIndex = '40'; },
@@ -1759,12 +1750,10 @@ class Component extends DCLogic {
       avatarClick: () => { if (this._aboutOpen && this._aboutReturn) { this._exitAboutToCase(); return; } if (this._aboutOpen) { this.spin = 0; this.dragMomentum = 0; this.closeAbout(); this.setState({ selected: null, hovered: null }); } else { this.openAbout(); } },
       aboutLabel: this.state.aboutOpen ? 'Exit' : 'About',
       aboutCursorLabel: this.state.aboutOpen ? 'GO BACK' : 'MOI',
-      goHome: () => { this._aboutReturn = null; this.spin = 0; this.dragMomentum = 0; this.setState({ selected: null, hovered: null }); if (this._aboutOpen) this.closeAbout(); },
+      goHome: () => { try { sessionStorage.removeItem('om_seen'); } catch (e) {} window.__navCover && window.__navCover(); window.location.href = window.location.pathname; },
       contact: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } window.location.href = 'mailto:jason.jinulim@gmail.com'; /* external: no backstop */ },
       headerFam, headerWeight, headerSize, headerSpacing, headerCase,
       footerFam, footerWeight, footerSize, footerSpacing, footerCase,
-      hoverFam, hoverWeight, hoverSize, hoverSpacing, hoverCase, hoverGap,
-      eyebrowWeight, eyebrowSize, eyebrowSpacing, eyebrowCase,
       aboutBioFam, aboutBioWeight, aboutBioSize, aboutBioLH, aboutBioSpacing, aboutBioCase, aboutImgW, aboutBioMax, aboutBioTop,
       setRing: (el) => { this.ringEl = el; },
       setBgCompanyL: (el) => { this.bgCompanyLEl = el; },
