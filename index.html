@@ -313,14 +313,6 @@
     </svg>
   </div>
 
-  <!-- Hover caption (flat text, scramble-in on hover, above the footer) -->
-  <sc-if value="{{ hasHover }}" hint-placeholder-val="{{ false }}">
-    <div style="position:absolute; left:0; right:0; bottom:74px; z-index:80; display:flex; flex-direction:column; align-items:flex-start; text-align:left; padding-left:16px; gap:{{ hoverGap }}; pointer-events:none; mix-blend-mode:difference; animation:spiralFadeIn .2s ease both;">
-      <span ref="{{ setCompanyEl }}" style="display:none; font-family:'Doto'; font-weight:{{ eyebrowWeight }}; font-size:{{ eyebrowSize }}; letter-spacing:{{ eyebrowSpacing }}; text-transform:{{ eyebrowCase }}; color:#ffffff; opacity:0;">{{ hover.company }}</span>
-      <span ref="{{ setTitleEl }}" style="font-family:{{ hoverFam }}; font-weight:{{ hoverWeight }}; font-size:{{ hoverSize }}; line-height:1; letter-spacing:{{ hoverSpacing }}; text-transform:{{ hoverCase }}; color:#f2f2f5; opacity:0;">{{ hover.title }}</span>
-    </div>
-  </sc-if>
-
   <!-- Case-study overlay (built in renderVals so no img-src hole streams) -->
   {{ overlayEl }}
 
@@ -330,8 +322,13 @@
       <div ref="{{ setMoiWrap }}" style="position:relative; width:{{ aboutImgW }}; max-width:100%; flex:0 0 auto; overflow:hidden;">
         <img ref="{{ setMoiImg }}" alt="Jason Lim" draggable="false" style="width:100%; height:100%; object-fit:cover; object-position:50% 100%; display:block;" />
       </div>
-      <p ref="{{ setBioEl }}" style="width:100%; max-width:{{ aboutBioMax }}; margin:{{ aboutBioTop }} 0 0; font-family:{{ aboutBioFam }}; font-weight:{{ aboutBioWeight }}; font-size:{{ aboutBioSize }}; line-height:{{ aboutBioLH }}; letter-spacing:{{ aboutBioSpacing }}; text-transform:{{ aboutBioCase }}; color:#f2f2f5; text-align:justify; text-wrap:pretty;">I&rsquo;m an autodidactic product designer based in Brooklyn with roots planted in Korea and the Rocky Mountains (read Colorado).<br><br>Past companies and clients include:</p>
-      <div ref="{{ setMarqueeEl }}" style="width:100vw; margin:34px 0 0 calc(50% - 50vw); overflow:hidden; -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%); mask-image:linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);">
+      <!-- About copy uses one spacing system: 76px between blocks (paragraphs / lead-ins / label groups),
+           12px to bind a label to the text or logos directly beneath it. -->
+      <div ref="{{ setBioEl }}" style="display:flex; flex-direction:column; gap:76px; width:100%; max-width:{{ aboutBioMax }}; margin:{{ aboutBioTop }} 0 0; font-family:{{ aboutBioFam }}; font-weight:{{ aboutBioWeight }}; font-size:{{ aboutBioSize }}; line-height:{{ aboutBioLH }}; letter-spacing:{{ aboutBioSpacing }}; text-transform:{{ aboutBioCase }}; color:#f2f2f5; text-align:justify; text-wrap:pretty;">
+        <p style="margin:0;">I&rsquo;m a product designer who has worked across consumer and enterprise products, from complex systems to everyday experiences, for companies large and small.</p>
+        <p style="margin:0; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; text-transform:uppercase; color:#ffffff; text-align:left;">Selected companies and clients include:</p>
+      </div>
+      <div ref="{{ setMarqueeEl }}" style="width:100vw; margin:12px 0 0 calc(50% - 50vw); overflow:hidden; -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%); mask-image:linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);">
         <div style="display:flex; width:max-content; animation:marquee 70s linear infinite;">
           <div style="display:flex; align-items:center; gap:78px; padding-right:78px; flex:0 0 auto;">
             <img src="./assets/logos/lime.svg" alt="Lime" draggable="false" style="height:42px; width:auto; display:block; filter:brightness(0) invert(1); opacity:.8;" />
@@ -371,7 +368,23 @@
           </div>
         </div>
       </div>
-      <p ref="{{ setReachEl }}" style="width:100%; max-width:{{ aboutBioMax }}; margin:34px 0 0; font-family:{{ aboutBioFam }}; font-weight:{{ aboutBioWeight }}; font-size:{{ aboutBioSize }}; line-height:{{ aboutBioLH }}; letter-spacing:{{ aboutBioSpacing }}; text-transform:{{ aboutBioCase }}; color:#f2f2f5; text-align:justify; text-wrap:pretty;">Please reach out if you&rsquo;re looking to collaborate or seeking mentorship.</p>
+      <div ref="{{ setReachEl }}" style="display:flex; flex-direction:column; gap:76px; width:100%; max-width:{{ aboutBioMax }}; margin:76px 0 0; font-family:{{ aboutBioFam }}; font-weight:{{ aboutBioWeight }}; font-size:{{ aboutBioSize }}; line-height:{{ aboutBioLH }}; letter-spacing:{{ aboutBioSpacing }}; text-transform:{{ aboutBioCase }}; color:#f2f2f5; text-align:justify; text-wrap:pretty;">
+        <p style="margin:0;">I care about keeping technology, and the process of making it, human. That means inviting different voices in, making collaboration feel safe, and designing with people too often treated as edge cases.</p>
+        <p style="margin:0;">A few values keep me grounded:</p>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <p style="margin:0; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; text-transform:uppercase; color:#ffffff; text-align:left;">Speak up for who isn&rsquo;t in the room</p>
+          <p style="margin:0;">I look for missing perspectives, advocate for needs that might go unheard, and help those voices shape the work.</p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <p style="margin:0; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; text-transform:uppercase; color:#ffffff; text-align:left;">Create safety for brave ideas</p>
+          <p style="margin:0;">Good collaboration leaves room to ask the obvious question, challenge assumptions, and share half-formed thoughts without fear. Messy sketches are welcome here.</p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <p style="margin:0; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; text-transform:uppercase; color:#ffffff; text-align:left;">Care is a design skill</p>
+          <p style="margin:0;">People remember the details that make them feel considered: clear language, thoughtful defaults, delightful interactions, and support when things go sideways. It all counts.</p>
+        </div>
+        <p style="margin:0;">I&rsquo;m always happy to meet kind and curious people looking to collaborate, compare notes, or seek advice and mentorship.</p>
+      </div>
     </div>
   </div>
 
@@ -448,7 +461,7 @@ class Component extends DCLogic {
     if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .8s ease'; this.scrollEl.style.opacity = '0'; }
     if (this.scanEl) { this.scanEl.style.transition = 'opacity .8s ease'; this.scanEl.style.opacity = '0'; }
     this._bgFadeTarget = 0; this._bgFadeRate = 0.06;
-    setTimeout(() => { window.location.href = dest; }, 900);
+    setTimeout(() => { window.__navCover && window.__navCover(); window.location.href = dest; }, 900);
   }
 
   // Reveal the About page: ring + "Scroll" hint fade out, content fades in.
@@ -591,7 +604,7 @@ class Component extends DCLogic {
     // Leaving to a case study, which has no scanlines — fade the index scanlines out first.
     if (this.scanEl) { this.scanEl.style.transition = 'opacity .45s ease'; this.scanEl.style.opacity = '0'; }
     this._bgFadeTarget = 0; this._bgFadeRate = 0.06;   // dither the WebGL background completely away before leaving
-    setTimeout(() => { window.location.href = dest; }, 900);
+    setTimeout(() => { window.__navCover && window.__navCover(); window.location.href = dest; }, 900);
   }
 
   componentDidMount() {
@@ -1281,100 +1294,6 @@ class Component extends DCLogic {
     this[rafKey] = requestAnimationFrame(stepFn);
   }
 
-  // Staggered caption reveal: the eyebrow (company) resolves first, then the title.
-  revealCaption() {
-    clearTimeout(this._capUnmount);
-    this._capMelting = false;
-    [this.companyEl, this.titleEl].forEach(el => { if (el) el.style.transition = 'none'; });
-    if (this.titleEl) this.titleEl.style.opacity = '0';
-    if (this.companyEl) { this.companyEl.style.filter = ''; this.companyEl.style.opacity = '1'; this._companyText = this.companyEl.textContent; this.scrambleIn(this.companyEl, this._companyText, 700); }
-    clearTimeout(this._capStagger);
-    this._capStagger = setTimeout(() => {
-      if (this.titleEl) { this.titleEl.style.opacity = '1'; this.meltReveal(this.titleEl, this.gooRevealBlurEl2, 'gooReveal2', 650, '_revRaf2'); }
-    }, 360);
-  }
-
-  // Scramble-in: cycle random glyphs, resolving left-to-right into the final text.
-  scrambleIn(el, finalText, dur) {
-    if (!el) return;
-    cancelAnimationFrame(this._scrRaf);
-    const text = finalText || '';
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#*';
-    const t0 = performance.now();
-    const stepFn = (t) => {
-      const k = Math.min(1, (t - t0) / dur);
-      const resolved = Math.floor(k * text.length);
-      let out = '';
-      for (let i = 0; i < text.length; i++) {
-        const c = text[i];
-        if (i < resolved || c === ' ') out += c;
-        else out += chars[(Math.random() * chars.length) | 0];
-      }
-      el.textContent = out;
-      if (k < 1) this._scrRaf = requestAnimationFrame(stepFn);
-      else el.textContent = text;
-    };
-    this._scrRaf = requestAnimationFrame(stepFn);
-  }
-
-  // Scramble-out: dissolve resolved text back into random glyphs, unresolving left-to-right, then fade.
-  scrambleOut(el, dur, textArg) {
-    if (!el) return;
-    cancelAnimationFrame(this._scrRaf);
-    clearInterval(el.__scr);
-    const text = textArg || this._companyText || el.textContent || '';
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#*';
-    const t0 = performance.now();
-    const stepFn = (t) => {
-      const k = Math.min(1, (t - t0) / dur);
-      const resolved = Math.floor((1 - k) * text.length);
-      let out = '';
-      for (let i = 0; i < text.length; i++) {
-        const c = text[i];
-        if (i < resolved || c === ' ') out += c;
-        else out += chars[(Math.random() * chars.length) | 0];
-      }
-      el.textContent = out;
-      el.style.opacity = String(Math.min(1, (1 - k) / 0.3));
-      if (k < 1) this._scrRaf = requestAnimationFrame(stepFn);
-      else el.style.opacity = '0';
-    };
-    this._scrRaf = requestAnimationFrame(stepFn);
-  }
-
-  // On hover-off: cancel any in-flight melt and dissolve both lines back into goo (blur up + fade).
-  hideCaption() {
-    clearTimeout(this._capStagger);
-    if (this._scrRaf) cancelAnimationFrame(this._scrRaf);
-    if (this._revRaf) cancelAnimationFrame(this._revRaf);
-    if (this._revRaf2) cancelAnimationFrame(this._revRaf2);
-    this._capMelting = true;                           // keep the caption mounted through the melt-out
-    if (this.companyEl) { this.companyEl.style.transition = 'none'; this.companyEl.style.filter = ''; this.scrambleOut(this.companyEl, 240); }
-    this.meltAwayCaption(this.titleEl, this.gooRevealBlurEl2, 'gooReveal2', 230, '_revRaf2');
-    clearTimeout(this._capUnmount);
-    this._capUnmount = setTimeout(() => { this._capMelting = false; this._retainHov = null; this.forceUpdate(); }, 380);
-  }
-
-  // Reverse of meltReveal: sharp -> goo. Opacity holds while it dissolves, only dropping at the very end.
-  meltAwayCaption(el, blur, filterId, dur, rafKey) {
-    if (!el || !blur) return;
-    el.style.transition = 'none';
-    el.style.opacity = '';
-    el.style.filter = 'url(#' + filterId + ')';
-    cancelAnimationFrame(this[rafKey]);
-    const end = (this.props.gooStrength ?? 2.3) + 4.6;
-    const t0 = performance.now();
-    const stepFn = (t) => {
-      const k = Math.min(1, (t - t0) / dur);
-      const eased = 1 - Math.pow(1 - k, 3);
-      blur.setAttribute('stdDeviation', (0.01 * (1 - eased) + end * eased).toFixed(2));
-      el.style.opacity = String(Math.min(1, (1 - k) / 0.25));   // hold at 1, fade only in the last quarter
-      if (k < 1) this[rafKey] = requestAnimationFrame(stepFn);
-      else { el.style.filter = ''; el.style.opacity = '0'; }
-    };
-    this[rafKey] = requestAnimationFrame(stepFn);
-  }
-
   animateMelt(el, on) {
     if (!el) return;
     const blur = this.gooBlurEl;
@@ -1614,23 +1533,9 @@ class Component extends DCLogic {
     const aboutBioTop = '52px';
     const mocks = this.mocks;
     const hovered = this.state.hovered;
-
-    // Caption reveal is triggered explicitly from onEnter (so it can also melt away on leave).
-    const hovMock = hovered != null ? mocks[this.mod(hovered, this.PER_TURN)] : null;
-    const hovKey = hovMock ? hovMock.title : null;
     if (hovered !== this._lastScrHover) {
       this._lastScrHover = hovered;
       if (this._applyVideoPlayback) this._applyVideoPlayback();
-    }
-    if (hovKey !== this._pendingRevealKey) {
-      this._pendingRevealKey = hovKey;
-      clearTimeout(this._revealDebounce);
-      this._revealDebounce = setTimeout(() => {
-        if (this._pendingRevealKey === this._lastRevealKey) return;
-        this._lastRevealKey = this._pendingRevealKey;
-        if (this._pendingRevealKey != null) this.revealCaption();
-        else this.hideCaption();
-      }, 110);
     }
 
     const PHONE_W = 204, TABLET_W = 400;   // iPad large; extra arc gives it the room
@@ -1757,9 +1662,6 @@ class Component extends DCLogic {
     }
 
     const selected = this.state.selected;
-    const hov = hovered != null ? mocks[this.mod(hovered, this.PER_TURN)] : null;
-    if (hov) this._retainHov = hov;                    // remember for the melt-out (element must stay mounted)
-    const shownHov = hov || (this._capMelting ? this._retainHov : null);
     const H = React.createElement;
     // Shared type treatments — single source for the eyebrow + title styles used
     // by BOTH the hover caption and the case-study overlay below (size set per use).
@@ -1782,7 +1684,7 @@ class Component extends DCLogic {
             H('p', { style: { margin: '0 0 18px', fontSize: '11px', color: accent, ...eyebrowStyle } }, selected.company),
             H('h2', { style: { margin: '0 0 22px', fontSize: '52px', ...titleStyle } }, selected.title),
             H('p', { style: { margin: '0 0 34px', fontSize: '16px', lineHeight: 1.6, color: '#b8bcc8', maxWidth: '38ch' } }, selected.blurb),
-            H('a', { href: selected.href, target: '_self', rel: 'noopener', onClick: (e) => { e.preventDefault(); window.location.href = selected.href; }, onMouseEnter: (e) => this.animateMelt(e.currentTarget, true), onMouseLeave: (e) => this.animateMelt(e.currentTarget, false), style: { display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', color: '#fff', border: '1px solid rgba(255,255,255,.22)', padding: '13px 22px', borderRadius: '999px' } }, 'View case study ↗')
+            H('a', { href: selected.href, target: '_self', rel: 'noopener', onClick: (e) => { e.preventDefault(); window.__navCover && window.__navCover(); window.location.href = selected.href; }, onMouseEnter: (e) => this.animateMelt(e.currentTarget, true), onMouseLeave: (e) => this.animateMelt(e.currentTarget, false), style: { display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', color: '#fff', border: '1px solid rgba(255,255,255,.22)', padding: '13px 22px', borderRadius: '999px' } }, 'View case study ↗')
           ),
           H('button', { onClick: close, style: { position: 'absolute', top: '-18px', right: '-18px', width: '44px', height: '44px', borderRadius: '999px', border: '1px solid rgba(255,255,255,.16)', background: 'rgba(20,22,28,.9)', color: '#ececf0', fontSize: '20px', lineHeight: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, '×')
         )
@@ -1840,16 +1742,12 @@ class Component extends DCLogic {
       avatarClick: () => { if (this._aboutOpen && this._aboutReturn) { this._exitAboutToCase(); return; } if (this._aboutOpen) { this.spin = 0; this.dragMomentum = 0; this.closeAbout(); this.setState({ selected: null, hovered: null }); } else { this.openAbout(); } },
       aboutLabel: this.state.aboutOpen ? 'Exit' : 'About',
       goHome: () => { this._aboutReturn = null; this.spin = 0; this.dragMomentum = 0; this.setState({ selected: null, hovered: null }); if (this._aboutOpen) this.closeAbout(); },
-      contact: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } window.location.href = 'mailto:jason.jinulim@gmail.com'; },
-      setCompanyEl: (el) => { this.companyEl = el; },
-      setTitleEl: (el) => { this.titleEl = el; },
+      contact: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } window.location.href = 'mailto:jason.jinulim@gmail.com'; /* external: no backstop */ },
       headerFam, headerWeight, headerSize, headerSpacing, headerCase,
       footerFam, footerWeight, footerSize, footerSpacing, footerCase,
       hoverFam, hoverWeight, hoverSize, hoverSpacing, hoverCase, hoverGap,
       eyebrowWeight, eyebrowSize, eyebrowSpacing, eyebrowCase,
       aboutBioFam, aboutBioWeight, aboutBioSize, aboutBioLH, aboutBioSpacing, aboutBioCase, aboutImgW, aboutBioMax, aboutBioTop,
-      hasHover: shownHov != null,
-      hover: shownHov ? { company: shownHov.company, title: shownHov.title } : {},
       setRing: (el) => { this.ringEl = el; },
       setBgCompanyL: (el) => { this.bgCompanyLEl = el; },
       setBgCompanyR: (el) => { this.bgCompanyREl = el; },
