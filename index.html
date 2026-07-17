@@ -691,7 +691,8 @@ class Component extends DCLogic {
     // index within the same tab (e.g. clicking "jason lim" home from a case study) skips it and
     // reveals the site instantly, so the site feels persisted rather than re-loading.
     let _seen = false; try { _seen = !!sessionStorage.getItem('om_seen'); } catch (e) {}
-    if (_deepAbout) this.openAboutDeep(); else if (_seen) this._revealInstant(); else this.runLoader();
+    const _mobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+    if (_deepAbout) this.openAboutDeep(); else if (_seen || _mobile) this._revealInstant(); else this.runLoader();
     try { sessionStorage.setItem('om_seen', '1'); } catch (e) {}
     // Failsafe: never let the deep-link cover strand as a black screen.
     setTimeout(() => { const c = document.getElementById('__aboutCover'); if (c && c.parentNode) c.parentNode.removeChild(c); }, 2000);
@@ -1192,7 +1193,7 @@ class Component extends DCLogic {
     const vs = 'attribute vec2 a; void main(){ gl_Position = vec4(a,0.,1.); }';
     const fs = [
       'precision highp float;',
-      'uniform vec2 u_res; uniform float u_time; uniform float u_dir; uniform float u_fade; uniform float u_dith;',
+      'uniform vec2 u_res; uniform float u_time; uniform float u_dir; uniform float u_fade; uniform float u_dith; uniform vec2 u_mouse; uniform float u_hole;',
       'float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }',
       'float noise(vec2 p){ vec2 i=floor(p), f=fract(p);',
       '  float a=hash(i), b=hash(i+vec2(1.,0.)), c=hash(i+vec2(0.,1.)), d=hash(i+vec2(1.,1.));',
@@ -1203,6 +1204,9 @@ class Component extends DCLogic {
       'float bayer8(vec2 a){ return bayer4(0.5*a)*0.25+bayer2(a); }',
       'void main(){',
       '  vec2 uv=gl_FragCoord.xy/u_res.xy;',
+      '  vec2 muv=u_mouse/u_res.xy; vec2 duv=uv-muv; vec2 dua=duv; dua.x*=u_res.x/u_res.y;',
+      '  float pull=u_hole*smoothstep(0.22,0.0,length(dua));',
+      '  uv-=duv*pull*0.82;',
       '  vec2 p=uv; p.x*=u_res.x/u_res.y; p*=2.2;',
       '  float t=u_time*0.12;',
       '  vec2 wq=vec2(fbm(p+vec2(0.0,t*0.4)), fbm(p+vec2(3.1,1.7)-t*0.28));',
@@ -1216,7 +1220,7 @@ class Component extends DCLogic {
       '  aurora*=u_fade;',
       '  vec3 base=vec3(0.016,0.017,0.019);',
       '  vec3 glow=vec3(0.058,0.061,0.068);',
-      '  float bth=(bayer8(floor(gl_FragCoord.xy/5.0))-0.5)*1.1*u_dith;',
+      '  float bth=(bayer8(floor(gl_FragCoord.xy/5.0))-0.5)*1.1*u_dith*(1.0+pull*4.0);',
       '  float a2=aurora+bth*smoothstep(0.02,0.14,aurora);',
       '  float q=step(0.5,a2);',
       '  vec3 col=mix(base,glow,q);',
@@ -1237,9 +1241,10 @@ class Component extends DCLogic {
     const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     const loc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    const uRes = gl.getUniformLocation(prog, 'u_res'), uTime = gl.getUniformLocation(prog, 'u_time'), uDir = gl.getUniformLocation(prog, 'u_dir'), uFade = gl.getUniformLocation(prog, 'u_fade'), uDith = gl.getUniformLocation(prog, 'u_dith');
+    const uRes = gl.getUniformLocation(prog, 'u_res'), uTime = gl.getUniformLocation(prog, 'u_time'), uDir = gl.getUniformLocation(prog, 'u_dir'), uFade = gl.getUniformLocation(prog, 'u_fade'), uDith = gl.getUniformLocation(prog, 'u_dith'), uMouse = gl.getUniformLocation(prog, 'u_mouse'), uHole = gl.getUniformLocation(prog, 'u_hole');
     this._bgResize = () => {
       const dpr = Math.min(1.5, window.devicePixelRatio || 1);
+      this._bgDpr = dpr;
       const w = Math.max(1, Math.floor(canvas.clientWidth * dpr)), h = Math.max(1, Math.floor(canvas.clientHeight * dpr));
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
       gl.viewport(0, 0, canvas.width, canvas.height);
@@ -1254,13 +1259,29 @@ class Component extends DCLogic {
     if (this._bgFadeTarget == null) this._bgFadeTarget = _seenBg ? 0 : 1;
     if (this._bgDith == null) this._bgDith = 1;
     if (this._bgDithTarget == null) this._bgDithTarget = 1;
-    const draw = (now) => { const target = -(this.spinDir || 1); this._bgDir += (target - this._bgDir) * 0.025; this._bgFade += (this._bgFadeTarget - this._bgFade) * (this._bgFadeRate || 0.06); this._bgDith += (this._bgDithTarget - this._bgDith) * 0.035; gl.uniform1f(uDith, this._bgDith); gl.uniform1f(uFade, this._bgFade); gl.uniform1f(uDir, this._bgDir); gl.uniform1f(uTime, (now - t0) / 1000); gl.drawArrays(gl.TRIANGLES, 0, 3); if (!reduce && !document.hidden) this._bgRaf = requestAnimationFrame(draw); };
+    // Cursor "hole": an empty spot carved out of the aurora that lags behind the pointer, with
+    // bayer-dithered edges (the soft radial ramp gets ordered-dithered by the existing threshold).
+    const _coarse = window.matchMedia && window.matchMedia('(hover: none), (max-width: 640px)').matches;
+    if (!this._holePos) this._holePos = { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 };
+    if (!this._holeTarget) this._holeTarget = { x: this._holePos.x, y: this._holePos.y };
+    if (this._holeOn == null) this._holeOn = 0;
+    if (this._holeOnTarget == null) this._holeOnTarget = 0;
+    if (!_coarse && !this._bgMove) {
+      this._bgMove = (e) => {
+        this._holeTarget.x = e.clientX; this._holeTarget.y = e.clientY;
+        this._holeOnTarget = 1;
+      };
+      this._bgLeave = () => { this._holeOnTarget = 0; };
+      window.addEventListener('pointermove', this._bgMove, { passive: true });
+      document.addEventListener('pointerleave', this._bgLeave);
+    }
+    const draw = (now) => { const target = -(this.spinDir || 1); this._bgDir += (target - this._bgDir) * 0.025; this._bgFade += (this._bgFadeTarget - this._bgFade) * (this._bgFadeRate || 0.06); this._bgDith += (this._bgDithTarget - this._bgDith) * 0.035; gl.uniform1f(uDith, this._bgDith); gl.uniform1f(uFade, this._bgFade); gl.uniform1f(uDir, this._bgDir); this._holeOn += (this._holeOnTarget - this._holeOn) * 0.07; this._holePos.x += (this._holeTarget.x - this._holePos.x) * 0.24; this._holePos.y += (this._holeTarget.y - this._holePos.y) * 0.24; const _dpr = this._bgDpr || 1; gl.uniform2f(uMouse, this._holePos.x * _dpr, canvas.height - this._holePos.y * _dpr); gl.uniform1f(uHole, this._holeOn); gl.uniform1f(uTime, (now - t0) / 1000); gl.drawArrays(gl.TRIANGLES, 0, 3); if (!reduce && !document.hidden) this._bgRaf = requestAnimationFrame(draw); };
     if (reduce) { gl.uniform1f(uDith, 1); gl.uniform1f(uFade, 1); gl.uniform1f(uDir, -1); gl.uniform1f(uTime, 12.0); gl.drawArrays(gl.TRIANGLES, 0, 3); }
     else this._bgRaf = requestAnimationFrame(draw);
     this._bgVis = () => { if (document.hidden) cancelAnimationFrame(this._bgRaf); else if (!reduce) this._bgRaf = requestAnimationFrame(draw); };
     document.addEventListener('visibilitychange', this._bgVis);
   }
-  componentWillUnmount() { cancelAnimationFrame(this.raf); cancelAnimationFrame(this._bgRaf); if (this._bgResize) window.removeEventListener('resize', this._bgResize); if (this._bgVis) document.removeEventListener('visibilitychange', this._bgVis); clearInterval(this._clockTimer); window.removeEventListener('resize', this._onResize); clearTimeout(this._sweepTimer); clearTimeout(this._dotSweepTimer); clearInterval(this._playTimer); window.removeEventListener('pointerdown', this._playAll); window.removeEventListener('focus', this._playAll); document.removeEventListener('visibilitychange', this._playAll); document.removeEventListener('visibilitychange', this._onVis); if (this._io) this._io.disconnect(); }
+  componentWillUnmount() { cancelAnimationFrame(this.raf); cancelAnimationFrame(this._bgRaf); if (this._bgResize) window.removeEventListener('resize', this._bgResize); if (this._bgVis) document.removeEventListener('visibilitychange', this._bgVis); clearInterval(this._clockTimer); window.removeEventListener('resize', this._onResize); clearTimeout(this._sweepTimer); clearTimeout(this._dotSweepTimer); clearInterval(this._playTimer); window.removeEventListener('pointerdown', this._playAll); window.removeEventListener('focus', this._playAll); document.removeEventListener('visibilitychange', this._playAll); document.removeEventListener('visibilitychange', this._onVis); if (this._io) this._io.disconnect(); if (this._bgMove) window.removeEventListener('pointermove', this._bgMove); if (this._bgLeave) document.removeEventListener('pointerleave', this._bgLeave); }
 
   // Inverse of the reveal: caption melts into goo and dissolves, then unmounts via onDone.
   meltAway(el, onDone) {
