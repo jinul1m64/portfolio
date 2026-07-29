@@ -1,25 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#000000">
+<title>Jason Lim — Product Designer</title>
+<meta name="description" content="The product design portfolio of Jason Lim, featuring consumer and enterprise work for DoorDash, NerdWallet, Ouster, and more.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://jasonlim.design/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Jason Lim — Product Designer">
+<meta property="og:description" content="Selected consumer and enterprise product design work by Jason Lim.">
+<meta property="og:url" content="https://jasonlim.design/">
+<link rel="icon" type="image/png" href="./assets/profile.png">
 <style>
-  /* Cross-document View Transitions: every page opts in, so navigations crossfade the whole page
-     (transition COMPLETES rather than being skipped, which had thrown the unhandled rejection).
-     Nothing is given a view-transition-name: naming the header lifted it into an isolated snapshot
-     whose hand-off to the live mix-blend-mode:difference element flashed black. Letting it ride the
-     root crossfade bakes the blend into the flat snapshot (white over the dark bg) so it stays stable.
-     The paint-bridge keeps the header + avatar present on the first frame so nothing pops in. */
+  /* Use View Transitions only as an atomic document handoff; the manual cover supplies the visual.
+     Crossfading the two root snapshots blends duplicate chrome and makes the header blink. */
   @view-transition { navigation: auto; }
   html { scrollbar-width: none; -ms-overflow-style: none; }
   html::-webkit-scrollbar { width: 0; height: 0; display: none; }
+  :root { color-scheme: dark; background: #000000; }
   html, body { background: #000000; }
-  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .45s; }
+  ::view-transition-old(root) { animation: none; opacity: 0; }
+  ::view-transition-new(root) { animation: none; opacity: 1; mix-blend-mode: normal; }
   /* Dark backstop: the crossfade overlay + incoming snapshot paint on #000000 so any blank
      pre-paint frame during the cross-document swap shows dark, never a white flash. */
   ::view-transition { background: #000000; }
   html::view-transition-new(root) { background: #000000; }
-  @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
   /* During a view transition, neutralise the header's mix-blend-mode and the backdrop blur — both
      re-render live against the crossfade and bloom the header text; restored ~0.9s after it settles. */
   html.vt-freeze header, html.vt-freeze footer, html.vt-freeze .m-avatar span { mix-blend-mode: normal !important; }
@@ -31,6 +39,7 @@
 <link rel="preload" href="./assets/fonts/extra3.woff2" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="./assets/fonts/extra4.woff2" as="font" type="font/woff2" crossorigin="">
 <link rel="preload" href="./assets/profile.png" as="image">
+<link rel="stylesheet" href="./assets/site.css">
 <script src="./support.js"></script>
 <script>
   /* Paint-bridge chrome for internal arrivals (home / About from a case study): the real header +
@@ -171,7 +180,6 @@
   .m-mobile-only { display: none; }
   .m-mobile-only.m-force-hide { display: none !important; }
   ::selection { background: #8aa0ff; color: #000000; }
-  @keyframes scanMove { from { background-position: 0 0; } to { background-position: 0 60px; } }
   @keyframes loaderWaitPulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.75; } }
   @keyframes colonBlink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
   @keyframes marquee { from { transform: translateX(-50%); } to { transform: translateX(0); } }
@@ -240,7 +248,7 @@
     <div ref="{{ setRing }}" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); will-change:transform;">
       <sc-for list="{{ cards }}" as="card" hint-placeholder-count="0">
         <div ref="{{ card.ref }}" style="{{ card.style }}">
-          <div style="{{ card.innerStyle }}" data-href="{{ card.href }}" data-title="{{ card.title }}" onMouseEnter="{{ card.onEnter }}" onMouseLeave="{{ card.onLeave }}" onClick="{{ card.onOpen }}">
+          <div style="{{ card.innerStyle }}" data-href="{{ card.href }}" data-title="{{ card.title }}" onClick="{{ card.onOpen }}">
             {{ card.body }}
           </div>
         </div>
@@ -251,15 +259,12 @@
   <!-- Subtle darkened vignette -->
   <div style="position:absolute; inset:0; z-index:20; pointer-events:none; background:linear-gradient(to right, rgba(0,0,0,.72) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,.72) 100%), radial-gradient(120% 100% at 50% 50%, rgba(0,0,0,0) 36%, rgba(0,0,0,.86) 100%);"></div>
 
-  <!-- CRT scanline overlay -->
-  <div ref="{{ setScanEl }}" style="{{ scanStyle }}"></div>
-
   <!-- Progressive-blur header & footer backdrops (blur strong at the edge, unblurs inward) -->
   <div style="position:absolute; top:0; left:0; right:0; height:172px; z-index:55; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to bottom,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to bottom,rgba(0,0,0,.72),rgba(0,0,0,0));"></div>
   <div class="m-hide-mobile" style="position:absolute; bottom:0; left:0; right:0; height:160px; z-index:55; pointer-events:none; backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px); -webkit-mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%); mask-image:linear-gradient(to top,#000 0%,#000 30%,rgba(0,0,0,0) 100%); background:linear-gradient(to top,rgba(0,0,0,.72),rgba(0,0,0,0));"></div>
 
   <!-- Header -->
-  <header ref="{{ setHeaderEl }}" style="position:fixed; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:60; pointer-events:none; opacity:0;">
+  <header ref="{{ setHeaderEl }}" style="position:fixed; top:0; left:0; right:0; height:52px; display:flex; justify-content:space-between; align-items:center; padding:0 16px; z-index:75; pointer-events:none; opacity:0; transform:translateZ(0); backface-visibility:hidden; -webkit-backface-visibility:hidden; will-change:opacity,transform; isolation:isolate;">
     <div style="pointer-events:auto;">
       <h1 style="margin:0; font-family:{{ headerFam }}; font-weight:{{ headerWeight }}; font-size:{{ headerSize }}; line-height:.94; letter-spacing:{{ headerSpacing }}; text-transform:{{ headerCase }}; cursor:pointer;" data-clickable="true" data-cursor-label="SEE WORK" onMouseEnter="{{ meltIn }}" onMouseLeave="{{ meltOut }}" onClick="{{ goHome }}">Jason Lim</h1>
     </div>
@@ -269,7 +274,7 @@
   </header>
 
   <!-- Center avatar (kept out of the header's difference blend so the photo stays true colour) -->
-  <div ref="{{ setAvatarEl }}" class="m-avatar" style="position:fixed; top:0px; left:0; right:0; z-index:60; display:flex; justify-content:center; pointer-events:none; opacity:0;">
+  <div ref="{{ setAvatarEl }}" class="m-avatar" style="position:fixed; top:0px; left:0; right:0; z-index:75; display:flex; justify-content:center; pointer-events:none; opacity:0; transform:translateZ(0); backface-visibility:hidden; -webkit-backface-visibility:hidden; will-change:opacity,transform; isolation:isolate;">
     <div style="position:relative; height:52px; display:flex; align-items:center; gap:12px;">
       <div ref="{{ setProfileWrap }}" style="position:relative; width:52px; height:52px; flex:0 0 auto; cursor:pointer; pointer-events:auto; transition:opacity .5s ease;" data-clickable="true" data-cursor-label="{{ aboutCursorLabel }}" onClick="{{ avatarClick }}">
         <img ref="{{ setProfileImg }}" src="./assets/profile.png" alt="Jason Lim" draggable="false" style="width:52px; height:52px; border-radius:0; object-fit:cover; display:block; transition:opacity .5s ease;" />
@@ -279,7 +284,7 @@
   </div>
 
   <!-- Footer hint -->
-  <footer ref="{{ setFooterEl }}" class="m-hide-mobile" style="position:absolute; bottom:0; left:0; right:0; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px; z-index:60; pointer-events:none; font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff; opacity:0;">
+  <footer ref="{{ setFooterEl }}" class="m-hide-mobile" style="position:absolute; bottom:0; left:0; right:0; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:16px; z-index:75; pointer-events:none; font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff; opacity:0; transform:translateZ(0); backface-visibility:hidden; -webkit-backface-visibility:hidden; will-change:opacity,transform; isolation:isolate;">
     <span ref="{{ setUpdatedEl }}" class="m-hide-mobile" style="justify-self:start;">Last updated 2026</span>
     <div ref="{{ setScrollEl }}" style="justify-self:center; display:flex; align-items:center; gap:8px; transition:opacity .5s ease;">
       <button ref="{{ setArrowLeftBtn }}" onClick="{{ selLeft }}" data-clickable="" data-cursor-label="CHANGE DIRECTION" data-cursor-anchor="tl" aria-label="Rotate ring toward top-left" style="all:unset; box-sizing:border-box; display:block; width:38px; height:38px; perspective:340px; pointer-events:auto; cursor:pointer; transition:opacity .35s ease;">
@@ -322,15 +327,12 @@
     </svg>
   </div>
 
-  <!-- Case-study overlay (built in renderVals so no img-src hole streams) -->
-  {{ overlayEl }}
-
   <!-- Mobile-only notice (desktop hidden): only the index chrome is shown on phones -->
   <div class="m-mobile-only {{ noticeHide }}" style="position:fixed; inset:0; z-index:40; align-items:center; justify-content:center; padding:0 40px; pointer-events:none;">
     <p style="margin:0; max-width:18ch; text-align:center; font-family:'Doto'; font-weight:400; font-size:18px; letter-spacing:-0.5px; text-transform:uppercase; color:#ffffff; line-height:1.55;">Please view work on a<br>laptop or desktop</p>
   </div>
 
-  <!-- About page (sits below the shared chrome: header, footer, scanlines + vignette all render over it) -->
+  <!-- About page (sits below the shared chrome: header, footer and vignette render over it) -->
   <div ref="{{ setAboutEl }}" class="m-about-scroll" style="position:absolute; inset:0; z-index:50; opacity:0; pointer-events:none; overflow-y:auto; scrollbar-width:none; transition:opacity .7s ease; background:transparent;">
     <div ref="{{ setAboutInner }}" class="m-about-inner" style="box-sizing:border-box; padding:0 48px 150px; display:flex; flex-direction:column; align-items:center;">
       <div ref="{{ setMoiWrap }}" style="position:relative; width:{{ aboutImgW }}; max-width:100%; flex:0 0 auto; overflow:hidden;">
@@ -402,7 +404,7 @@
     </div>
   </div>
 
-  <!-- Boot loader: black + scanlines, centred count-up, melts out on complete -->
+  <!-- Boot loader: black with a centred count-up, melts out on complete -->
   <div ref="{{ setLoader }}" style="position:absolute; inset:0; z-index:60; background:transparent; display:flex; align-items:center; justify-content:center; pointer-events:auto;">
     <span ref="{{ setLoaderPct }}" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:{{ footerCase }}; color:#ffffff;">0%</span>
     <span ref="{{ setLoaderWait }}" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) translateY(1em); font-family:{{ footerFam }}; font-weight:{{ footerWeight }}; font-size:{{ footerSize }}; letter-spacing:{{ footerSpacing }}; text-transform:lowercase; color:#ffffff; opacity:0; transition:opacity .5s ease;">loading</span>
@@ -410,9 +412,9 @@
 
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;autoSpinSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:0,&quot;max&quot;:26,&quot;step&quot;:1,&quot;unit&quot;:&quot;°/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;ringWidth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.6,&quot;max&quot;:1.15,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;accentColor&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#8aa0ff&quot;,&quot;options&quot;:[&quot;#8aa0ff&quot;,&quot;#e0a86b&quot;,&quot;#8fd3b8&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Style&quot;},&quot;slurScale&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:120,&quot;min&quot;:0,&quot;max&quot;:120,&quot;step&quot;:5,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;slurSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.45,&quot;min&quot;:0.15,&quot;max&quot;:1.6,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;gooStrength&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.3,&quot;min&quot;:0.5,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;gooThresh&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:35,&quot;min&quot;:6,&quot;max&quot;:40,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;headerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:16,&quot;max&quot;:72,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1.5,&quot;min&quot;:-3,&quot;max&quot;:12,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;lowercase&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;footerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:8,&quot;max&quot;:28,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-0.4,&quot;min&quot;:-1,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;UPPERCASE&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;eyebrowFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:400,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:8,&quot;max&quot;:32,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-0.5,&quot;min&quot;:-1,&quot;max&quot;:10,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;eyebrowCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;UPPERCASE&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Eyebrow type (hover)&quot;},&quot;hoverFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:300,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:104,&quot;min&quot;:20,&quot;max&quot;:160,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-4,&quot;min&quot;:-4,&quot;max&quot;:10,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;lowercase&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;hoverGap&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-52,&quot;min&quot;:-60,&quot;max&quot;:24,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hover title type&quot;},&quot;aboutBioSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:20,&quot;max&quot;:64,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioLineHeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.9,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1,&quot;min&quot;:-3,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioWeight&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;300&quot;,&quot;options&quot;:[&quot;300&quot;,&quot;400&quot;,&quot;500&quot;,&quot;700&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;As typed&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutImgW&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:452,&quot;min&quot;:300,&quot;max&quot;:760,&quot;step&quot;:10,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;},&quot;autoSpinSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:0,&quot;max&quot;:26,&quot;step&quot;:1,&quot;unit&quot;:&quot;°/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;ringWidth&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.6,&quot;max&quot;:1.15,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Motion&quot;},&quot;slurScale&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:120,&quot;min&quot;:0,&quot;max&quot;:120,&quot;step&quot;:5,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;slurSpeed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.45,&quot;min&quot;:0.15,&quot;max&quot;:1.6,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Slur (TV scramble)&quot;},&quot;gooStrength&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.3,&quot;min&quot;:0.5,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;gooThresh&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:35,&quot;min&quot;:6,&quot;max&quot;:40,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Text melt (hover)&quot;},&quot;headerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:16,&quot;max&quot;:72,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1.5,&quot;min&quot;:-3,&quot;max&quot;:12,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;headerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;lowercase&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Header type&quot;},&quot;footerFont&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;PP Neue Montreal&quot;,&quot;options&quot;:[&quot;PP Mondwest&quot;,&quot;PP Neue Montreal&quot;,&quot;PP NeueBit&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerWeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:350,&quot;min&quot;:300,&quot;max&quot;:700,&quot;step&quot;:50,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:20,&quot;min&quot;:8,&quot;max&quot;:28,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-0.4,&quot;min&quot;:-1,&quot;max&quot;:8,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;footerCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;UPPERCASE&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Footer type&quot;},&quot;aboutBioSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:40,&quot;min&quot;:20,&quot;max&quot;:64,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioLineHeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.9,&quot;max&quot;:2,&quot;step&quot;:0.05,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioSpacing&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:-1,&quot;min&quot;:-3,&quot;max&quot;:4,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioWeight&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;300&quot;,&quot;options&quot;:[&quot;300&quot;,&quot;400&quot;,&quot;500&quot;,&quot;700&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutBioCase&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;As typed&quot;,&quot;options&quot;:[&quot;As typed&quot;,&quot;UPPERCASE&quot;,&quot;lowercase&quot;,&quot;Capitalize&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;About page&quot;},&quot;aboutImgW&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:452,&quot;min&quot;:300,&quot;max&quot;:760,&quot;step&quot;:10,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;About page&quot;}}">
 class Component extends DCLogic {
-  state = { hovered: null, selected: null, spinSel: 'right' };
+  state = { spinSel: 'right' };
   cardEls = [];   // must exist before ref callbacks fire (they run before componentDidMount)
   videoEls = new Set();   // all mounted <video> faces, for autoplay recovery
 
@@ -441,7 +443,7 @@ class Component extends DCLogic {
       { img: R('m5', B+'65b041af6127d88b289d5fba_nw-1.png'), title: 'Homescreen Redesign', company: 'NerdWallet', href: 'https://jasonlim.design/#nw', blurb: 'A refreshed home surface that centers each member\u2019s most relevant financial next step.', o: 'portrait' },
       { img: R('m2', B+'65b0054f1a6aab36d00e14e5_ratings-1.png'), title: 'Dasher Ratings', company: 'DoorDash', href: 'https://jasonlim.design/#ratings', blurb: 'A clearer, fairer ratings system that helps Dashers understand their standing and what actually moves it.', o: 'portrait' },
       { img: R('m3', B+'65b005b8069fd5247b08aab1_sp-1.png'), video: './assets/video/mobilization.webm', title: 'dasher mobilization', company: 'DoorDash', href: './work/mobilization.dc.html', blurb: 'Promotional surfaces that mobilize Dashers toward high-demand windows without pressure or clutter.', o: 'portrait' },
-      { img: R('m4', './assets/ouster-fleet.png'), video: './assets/video/ouster.webm', title: 'fleet management', company: 'Ouster', href: './work/ouster.dc.html', blurb: 'A web tool for monitoring, configuring, and interpreting fleets of lidar sensors at scale.', o: 'landscape' },
+      { img: R('m4', './assets/ouster-fleet.png'), video: './assets/video/ouster-smooth-test.webm', videoMp4: './assets/video/ouster-smooth-h264.mp4', title: 'fleet management', company: 'Ouster', href: './work/ouster.dc.html', blurb: 'A web tool for monitoring, configuring, and interpreting fleets of lidar sensors at scale.', o: 'landscape' },
       { img: R('m1', './assets/chat-poster.png'), video: './assets/video/in-app-chat.webm', title: 'in-app chat', company: 'DoorDash', href: './work/in-app-chat.dc.html', blurb: 'Real-time messaging that connects Dashers, customers, and support in one calm, legible thread during an active delivery.', o: 'portrait' },
     ];
   }
@@ -463,17 +465,17 @@ class Component extends DCLogic {
 
   // Click a device → fade out the ring, minimap, footer + scroll hint (like the scroll disappearing), then open the case study.
   openCase(href) {
-    if (this._booting) return;
+    if (this._booting || !href || /^https?:/i.test(href)) return;
     this._booting = true;
-    const dest = href || './case-study.dc.html';
-    // Same exit as index→About: gentle .8s opacity fades of the ring chrome (scene, minimap, footer,
-    // scroll hint, scanlines) + dither the WebGL away, then navigate. Header stays (persistent nav);
+    if (this._hideCursorLabelNow) this._hideCursorLabelNow();
+    const dest = href;
+    // Same exit as index→About: gentle .8s opacity fades of the ring chrome (scene, minimap, footer
+    // and scroll hint) + dither the WebGL away, then navigate. Header stays (persistent nav);
     // the case study runs its own entry reveal on arrival.
     if (this.sceneEl) { this.sceneEl.style.transition = 'opacity .8s ease'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
     if (this.miniWrap) { this.miniWrap.style.transition = 'opacity .8s ease'; this.miniWrap.style.opacity = '0'; }
     if (this.footerEl) { this.footerEl.style.transition = 'opacity .8s ease'; this.footerEl.style.opacity = '0'; }
     if (this.scrollEl) { this.scrollEl.style.transition = 'opacity .8s ease'; this.scrollEl.style.opacity = '0'; }
-    if (this.scanEl) { this.scanEl.style.transition = 'opacity .8s ease'; this.scanEl.style.opacity = '0'; }
     this._bgFadeTarget = 0; this._bgFadeRate = 0.06;
     setTimeout(() => { window.__navCover && window.__navCover(); window.location.href = dest; }, 900);
   }
@@ -574,13 +576,10 @@ class Component extends DCLogic {
     const loader = this.loaderEl;
     if (loader) { loader.style.display = 'none'; loader.style.visibility = 'hidden'; loader.style.opacity = '0'; }
     // Header + avatar are persistent nav (carried across the navigation by the paint-bridge) so they
-    // show at once. The footer and scanlines are NOT carried from the case study, so fade them in
-    // gently instead of snapping — that snap was what felt unnatural.
+    // show at once. The footer is not carried from the case study, so fade it in gently.
     [this.headerEl, this.avatarEl].filter(Boolean).forEach(el => { el.style.opacity = '1'; el.style.filter = ''; });
     const _fadeUp = (el, dur, delay) => { if (!el) return; el.style.transition = 'none'; el.style.opacity = '0'; void el.offsetHeight; setTimeout(() => { if (el) { el.style.transition = 'opacity ' + dur + 'ms ease'; el.style.opacity = '1'; } }, delay || 0); };
     _fadeUp(this.footerEl, 600, 220);
-    // Scanlines are index-only; fade them in (case studies have none) once the crossfade settles.
-    _fadeUp(this.scanEl, 800, 500);
     if (this.sceneEl) { this.sceneEl.style.transition = 'none'; this.sceneEl.style.opacity = '0'; this.sceneEl.style.pointerEvents = 'none'; }
     if (this.miniWrap) { this.miniWrap.style.transition = 'none'; this.miniWrap.style.opacity = '0'; }
     if (this.scrollEl) { this.scrollEl.style.opacity = '0'; }
@@ -610,26 +609,43 @@ class Component extends DCLogic {
     this._aboutReturn = null;
     this._aboutOpen = false;
     this._aboutGooOut();
-    if (!dest) { this.closeAbout(); this.setState({ selected: null, hovered: null }); return; }
+    if (!dest) { this.closeAbout(); return; }
+    this._booting = true;
+    if (this._hideCursorLabelNow) this._hideCursorLabelNow();
     if (this.aboutEl) { this.aboutEl.style.pointerEvents = 'none'; }
     if (this.aboutLabelEl) this.aboutLabelEl.style.opacity = '0';
-    // Fade the footer out as we leave (it's index-only). Scanlines persist across the crossfade.
+    // Fade the footer out as we leave (it's index-only).
     if (this.footerEl) { this.footerEl.style.transition = 'opacity .5s ease'; this.footerEl.style.opacity = '0'; }
-    // Leaving to a case study, which has no scanlines — fade the index scanlines out first.
-    if (this.scanEl) { this.scanEl.style.transition = 'opacity .45s ease'; this.scanEl.style.opacity = '0'; }
     this._bgFadeTarget = 0; this._bgFadeRate = 0.06;   // dither the WebGL background completely away before leaving
     setTimeout(() => { window.__navCover && window.__navCover(); window.location.href = dest; }, 900);
   }
 
   componentDidMount() {
+    // A cursor label starts as genuinely empty. Pointer movement during the loader does not count
+    // as a hover; the visitor must move over an interactive target after the page is ready.
+    this._cursorLabelText = null;
+    this._cursorX = null;
+    this._cursorY = null;
+    // The compact layout intentionally shows only the mobile fallback. Keep the desktop media,
+    // ring RAF, and WebGL runtime out of that path entirely; reload if the breakpoint is crossed
+    // so the newly active layout gets a clean initialization rather than a half-mounted runtime.
+    this._mobileMq = window.matchMedia ? window.matchMedia('(max-width: 640px)') : null;
+    this._mobileGate = !!(this._mobileMq && this._mobileMq.matches);
+    this._onMobileGateChange = (e) => {
+      if (!!e.matches !== this._mobileGate) location.reload();
+    };
+    if (this._mobileMq) {
+      if (this._mobileMq.addEventListener) this._mobileMq.addEventListener('change', this._onMobileGateChange);
+      else if (this._mobileMq.addListener) this._mobileMq.addListener(this._onMobileGateChange);
+    }
     this.spin = 0;
     this.dragMomentum = 0;
     this.spinDir = 1;             // ring direction: +1 = default (enter top-left->bottom-right, right arrow), -1 = inverse (left arrow)
     this.dragging = false;
     this.last = performance.now();
     this.tick = this.tick.bind(this);
-    this._running = true;
-    this.raf = requestAnimationFrame(this.tick);
+    this._running = !this._mobileGate;
+    if (this._running) this.raf = requestAnimationFrame(this.tick);
     this._onResize = () => { this.forceUpdate(); this._sizeMoi && this._sizeMoi(); this._alignMini && this._alignMini(); };
     window.addEventListener('resize', this._onResize);
     this._alignMini && this._alignMini();
@@ -637,27 +653,29 @@ class Component extends DCLogic {
     // next to a static image causes no play/pause or poster swap (that start/stop was flashing the difference readouts
     // on smooth auto-spin). Only a hidden tab / off-screen ring pauses everything, for battery.
     this._applyVideoPlayback = () => {
-      if (!this._running) { this.videoEls.forEach(v => { if (v && !v.paused) v.pause(); }); return; }
+      if (this._mobileGate || !this._running) { this.videoEls.forEach(v => { if (v && !v.paused) v.pause(); }); return; }
       this.videoEls.forEach(v => {
         if (!v) return;
         if (v.paused) { v.muted = true; const p = v.play(); if (p && p.catch) p.catch(() => {}); }
       });
     };
     this._playAll = this._applyVideoPlayback;
-    this._playAll();
-    this._playTimer = setInterval(this._playAll, 1500);
-    window.addEventListener('pointerdown', this._playAll);
-    window.addEventListener('focus', this._playAll);
-    document.addEventListener('visibilitychange', this._playAll);
-    // First-interaction unlock: any gesture (incl. a mouse move) satisfies the autoplay policy, so the front clip starts even if pre-interaction autoplay was blocked.
-    const unlock = () => { this._playAll && this._playAll(); };
-    ['pointermove', 'pointerdown', 'keydown', 'touchstart', 'wheel'].forEach(ev => window.addEventListener(ev, unlock, { once: true, passive: true }));
+    if (!this._mobileGate) {
+      this._playAll();
+      this._playTimer = setInterval(this._playAll, 1500);
+      window.addEventListener('pointerdown', this._playAll);
+      window.addEventListener('focus', this._playAll);
+      document.addEventListener('visibilitychange', this._playAll);
+      // First-interaction unlock: any gesture (incl. a mouse move) satisfies the autoplay policy, so the front clip starts even if pre-interaction autoplay was blocked.
+      const unlock = () => { this._playAll && this._playAll(); };
+      ['pointermove', 'pointerdown', 'keydown', 'touchstart', 'wheel'].forEach(ev => window.addEventListener(ev, unlock, { once: true, passive: true }));
+    }
 
     // Pause the RAF loop + videos when the tab is hidden or the ring is scrolled off-screen.
     this._onScreen = true;      // set by IntersectionObserver
     this._visible = !document.hidden;
     this._syncRunning = () => {
-      const shouldRun = this._onScreen && this._visible;
+      const shouldRun = !this._mobileGate && this._onScreen && this._visible;
       if (shouldRun && !this._running) {
         this._running = true;
         this.last = performance.now();
@@ -670,8 +688,8 @@ class Component extends DCLogic {
       }
     };
     this._onVis = () => { this._visible = !document.hidden; this._syncRunning(); };
-    document.addEventListener('visibilitychange', this._onVis);
-    if (this.rootEl && 'IntersectionObserver' in window) {
+    if (!this._mobileGate) document.addEventListener('visibilitychange', this._onVis);
+    if (!this._mobileGate && this.rootEl && 'IntersectionObserver' in window) {
       this._io = new IntersectionObserver((ents) => {
         this._onScreen = ents[0].isIntersecting;
         this._syncRunning();
@@ -691,7 +709,7 @@ class Component extends DCLogic {
     // index within the same tab (e.g. clicking "jason lim" home from a case study) skips it and
     // reveals the site instantly, so the site feels persisted rather than re-loading.
     let _seen = false; try { _seen = !!sessionStorage.getItem('om_seen'); } catch (e) {}
-    const _mobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+    const _mobile = this._mobileGate;
     if (_deepAbout) this.openAboutDeep(); else if (_seen || _mobile) this._revealInstant(); else this.runLoader();
     try { sessionStorage.setItem('om_seen', '1'); } catch (e) {}
     // Failsafe: never let the deep-link cover strand as a black screen.
@@ -759,7 +777,43 @@ class Component extends DCLogic {
     };
     // Decide + apply the cursor label from the CURRENT pointer position (via elementFromPoint), so it stays
     // truthful when the ring moves under a stationary cursor (wheel / momentum / auto-spin), not only on move.
+    this._hideCursorLabelNow = () => {
+      const labelEl = this.cursorLabel;
+      this._cursorLabelText = null;
+      this._cursorX = null; this._cursorY = null;
+      cancelAnimationFrame(this._curScrRaf);
+      if (labelEl) { clearInterval(labelEl.__scr); labelEl.style.opacity = '0'; labelEl.textContent = ''; }
+      if (this.cursorScale) this.cursorScale.style.transform = 'scale(0.9)';
+      if (this.cursorBlur) this.cursorBlur.style.opacity = '0';
+      if (this.cursorTextBg) this.cursorTextBg.style.opacity = '0';
+      if (this.cursorBlurInner) this.cursorBlurInner.style.transform = 'scale(.55)';
+      if (this.cursorCorners) this.cursorCorners.style.transform = 'scale(1)';
+    };
+    // Hide the large hover treatment while the user is actively moving the ring, but preserve the
+    // pointer coordinates so the correct label can return after the ring has settled.
+    this._suppressCursorLabelForMotion = () => {
+      const labelEl = this.cursorLabel;
+      this._cursorLabelText = null;
+      cancelAnimationFrame(this._curScrRaf);
+      if (labelEl) { clearInterval(labelEl.__scr); labelEl.__scr = null; labelEl.style.opacity = '0'; labelEl.textContent = ''; }
+      if (this.cursorScale) this.cursorScale.style.transform = 'scale(0.9)';
+      if (this.cursorBlur) this.cursorBlur.style.opacity = '0';
+      if (this.cursorTextBg) this.cursorTextBg.style.opacity = '0';
+      if (this.cursorBlurInner) this.cursorBlurInner.style.transform = 'scale(.55)';
+      if (this.cursorCorners) this.cursorCorners.style.transform = 'scale(1)';
+    };
     this._refreshCursorLabel = () => {
+      const now = performance.now();
+      const ringInputMoving = this.dragging || Math.abs(this.dragMomentum || 0) > 0.4 || now < (this._ringInputUntil || 0);
+      if (ringInputMoving) {
+        this._cursorRingSettleUntil = now + 50;
+        this._suppressCursorLabelForMotion();
+        return;
+      }
+      if (now < (this._cursorRingSettleUntil || 0)) {
+        this._suppressCursorLabelForMotion();
+        return;
+      }
       const x = this._cursorX, y = this._cursorY;
       let label = null;
       let anchor = 'br';
@@ -797,22 +851,24 @@ class Component extends DCLogic {
         if (this.cursorCorners) this.cursorCorners.style.transform = label ? 'scale(2.0)' : 'scale(1)';
         if (this.cursorLabel) {
           if (label) { cancelAnimationFrame(this._curScrRaf); this.cursorLabel.style.opacity = '1'; this.scramble(this.cursorLabel, label); }
-          else this._labelOut(this.cursorLabel, 110, prev || 'CLICK TO VIEW');
+          else if (prev) this._labelOut(this.cursorLabel, 110, prev);
+          else { this.cursorLabel.style.opacity = '0'; this.cursorLabel.textContent = ''; }
         }
       }
     };
     this._onCursorMove = (e) => {
-      this._cursorX = e.clientX; this._cursorY = e.clientY;
       if (this.cursorEl) {
         this.cursorEl.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
         if (this.cursorEl.style.opacity !== '1') this.cursorEl.style.opacity = '1';
       }
       if (this.cursorBlur) this.cursorBlur.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
       if (this.cursorTextBg) this.cursorTextBg.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)';
+      if (this._booting) { this._hideCursorLabelNow(); return; }
+      this._cursorX = e.clientX; this._cursorY = e.clientY;
       this._refreshCursorLabel();
     };
     window.addEventListener('pointermove', this._onCursorMove, { passive: true });
-    this._onCursorLeaveWin = () => { if (this.cursorEl) this.cursorEl.style.opacity = '0'; };
+    this._onCursorLeaveWin = () => { if (this.cursorEl) this.cursorEl.style.opacity = '0'; this._hideCursorLabelNow(); };
     document.addEventListener('mouseleave', this._onCursorLeaveWin);
 
     // Keep the EST clock current — update HH / MM every second via direct DOM (renderVals isn't called per frame).
@@ -859,7 +915,7 @@ class Component extends DCLogic {
     // Header + avatar are the persistent chrome carried across the navigation — show them at once,
     // no fade, so they feel continuous with the case study we came from.
     [this.headerEl, this.avatarEl].filter(Boolean).forEach(el => { el.style.transition = 'none'; el.style.opacity = '1'; el.style.filter = ''; });
-    // Everything the ring view adds (footer, ring, minimap, scanlines + sweep) fades in like the
+    // Everything the ring view adds (footer, ring, minimap + sweep) fades in like the
     // loader-finish reveal, starting from 0 with a gentle stagger.
     const fadeIn = (el, dur, delay) => {
       if (!el) return;
@@ -868,16 +924,11 @@ class Component extends DCLogic {
       void el.offsetHeight;
       setTimeout(() => { el.style.transition = 'opacity ' + dur + 'ms ease'; el.style.opacity = '1'; }, delay || 0);
     };
-    // Scanlines exist on both pages, so they persist through the root crossfade (don't fade them
-    // from 0 here — that dipped them out then in). Ring, footer and minimap are new to this view, fade in.
     // Footer fades in fast; the ring + minimap fade in slowly (mirrors how they fade OUT on the
     // way into a case study).
     if (this.footerEl) fadeIn(this.footerEl, 450, 100);
     if (this.sceneEl) { this.sceneEl.style.pointerEvents = ''; this._revealScene(1500, 250); }
     this._revealMini(1550);
-    // Scanlines exist on the index but NOT on case studies, so fade them in on arrival (after the
-    // page crossfade settles) rather than snapping. scanEl starts at 0 before the VT captures it.
-    if (this.scanEl) fadeIn(this.scanEl, 800, 500);
     // Inverse of the leave transition: dither the WebGL background back IN via the fade uniform.
     // Hold it fully dithered-out until the root view-transition crossfade settles, then ramp so the
     // dither-in plays on the already-opaque page instead of being masked by the crossfade.
@@ -912,9 +963,16 @@ class Component extends DCLogic {
     let shownPct = 0;
     const step = (t) => {
       const el = t - t0;
-      // One representative warmed <video> per unique clip; gate on all four being ready.
+      // One representative warmed <video> per unique clip. Prefer an element that has actually
+      // presented a decoded frame; readyState alone can report ready before the first paint.
       const bySrc = {};
-      [...(this.videoEls || [])].forEach(v => { if (!v.getAttribute('src')) return; const s = v.dataset.vsrc || v.currentSrc || ''; if (!s) return; if (!bySrc[s] || v.readyState > bySrc[s].readyState) bySrc[s] = v; });
+      [...(this.videoEls || [])].forEach(v => {
+        if (!v.getAttribute('src') && !v.querySelector('source')) return;
+        const s = v.currentSrc || v.dataset.vsrc || '';
+        if (!s) return;
+        const cur = bySrc[s];
+        if (!cur || (v._frameConfirmed && !cur._frameConfirmed) || (!!v._frameConfirmed === !!cur._frameConfirmed && v.readyState > cur.readyState)) bySrc[s] = v;
+      });
       const reps = Object.values(bySrc);
       reps.forEach(v => { if (!v._kicked) { v._kicked = true; try { v.preload = 'auto'; v.load(); } catch (e) {} } });
       // Display counts up on a smooth time ease (0→99 over MINDUR), independent of the jumpy
@@ -923,7 +981,8 @@ class Component extends DCLogic {
       const target = Math.round((1 - Math.pow(1 - timeFrac, 2)) * 100);
       if (target > shownPct) shownPct = target;               // monotonic — never counts backward
       pctEl.textContent = shownPct + '%';
-      const ready = reps.length >= 1 && reps.every(v => v.readyState >= 3);
+      const expected = new Set(this.mocks.filter(m => m.video).map(m => m.video)).size;
+      const ready = reps.length >= expected && reps.every(v => v._frameConfirmed);
       // Once the count has maxed out but the clips still aren't ready, pulse "please wait".
       if (this.loaderWaitEl) this.loaderWaitEl.style.opacity = (shownPct >= 99 && !ready) ? '1' : '0';
       if ((ready && el >= MINDUR) || el > MAXDUR) { pctEl.textContent = '100%'; setTimeout(() => this.finishLoader(), 220); }
@@ -1014,14 +1073,24 @@ class Component extends DCLogic {
   _swapLogo(flip, img, src, h) {
     if (!flip || !img) return;
     if (flip._logoSrc === src) { if (src) img.style.height = h + 'px'; return; }
+    // Finish the current flip before starting the newest requested one. Rapid scrolling can cross
+    // several projects quickly; restarting midway was producing a visible readout flash.
+    if (flip._logoBusy) { flip._logoQueued = { src, h }; return; }
+    flip._logoBusy = true;
     flip._logoSrc = src;
     const tok = (flip._logoTok = (flip._logoTok || 0) + 1);
     const ease = 'transform .12s cubic-bezier(.45,0,.55,1)';
+    const finish = () => {
+      if (flip._logoTok !== tok) return;
+      flip._logoBusy = false;
+      const queued = flip._logoQueued; flip._logoQueued = null;
+      if (queued && queued.src !== flip._logoSrc) this._swapLogo(flip, img, queued.src, queued.h);
+    };
     flip.style.transition = ease;
     flip.style.transform = 'rotate3d(1,1,0,-90deg)';
     setTimeout(() => {
       if (flip._logoTok !== tok) return;
-      if (!src) { flip.style.display = 'none'; return; }
+      if (!src) { flip.style.display = 'none'; finish(); return; }
       img.src = src; img.style.height = h + 'px'; flip.style.display = '';
       flip.style.transition = 'none';
       flip.style.transform = 'rotate3d(1,1,0,90deg)';   // far side, unseen
@@ -1030,6 +1099,7 @@ class Component extends DCLogic {
         if (flip._logoTok !== tok) return;
         flip.style.transition = ease;
         flip.style.transform = 'rotate3d(1,1,0,0deg)';
+        setTimeout(finish, 130);
       });
     }, 120);
   }
@@ -1144,18 +1214,18 @@ class Component extends DCLogic {
     if (!this._miniMarks) return;
     const CX = 72, CY = 30, AX = 184, AY = 46, rad = Math.PI / 180;
     const TLT = 18 * rad, cosTlt = Math.cos(TLT), sinTlt = Math.sin(TLT);
+    const miniSpin = this._miniSpin == null ? this.spin : this._miniSpin;
     for (const m of this._miniMarks) {
-      const phi = (m.a + this.spin) * rad;
+      const phi = (m.a + miniSpin) * rad;
       m.depth = Math.cos(phi);                          // +1 = front (near camera)
       const lx = AX * Math.sin(phi), ly = AY * Math.cos(phi);   // phi=0 -> bottom (front)
       const sx = CX + (lx * cosTlt - ly * sinTlt);
       const sy = CY + (lx * sinTlt + ly * cosTlt);
-      const hov = (m.i === this.state.hovered);
       const s = 0.7 + 0.3 * ((m.depth + 1) / 2);
       const tf = 'translate(' + sx.toFixed(2) + 'px,' + sy.toFixed(2) + 'px) scale(' + s.toFixed(3) + ')';
-      const rot = 'rotateY(' + ((m.a + this.spin)).toFixed(1) + 'deg)';
+      const rot = 'rotateY(' + ((m.a + miniSpin)).toFixed(1) + 'deg)';
       const z = String(Math.round((m.depth + 1) * 100));
-      const bscale = hov ? 'scale(1.4)' : 'scale(1)';   // hover emphasis eased by the body's CSS transition (matches big ring)
+      const bscale = 'scale(1)';
       m.d.wrap.style.transform = tf; m.d.wrap.style.zIndex = z; m.d.inner.style.transform = rot; m.d.inner.firstChild.style.transform = bscale;
       m.b.wrap.style.transform = tf; m.b.wrap.style.zIndex = z; m.b.inner.style.transform = rot; m.b.inner.firstChild.style.transform = bscale;
     }
@@ -1268,20 +1338,38 @@ class Component extends DCLogic {
     if (this._holeOnTarget == null) this._holeOnTarget = 0;
     if (!_coarse && !this._bgMove) {
       this._bgMove = (e) => {
-        this._holeTarget.x = e.clientX; this._holeTarget.y = e.clientY;
-        this._holeOnTarget = 1;
+        this._bgPointerX = e.clientX; this._bgPointerY = e.clientY;
+        const ringMoving = this.dragging || Math.abs(this.dragMomentum || 0) > 0.4 || performance.now() < (this._ringInputUntil || 0);
+        if (!ringMoving) { this._holeTarget.x = e.clientX; this._holeTarget.y = e.clientY; this._holeOnTarget = 1; }
       };
-      this._bgLeave = () => { this._holeOnTarget = 0; };
+      this._bgLeave = () => { this._bgPointerX = this._bgPointerY = null; this._holeOnTarget = 0; };
       window.addEventListener('pointermove', this._bgMove, { passive: true });
       document.addEventListener('pointerleave', this._bgLeave);
     }
-    const draw = (now) => { const target = -(this.spinDir || 1); this._bgDir += (target - this._bgDir) * 0.025; this._bgFade += (this._bgFadeTarget - this._bgFade) * (this._bgFadeRate || 0.06); this._bgDith += (this._bgDithTarget - this._bgDith) * 0.035; gl.uniform1f(uDith, this._bgDith); gl.uniform1f(uFade, this._bgFade); gl.uniform1f(uDir, this._bgDir); this._holeOn += (this._holeOnTarget - this._holeOn) * 0.07; this._holePos.x += (this._holeTarget.x - this._holePos.x) * 0.24; this._holePos.y += (this._holeTarget.y - this._holePos.y) * 0.24; const _dpr = this._bgDpr || 1; gl.uniform2f(uMouse, this._holePos.x * _dpr, canvas.height - this._holePos.y * _dpr); gl.uniform1f(uHole, this._holeOn); gl.uniform1f(uTime, (now - t0) / 1000); gl.drawArrays(gl.TRIANGLES, 0, 3); if (!reduce && !document.hidden) this._bgRaf = requestAnimationFrame(draw); };
+    const draw = (now) => {
+      const target = -(this.spinDir || 1);
+      this._bgDir += (target - this._bgDir) * 0.025;
+      this._bgFade += (this._bgFadeTarget - this._bgFade) * (this._bgFadeRate || 0.06);
+      this._bgDith += (this._bgDithTarget - this._bgDith) * 0.035;
+      const ringMoving = this.dragging || Math.abs(this.dragMomentum || 0) > 0.4 || now < (this._ringInputUntil || 0);
+      if (ringMoving) this._holeOnTarget = 0;
+      else if (this._bgPointerX != null) { this._holeTarget.x = this._bgPointerX; this._holeTarget.y = this._bgPointerY; this._holeOnTarget = 1; }
+      this._holeOn += (this._holeOnTarget - this._holeOn) * 0.07;
+      this._holePos.x += (this._holeTarget.x - this._holePos.x) * 0.24;
+      this._holePos.y += (this._holeTarget.y - this._holePos.y) * 0.24;
+      gl.uniform1f(uDith, this._bgDith); gl.uniform1f(uFade, this._bgFade); gl.uniform1f(uDir, this._bgDir);
+      const _dpr = this._bgDpr || 1;
+      gl.uniform2f(uMouse, this._holePos.x * _dpr, canvas.height - this._holePos.y * _dpr);
+      gl.uniform1f(uHole, this._holeOn); gl.uniform1f(uTime, (now - t0) / 1000);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      if (!reduce && !document.hidden) this._bgRaf = requestAnimationFrame(draw);
+    };
     if (reduce) { gl.uniform1f(uDith, 1); gl.uniform1f(uFade, 1); gl.uniform1f(uDir, -1); gl.uniform1f(uTime, 12.0); gl.drawArrays(gl.TRIANGLES, 0, 3); }
     else this._bgRaf = requestAnimationFrame(draw);
     this._bgVis = () => { if (document.hidden) cancelAnimationFrame(this._bgRaf); else if (!reduce) this._bgRaf = requestAnimationFrame(draw); };
     document.addEventListener('visibilitychange', this._bgVis);
   }
-  componentWillUnmount() { cancelAnimationFrame(this.raf); cancelAnimationFrame(this._bgRaf); if (this._bgResize) window.removeEventListener('resize', this._bgResize); if (this._bgVis) document.removeEventListener('visibilitychange', this._bgVis); clearInterval(this._clockTimer); window.removeEventListener('resize', this._onResize); clearTimeout(this._sweepTimer); clearTimeout(this._dotSweepTimer); clearInterval(this._playTimer); window.removeEventListener('pointerdown', this._playAll); window.removeEventListener('focus', this._playAll); document.removeEventListener('visibilitychange', this._playAll); document.removeEventListener('visibilitychange', this._onVis); if (this._io) this._io.disconnect(); if (this._bgMove) window.removeEventListener('pointermove', this._bgMove); if (this._bgLeave) document.removeEventListener('pointerleave', this._bgLeave); }
+  componentWillUnmount() { cancelAnimationFrame(this.raf); cancelAnimationFrame(this._bgRaf); if (this._bgResize) window.removeEventListener('resize', this._bgResize); if (this._bgVis) document.removeEventListener('visibilitychange', this._bgVis); clearInterval(this._clockTimer); window.removeEventListener('resize', this._onResize); clearTimeout(this._sweepTimer); clearTimeout(this._dotSweepTimer); clearInterval(this._playTimer); window.removeEventListener('pointerdown', this._playAll); window.removeEventListener('focus', this._playAll); document.removeEventListener('visibilitychange', this._playAll); document.removeEventListener('visibilitychange', this._onVis); window.removeEventListener('pointermove', this._onCursorMove); document.removeEventListener('mouseleave', this._onCursorLeaveWin); if (this._io) this._io.disconnect(); if (this._mobileMq && this._onMobileGateChange) { if (this._mobileMq.removeEventListener) this._mobileMq.removeEventListener('change', this._onMobileGateChange); else if (this._mobileMq.removeListener) this._mobileMq.removeListener(this._onMobileGateChange); } if (this._bgMove) window.removeEventListener('pointermove', this._bgMove); if (this._bgLeave) document.removeEventListener('pointerleave', this._bgLeave); }
 
   // Inverse of the reveal: caption melts into goo and dissolves, then unmounts via onDone.
   meltAway(el, onDone) {
@@ -1406,8 +1494,9 @@ class Component extends DCLogic {
     this._curScrRaf = requestAnimationFrame(step);
   }
 
-  scramble(el, target) {
+  scramble(el, target, finishCurrent) {
     if (!el) return;
+    if (finishCurrent && el.__scr) { el.__scrQueued = target; return; }
     const glyphs = '!<>-_\\/[]{}=+*^?#%&@';
     clearInterval(el.__scr);
     const total = 24;
@@ -1423,7 +1512,11 @@ class Component extends DCLogic {
         else out += glyphs[Math.floor(Math.random() * glyphs.length)];
       }
       el.textContent = out;
-      if (frame >= total) { el.textContent = target; clearInterval(el.__scr); }
+      if (frame >= total) {
+        el.textContent = target; clearInterval(el.__scr); el.__scr = null;
+        const queued = el.__scrQueued; el.__scrQueued = null;
+        if (finishCurrent && queued && queued !== target) this.scramble(el, queued, true);
+      }
     }, 28);
   }
 
@@ -1432,13 +1525,14 @@ class Component extends DCLogic {
     this.last = now;
     if (this.sceneEl) this.sceneEl.style.zIndex = '40';
     const auto = this.props.autoSpinSpeed ?? 8;
-    const paused = this.state.selected != null || (this.state.hovered != null && !this.dragging);
-    if (!paused && !this.dragging) {
+    if (!this.dragging) {
       this.spin += auto * (this.spinDir || 1) * dt;
       this.spin += this.dragMomentum * dt;
     }
     this.dragMomentum *= Math.pow(0.9, dt * 60);
     this._dotOrbit = (this._dotOrbit || 0) - (this.spinDir || 1) * 0.014 * dt;   // very slow minimap dot orbit
+    if (this._miniSpin == null) this._miniSpin = this.spin;
+    this._miniSpin += (this.spin - this._miniSpin) * (1 - Math.exp(-dt * 9));
     this._tickMini();
     if (Math.abs(this.dragMomentum) < 0.02) this.dragMomentum = 0;
 
@@ -1482,12 +1576,10 @@ class Component extends DCLogic {
     const ox = -cFront.dx, oy = -cFront.dy - window.innerHeight * 0.02;   // keep the front device centred
 
     const vw = window.innerWidth, cx = vw / 2;
-    const hovered = this.state.hovered;
-    const hoveredIdx = (hovered != null) ? (hovered - this.FROM) : -1;
-    // All clips stay loaded (only 4 videos), so there is no warm-band attach/detach. Just collect which
-    // slots are visible enough to play; back-facing ones pause (src is never removed → no layer churn).
+    // All clips stay loaded and playing (only 4 videos), so there is no warm-band attach/detach.
+    // Track visible slots for interaction/readout logic only; playback is intentionally independent.
     const activeSlots = [];
-    let frontC = -1, frontSlot = -1;   // most front-facing visible device = current case study
+    let frontC = -1, frontSlot = -1, currentC = -1;   // most front-facing visible device = current case study
     for (let k = 0; k < this.cardEls.length; k++) {
       const e = this.cardEls[k];
       if (!e || !e.el) continue;
@@ -1495,27 +1587,41 @@ class Component extends DCLogic {
       const phi = e.a + this.spin;          // device turn angle (deg)
       const th = phi * rad;
       const c = Math.cos(th);
-      if (c <= 0.08) { e.el.style.visibility = 'visible'; e.el.style.pointerEvents = 'none'; e.el.style.setProperty('--f', '0'); continue; }   // composited but not interactive (opacity 0)he difference readouts
-      if (c > frontC) { frontC = c; frontSlot = this.FROM + k; }
       const p = ringPt(th);
       const dx = p.dx + ox, dy = p.dy + oy;
-      const isHov = (k === hoveredIdx);
       e.el.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${(p.sc * GSCALE).toFixed(3)})`;
-      e.el.style.zIndex = isHov ? '5000' : String(1000 + Math.round(p.z2));
+      e.el.style.zIndex = String(1000 + Math.round(p.z2));
       const inner = e.el.firstElementChild;
-      if (inner) inner.style.transform = `perspective(${1200 * this.DEVICE_SS}px) translate(-50%,-50%) rotateY(${phi.toFixed(2)}deg) scale(${(1 / this.DEVICE_SS).toFixed(4)})`;
+      const deviceSS = e.SS || this.DEVICE_SS;
+      if (inner) inner.style.transform = `perspective(${1200 * deviceSS}px) translate(-50%,-50%) rotateY(${phi.toFixed(2)}deg) scale(${(1 / deviceSS).toFixed(4)})`;
+      // Keep updating every device's offscreen position. The Ouster tablet retains a practically
+      // invisible 0.001 opacity so its larger composited surface stays prepared before it enters.
+      if (c <= 0.08) {
+        e.el.style.visibility = 'visible';
+        e.el.style.pointerEvents = 'none';
+        e.el.style.opacity = e.isTablet ? '0.001' : '0';
+        continue;
+      }
+      if (this.FROM + k === this._curSlot) currentC = c;
+      if (c > frontC) { frontC = c; frontSlot = this.FROM + k; }
       // Fade across the front arc — asymmetric: the incoming (top-left) device reveals a touch
       // later, the outgoing (bottom-right) device hides a touch sooner.
       const sinth = Math.sin(th);
       const edge = 0.30;
       const span = (sinth < 0) ? 0.20 : 0.13;   // outgoing (steeper path) fades over a tighter arc so it matches the incoming timing
       let op = Math.min(1, Math.max(0, (c - edge) / span));
-      e.el.style.visibility = 'visible';   // never toggle visibility (layer add/remove flashes the difference readouts); opacity via --f hides it
+      e.el.style.visibility = 'visible';   // never toggle visibility (layer add/remove flashes the difference readouts)
       e.el.style.pointerEvents = op > 0.5 ? 'auto' : 'none';   // only the clearly-visible front devices are hoverable/clickable
-      e.el.style.setProperty('--f', op.toFixed(3));
+      // Fade the completed 3D device as one stable surface. Fading every sidewall, rim and media
+      // child independently made the large Ouster tablet especially prone to compositor flashes.
+      e.el.style.opacity = (e.isTablet ? Math.max(0.001, op) : op).toFixed(3);
       if (op > 0.06) activeSlots.push(String(this.FROM + k));
     }
     this._activeSlots = new Set(activeSlots);
+    // Give the current project a small "stay selected" zone. Near the handoff point two devices
+    // can be almost equally central; without this margin, tiny scroll/hover movement can make the
+    // logo and text flip rapidly between them. A fast scroll still crosses the margin immediately.
+    if (frontSlot !== this._curSlot && currentC > 0.08 && frontC - currentC < 0.065) frontSlot = this._curSlot;
     // Update the background readout (title + L/R numerator) when the front-most device changes.
     if (frontSlot >= 0 && frontSlot !== this._curSlot) {
       this._curSlot = frontSlot;
@@ -1530,10 +1636,10 @@ class Component extends DCLogic {
       const logoH = ({ doordash: 16, ouster: 17, nerdwallet: 18 })[key] || 16;   // per-mark optical sizing
       this._swapLogo(this.bgLogoLFlipEl, this.bgLogoLEl, logo, logoH);
       this._swapLogo(this.bgLogoRFlipEl, this.bgLogoREl, logo, logoH);
-      if (coChanged && this.bgCompanyLEl) this.scramble(this.bgCompanyLEl, co);
-      if (coChanged && this.bgCompanyREl) this.scramble(this.bgCompanyREl, co);
-      if (this.bgNumLEl) this.scramble(this.bgNumLEl, num);
-      if (this.bgNumREl) this.scramble(this.bgNumREl, num);
+      if (coChanged && this.bgCompanyLEl) this.scramble(this.bgCompanyLEl, co, true);
+      if (coChanged && this.bgCompanyREl) this.scramble(this.bgCompanyREl, co, true);
+      if (this.bgNumLEl) this.scramble(this.bgNumLEl, num, true);
+      if (this.bgNumREl) this.scramble(this.bgNumREl, num, true);
     }
     if (this._applyVideoPlayback) this._applyVideoPlayback();
     if (this._cursorX != null && !this.dragging) this._refreshCursorLabel();   // keep label truthful as the ring moves under a still cursor
@@ -1542,7 +1648,9 @@ class Component extends DCLogic {
 
   renderVals() {
     const R = this.radius();
-    const accent = this.props.accentColor ?? '#8aa0ff';
+    const compactViewport = this._mobileGate != null
+      ? this._mobileGate
+      : !!(window.matchMedia && window.matchMedia('(max-width: 640px)').matches);
 
     // Per-region type controls (font / weight / size / spacing / capitalization)
     const FONTS = {
@@ -1563,14 +1671,6 @@ class Component extends DCLogic {
     const footerSize = (this.props.footerSize ?? 20) + 'px';
     const footerSpacing = (this.props.footerSpacing ?? -0.4) + 'px';
     const footerCase = cap(this.props.footerCase ?? 'UPPERCASE');
-    const hoverFam = fam(this.props.hoverFont, 'PP Neue Montreal');
-    const hoverWeight = this.props.hoverWeight ?? 400;
-    const hoverSpacing = (this.props.hoverSpacing ?? -0.3) + 'px';
-    const hoverCase = cap(this.props.hoverCase);
-    const eyebrowFam = fam(this.props.eyebrowFont, 'PP Neue Montreal');
-    const eyebrowWeight = this.props.eyebrowWeight ?? 400;
-    const eyebrowSpacing = (this.props.eyebrowSpacing ?? 3.5) + 'px';
-    const eyebrowCase = cap(this.props.eyebrowCase);
     // About-page bio typography (all tweakable)
     const aboutBioFam = fam(this.props.aboutBioFont, 'PP Neue Montreal');
     const aboutBioWeight = this.props.aboutBioWeight ?? 300;
@@ -1582,48 +1682,70 @@ class Component extends DCLogic {
     const aboutBioMax = 'var(--aboutW, 768px)';
     const aboutBioTop = '52px';
     const mocks = this.mocks;
-    const hovered = this.state.hovered;
-    if (hovered !== this._lastScrHover) {
-      this._lastScrHover = hovered;
-      if (this._applyVideoPlayback) this._applyVideoPlayback();
-    }
-
     const PHONE_W = 204, TABLET_W = 400;   // iPad large; extra arc gives it the room
-    const FADE = 'var(--f,1)';
     const cards = [];
     for (let i = this.FROM; i <= this.TO; i++) {
       const base = mocks[this.mod(i, this.PER_TURN)];
       const isTablet = base.o === 'landscape';
       const y = 0;   // single row: no vertical stacking (one tilted ring of devices)
       const a = this.slotAngle(i);
-      const SS = this.DEVICE_SS;
+      // Ouster-only performance trial: 1.5x is still comfortably above its maximum visible size,
+      // while reducing the large tablet surface the browser composites during ring movement.
+      const SS = isTablet ? 1.5 : this.DEVICE_SS;
       const W = (isTablet ? TABLET_W : PHONE_W) * SS;
       const DEVICE_W = W;   // render at full width; spacing comes from the arc layout
       const cardR = R;   // iPad sits on the same Z as the phones
-      const isHov = hovered === i;
-      const scv = isHov ? 1.1 : 1;
+      const scv = 1;
       const idx = i - this.FROM;
       const h = React.createElement;
-      // Face media: video cards render a still poster under a lazily-loaded <video> (src attached only near the front).
+      // Face media: every video stays mounted and loaded. Its poster remains visible until the
+      // browser confirms that an actual video frame has been presented.
       const mkFace = (style) => {
-        if (!base.video) return h('img', { key: 'face', src: base.img, alt: '', draggable: false, style });
+        if (!base.video || compactViewport) return h('img', { key: 'face', src: base.img, alt: '', draggable: false, style });
         const fit = style.objectFit || 'cover';
+        const videoPrimary = base.videoMp4 || base.video;
         // Poster under every clip (incl. the Ouster tablet) so a still shows instead of black while the video buffers.
         const showPoster = true;
         return h('div', { key: 'face', style: Object.assign({}, style, { position: style.position || 'relative', overflow: 'hidden', background: '#000' }) }, [
           showPoster ? h('img', { key: 'poster', src: base.img, alt: '', draggable: false, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: fit, display: 'block' } }) : null,
           h('video', { key: 'vid', loop: true, muted: true, playsInline: true, preload: 'auto', draggable: false,
-            src: base.video,
-            'data-slot': String(i), 'data-vsrc': base.video, 'data-tablet': base.o === 'landscape' ? '1' : '0',
-            ref: (v) => { if (v) { v.defaultMuted = true; v.muted = true; v.setAttribute('muted', ''); v.loop = true; v.dataset.slot = String(i); v.dataset.vsrc = base.video; v.dataset.tablet = base.o === 'landscape' ? '1' : '0'; this.videoEls.add(v);
+            src: base.videoMp4 ? undefined : base.video,
+            'data-slot': String(i), 'data-vsrc': videoPrimary, 'data-tablet': base.o === 'landscape' ? '1' : '0',
+            ref: (v) => { if (v) { v.defaultMuted = true; v.muted = true; v.setAttribute('muted', ''); v.loop = true; v.dataset.slot = String(i); v.dataset.vsrc = videoPrimary; v.dataset.tablet = base.o === 'landscape' ? '1' : '0'; this.videoEls.add(v);
+              if (v._frameConfirmed) v.style.opacity = '1';
               if (!v._posterWired) { v._posterWired = true; const pos = () => (v.parentNode && v.parentNode.firstChild !== v ? v.parentNode.firstChild : null);
-                const hide = () => { const p = pos(); if (p && p.tagName === 'IMG') { p.style.transition = 'opacity .25s ease'; p.style.opacity = '0'; } };
-                const showP = () => { const p = pos(); if (p && p.tagName === 'IMG') p.style.opacity = '1'; };
-                v.addEventListener('playing', hide); v.addEventListener('timeupdate', () => { if (!v.paused && v.currentTime > 0) hide(); }); v.addEventListener('pause', showP);
-                // All 4 clips stay loaded (no warm-band). If the browser can't decode one, just fall back to its poster.
-                v.addEventListener('error', showP); }
+                const revealFrame = () => {
+                  if (v._frameConfirmed) return;
+                  v._frameConfirmed = true;
+                  v.style.transition = 'opacity .12s linear';
+                  v.style.opacity = '1';
+                  const p = pos();
+                  if (p && p.tagName === 'IMG') { p.style.transition = 'opacity .18s linear'; p.style.opacity = '0'; }
+                };
+                const confirmFrame = () => {
+                  if (v._frameConfirmed || v.readyState < 2) return;
+                  if (typeof v.requestVideoFrameCallback === 'function') {
+                    if (v._frameCallbackPending) return;
+                    v._frameCallbackPending = true;
+                    v.requestVideoFrameCallback(() => { v._frameCallbackPending = false; revealFrame(); });
+                  } else if (!v.paused && v.currentTime > 0) revealFrame();
+                };
+                const showErrorPoster = () => {
+                  const p = pos();
+                  v._frameConfirmed = false;
+                  v.style.transition = 'none'; v.style.opacity = '0';
+                  if (p && p.tagName === 'IMG') { p.style.transition = 'none'; p.style.opacity = '1'; }
+                };
+                v.addEventListener('loadeddata', confirmFrame);
+                v.addEventListener('playing', confirmFrame);
+                v.addEventListener('timeupdate', confirmFrame);
+                // Routine pauses retain the last decoded frame. Only a genuine media error restores the poster.
+                v.addEventListener('error', showErrorPoster); }
               this._applyVideoPlayback && this._applyVideoPlayback(); } },
-            style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: fit, display: 'block' } }),
+            style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: fit, display: 'block', opacity: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' } }, base.videoMp4 ? [
+              h('source', { key: 'mp4', src: base.videoMp4, type: 'video/mp4' }),
+              h('source', { key: 'webm', src: base.video, type: 'video/webm' }),
+            ] : null),
         ]);
       };
       const faceFit = isTablet ? 'contain' : 'cover';
@@ -1631,7 +1753,7 @@ class Component extends DCLogic {
       // --- Titanium body: stacked side-wall layers behind the glass ---
       const depth = isTablet ? Math.round(DEVICE_W * 0.03) : Math.round(W * 0.062); // thinner
       const rad0 = isTablet ? 22 * SS : Math.round(W * 0.135);
-      const nL = isTablet ? 12 : 16;
+      const nL = isTablet ? 8 : 16;
       const parts = [];
       for (let j = 0; j < nL; j++) {
         const t = (j + 1) / nL;
@@ -1641,7 +1763,7 @@ class Component extends DCLogic {
         const g = `linear-gradient(96deg, hsl(220 5% ${Math.round(28*dark)}%) 0%, hsl(222 7% ${Math.round(14*dark)}%) 20%, hsl(224 9% ${Math.round(5*dark)}%) 52%, hsl(222 7% ${Math.round(12*dark)}%) 80%, hsl(220 5% ${Math.round(24*dark)}%) 100%)`;
         parts.push(h('div', { key: 'l' + j, style: {
           position: 'absolute', top: inset + 'px', left: inset + 'px', right: inset + 'px', bottom: inset + 'px',
-          borderRadius: (rad0 + Math.abs(inset)) + 'px', background: g, opacity: FADE,
+          borderRadius: (rad0 + Math.abs(inset)) + 'px', background: g,
           transform: `translateZ(${z.toFixed(1)}px)`,
           boxShadow: j === nL - 1 ? `0 ${40 * SS}px ${80 * SS}px rgba(0,0,0,.6)` : 'none',
         } }));
@@ -1652,7 +1774,7 @@ class Component extends DCLogic {
       const btnBg = 'linear-gradient(180deg,#2c2e33,#141519)';
       const mkBtn = (k, side, topPct, hPct) => {
         const s = { position: 'absolute', top: topPct + '%', height: hPct + '%', width: (3 * SS) + 'px',
-          background: btnBg, borderRadius: (2 * SS) + 'px', opacity: FADE, transform: `translateZ(${bz}px)` };
+          background: btnBg, borderRadius: (2 * SS) + 'px', transform: `translateZ(${bz}px)` };
         if (side === 'l') s.left = (-2.5 * SS) + 'px'; else s.right = (-2.5 * SS) + 'px';
         return h('div', { key: k, style: s });
       };
@@ -1660,46 +1782,42 @@ class Component extends DCLogic {
         parts.push(mkBtn('ba', 'l', 15, 5), mkBtn('bvu', 'l', 25, 9), mkBtn('bvd', 'l', 37, 9), mkBtn('bp', 'r', 27, 15));
         parts.push(h('div', { key: 'rim', style: {
           position: 'absolute', top: (-2 * SS) + 'px', left: (-2 * SS) + 'px', right: (-2 * SS) + 'px', bottom: (-2 * SS) + 'px',
-          borderRadius: (rad0 + 2 * SS) + 'px', opacity: FADE, transform: `translateZ(${0.3 * SS}px)`,
+          borderRadius: (rad0 + 2 * SS) + 'px', transform: `translateZ(${0.3 * SS}px)`,
           background: 'linear-gradient(120deg,#44474d,#1a1b1f 38%,#0a0b0d 60%,#3a3d43)',
         } }));
         parts.push(mkFace({
           position: 'absolute', inset: '0', width: '100%', height: '100%', objectFit: faceFit,
-          borderRadius: rad0 + 'px', opacity: FADE, transform: `translateZ(${0.7 * SS}px)`, display: 'block',
+          borderRadius: rad0 + 'px', transform: `translateZ(${0.7 * SS}px)`, display: 'block',
         }));
       } else {
         parts.push(mkBtn('bp', 'r', 8, 12), mkBtn('bv', 'r', 26, 9));
         parts.push(h('div', { key: 'pad', style: {
-          position: 'absolute', inset: '0', borderRadius: (rad0 + 2 * SS) + 'px', opacity: FADE,
+          position: 'absolute', inset: '0', borderRadius: (rad0 + 2 * SS) + 'px',
           background: 'linear-gradient(140deg,#232529,#0d0e11)', transform: `translateZ(${0.7 * SS}px)`,
           padding: (9 * SS) + 'px', display: 'flex', boxShadow: `inset 0 0 0 ${SS}px rgba(255,255,255,.04)`,
         } },
-          h('div', { style: { flex: '1', borderRadius: (13 * SS) + 'px', overflow: 'hidden', background: '#000', display: 'flex' } },
-            mkFace({ flex: '1', width: '100%', height: '100%', objectFit: faceFit, display: 'block', background: '#000' })
-          )
+          mkFace({ flex: '1', width: '100%', height: '100%', objectFit: faceFit, display: 'block', background: '#000', borderRadius: (13 * SS) + 'px' })
         ));
       }
       const body = h('div', { style: {
         position: 'relative', width: DEVICE_W + 'px', aspectRatio: isTablet ? '1.3136' : '0.4997',
         transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
-        transform: isHov ? 'scale(1.1)' : 'scale(1)',
-        transition: 'transform .35s cubic-bezier(.22,.61,.36,1)',
+        transform: 'scale(1)',
       } }, parts);
 
       cards.push({
         key: i,
         body,
-        ref: (el) => { this.cardEls[idx] = el ? { el, a, isTablet, W, rad: cardR } : null; },
-        onEnter: () => {},
-        onLeave: () => {},
+        ref: (el) => { this.cardEls[idx] = el ? { el, a, isTablet, W, rad: cardR, SS } : null; },
         onOpen: () => { if (!/^https?:/i.test(base.href || '')) this.openCase(base.href); },
         href: base.href,
         title: base.title,
         style: {
           position: 'absolute', top: 0, left: 0, width: '1px', height: '1px',
           transform: 'none',   // billboard position/scale driven per-frame in tick()
-          '--f': 1,
-          zIndex: isHov ? 30 : 1,
+          opacity: 1,
+          willChange: 'transform, opacity',
+          zIndex: 1,
         },
         innerStyle: {
           position: 'absolute', left: 0, top: 0, width: W + 'px',
@@ -1711,34 +1829,6 @@ class Component extends DCLogic {
       });
     }
 
-    const selected = this.state.selected;
-    const H = React.createElement;
-    // Shared type treatments — the eyebrow + title styles used by the case-study overlay (size set per use).
-    const eyebrowStyle = { fontFamily: eyebrowFam, fontWeight: eyebrowWeight, letterSpacing: eyebrowSpacing, textTransform: eyebrowCase };
-    const titleStyle = { fontFamily: hoverFam, fontWeight: hoverWeight, lineHeight: 1, letterSpacing: hoverSpacing, textTransform: hoverCase };
-    const close = () => this.setState({ selected: null });
-    let overlayEl = null;
-    if (selected) {
-      overlayEl = H('div', {
-        onClick: (e) => { if (e.target === e.currentTarget) close(); },
-        style: { position: 'absolute', inset: 0, zIndex: 85, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '56px', background: 'rgba(6,7,9,.82)', animation: 'spiralFadeIn .3s ease', cursor: 'auto' },
-      },
-        H('div', { style: { position: 'relative', display: 'flex', gap: '56px', alignItems: 'center', maxWidth: '1000px', width: '100%' } },
-          H('div', { style: { flex: '0 0 auto', maxWidth: '46%', display: 'flex', justifyContent: 'center' } },
-            selected.video
-              ? H('video', { src: selected.video, autoPlay: true, loop: true, muted: true, playsInline: true, ref: (v) => { if (v) { v.muted = true; const p = v.play(); if (p && p.catch) p.catch(() => {}); } }, style: { maxHeight: '74vh', maxWidth: '100%', borderRadius: '16px', border: '1px solid rgba(255,255,255,.1)', boxShadow: '0 40px 100px rgba(0,0,0,.6)' } })
-              : H('img', { src: selected.img, alt: selected.title, style: { maxHeight: '74vh', maxWidth: '100%', borderRadius: '16px', border: '1px solid rgba(255,255,255,.1)', boxShadow: '0 40px 100px rgba(0,0,0,.6)' } })
-          ),
-          H('div', { style: { flex: '1 1 auto', maxWidth: '440px' } },
-            H('p', { style: { margin: '0 0 18px', fontSize: '11px', color: accent, ...eyebrowStyle } }, selected.company),
-            H('h2', { style: { margin: '0 0 22px', fontSize: '52px', ...titleStyle } }, selected.title),
-            H('p', { style: { margin: '0 0 34px', fontSize: '16px', lineHeight: 1.6, color: '#b8bcc8', maxWidth: '38ch' } }, selected.blurb),
-            H('a', { href: selected.href, target: '_self', rel: 'noopener', onClick: (e) => { e.preventDefault(); window.__navCover && window.__navCover(); window.location.href = selected.href; }, onMouseEnter: (e) => this.animateMelt(e.currentTarget, true), onMouseLeave: (e) => this.animateMelt(e.currentTarget, false), style: { display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '12px', letterSpacing: '2px', textTransform: 'uppercase', color: '#fff', border: '1px solid rgba(255,255,255,.22)', padding: '13px 22px', borderRadius: '999px' } }, 'View case study ↗')
-          ),
-          H('button', { onClick: close, style: { position: 'absolute', top: '-18px', right: '-18px', width: '44px', height: '44px', borderRadius: '999px', border: '1px solid rgba(255,255,255,.16)', background: 'rgba(20,22,28,.9)', color: '#ececf0', fontSize: '20px', lineHeight: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, '×')
-        )
-      );
-    }
     const estParts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
     const estHours = estParts.find(p => p.type === 'hour').value;
     const estMinutes = estParts.find(p => p.type === 'minute').value;
@@ -1747,15 +1837,11 @@ class Component extends DCLogic {
       estHours,
       estMinutes,
       setRoot: this.setRoot,
-      setBgCanvas: (el) => { if (el && !this._bgInit && !window.__NO_WEBGL) { this._bgInit = true; this._initBg(el); } if (el && window.__NO_WEBGL) el.style.display = 'none'; },
-      overlayEl,
-      scanStyle: {
-        position: 'absolute', inset: 0, zIndex: 70, pointerEvents: 'none', overflow: 'hidden',
-        opacity: 1,
-        backgroundImage: 'repeating-linear-gradient(to bottom, rgba(128,128,128,0.09) 0px, rgba(128,128,128,0) 3px, rgba(128,128,128,0.09) 6px)',
-        animation: 'scanMove 1.2s linear infinite',
+      setBgCanvas: (el) => {
+        if (!el) return;
+        if (compactViewport || window.__NO_WEBGL) { el.style.display = 'none'; return; }
+        if (!this._bgInit) { this._bgInit = true; this._initBg(el); }
       },
-      setScanEl: (el) => { this.scanEl = el; },
       setGoo: (el) => { this.gooBlurEl = el; },
       setGooReveal: (el) => { this.gooRevealBlurEl = el; },
       meltIn: (e) => this.animateMelt(e.currentTarget, true),
@@ -1787,12 +1873,12 @@ class Component extends DCLogic {
       setHrEl: (el) => { this.hrEl = el; },
       setMinEl: (el) => { this.minEl = el; },
       setUpdatedEl: (el) => { this.updatedEl = el; this._startFooterCycle && this._startFooterCycle(); },
-      avatarClick: () => { if (this._aboutOpen && this._aboutReturn) { this._exitAboutToCase(); return; } if (this._aboutOpen) { this.spin = 0; this.dragMomentum = 0; this.closeAbout(); this.setState({ selected: null, hovered: null }); } else { this.openAbout(); } },
+      avatarClick: () => { if (this._aboutOpen && this._aboutReturn) { this._exitAboutToCase(); return; } if (this._aboutOpen) { this.spin = 0; this.dragMomentum = 0; this.closeAbout(); } else { this.openAbout(); } },
       aboutLabel: this.state.aboutOpen ? 'Exit' : 'About',
       aboutCursorLabel: this.state.aboutOpen ? 'GO BACK' : 'MOI',
       noticeHide: this.state.aboutOpen ? 'm-force-hide' : '',
-      goHome: () => { try { sessionStorage.removeItem('om_seen'); } catch (e) {} window.__navCover && window.__navCover(); window.location.href = window.location.pathname; },
-      contact: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } window.location.href = 'mailto:jason.jinulim@gmail.com'; /* external: no backstop */ },
+      goHome: () => { this._booting = true; if (this._hideCursorLabelNow) this._hideCursorLabelNow(); try { sessionStorage.removeItem('om_seen'); } catch (e) {} window.__navCover && window.__navCover(); window.location.href = window.location.pathname; },
+      contact: (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } if (this._hideCursorLabelNow) this._hideCursorLabelNow(); window.location.href = 'mailto:jason.jinulim@gmail.com'; /* external: no backstop */ },
       headerFam, headerWeight, headerSize, headerSpacing, headerCase,
       footerFam, footerWeight, footerSize, footerSpacing, footerCase,
       aboutBioFam, aboutBioWeight, aboutBioSize, aboutBioLH, aboutBioSpacing, aboutBioCase, aboutImgW, aboutBioMax, aboutBioTop,
@@ -1821,10 +1907,10 @@ class Component extends DCLogic {
       setMiniRing: (el) => { this.miniRing = el; this._buildMiniRing && this._buildMiniRing(); },
       setMiniDevices: (el) => { this.miniDevices = el; this._buildMiniDevices && this._buildMiniDevices(); },
       setMiniDevicesBright: (el) => { this.miniDevicesBright = el; this._buildMiniDevices && this._buildMiniDevices(); },
-      onDown: (e) => { if (e.target && e.target.closest && e.target.closest('a, h1, [data-clickable]')) return; this._downDevice = (e.target && e.target.closest && e.target.closest('[data-href]')) || null; this._dragDist = 0; this.dragging = true; this.lastX = e.clientX; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} if (e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grabbing'; },
-      onMove: (e) => { if (!this.dragging) return; const dx = e.clientX - this.lastX; this.lastX = e.clientX; this._dragDist = (this._dragDist || 0) + Math.abs(dx); this.spin += dx * 0.28; this.dragMomentum = dx * 12; },
-      onUp: (e) => { const wasTap = this.dragging && (this._dragDist || 0) < 6; this.dragging = false; if (e && e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grab'; if (wasTap && this._downDevice) { const href = this._downDevice.getAttribute('data-href'); if (href && !/^https?:/i.test(href)) this.openCase(href); } this._downDevice = null; },
-      onWheel: (e) => { this.dragMomentum += e.deltaY * 0.5; },
+      onDown: (e) => { if (e.target && e.target.closest && e.target.closest('a, h1, [data-clickable]')) return; this._downDevice = (e.target && e.target.closest && e.target.closest('[data-href]')) || null; this._dragDist = 0; this.dragging = true; this._ringInputUntil = performance.now() + 220; this._suppressCursorLabelForMotion && this._suppressCursorLabelForMotion(); this.lastX = e.clientX; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} if (e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grabbing'; },
+      onMove: (e) => { if (!this.dragging) return; const dx = e.clientX - this.lastX; this.lastX = e.clientX; this._dragDist = (this._dragDist || 0) + Math.abs(dx); this.spin += dx * 0.28; this.dragMomentum = dx * 12; this._ringInputUntil = performance.now() + 220; },
+      onUp: (e) => { const wasTap = this.dragging && (this._dragDist || 0) < 6; this.dragging = false; this._ringInputUntil = performance.now() + 220; if (e && e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grab'; if (wasTap && this._downDevice) { const href = this._downDevice.getAttribute('data-href'); if (href && !/^https?:/i.test(href)) this.openCase(href); } this._downDevice = null; },
+      onWheel: (e) => { this.dragMomentum += e.deltaY * 0.5; this._ringInputUntil = performance.now() + 220; this._suppressCursorLabelForMotion && this._suppressCursorLabelForMotion(); },
     };
   }
 }

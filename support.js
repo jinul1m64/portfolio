@@ -1070,11 +1070,15 @@
   }
 
   // src/cdn.ts
-  var REACT_URL = "https://unpkg.com/react@18.3.1/umd/react.production.min.js";
+  // All pages load the single site-root runtime, so vendor paths resolve from one canonical base.
+  var SUPPORT_SCRIPT_URL = document.currentScript && document.currentScript.src || document.baseURI;
+  var SUPPORT_SCRIPT_DIR = new URL(".", SUPPORT_SCRIPT_URL);
+  var SITE_ROOT_URL = SUPPORT_SCRIPT_DIR;
+  var REACT_URL = new URL("assets/vendor/react.production.min.js", SITE_ROOT_URL).href;
   var REACT_SRI = "sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z";
-  var REACT_DOM_URL = "https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js";
+  var REACT_DOM_URL = new URL("assets/vendor/react-dom.production.min.js", SITE_ROOT_URL).href;
   var REACT_DOM_SRI = "sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1";
-  var BABEL_URL = "https://unpkg.com/@babel/standalone@7.29.0/babel.min.js";
+  var BABEL_URL = new URL("assets/vendor/babel.min.js", SITE_ROOT_URL).href;
   var BABEL_SRI = "sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y";
   function cdnScriptFor(url, sri) {
     const res = window.__resources;
