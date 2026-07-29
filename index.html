@@ -443,7 +443,7 @@ class Component extends DCLogic {
       { img: R('m5', B+'65b041af6127d88b289d5fba_nw-1.png'), title: 'Homescreen Redesign', company: 'NerdWallet', href: 'https://jasonlim.design/#nw', blurb: 'A refreshed home surface that centers each member\u2019s most relevant financial next step.', o: 'portrait' },
       { img: R('m2', B+'65b0054f1a6aab36d00e14e5_ratings-1.png'), title: 'Dasher Ratings', company: 'DoorDash', href: 'https://jasonlim.design/#ratings', blurb: 'A clearer, fairer ratings system that helps Dashers understand their standing and what actually moves it.', o: 'portrait' },
       { img: R('m3', B+'65b005b8069fd5247b08aab1_sp-1.png'), video: './assets/video/mobilization.webm', title: 'dasher mobilization', company: 'DoorDash', href: './work/mobilization.dc.html', blurb: 'Promotional surfaces that mobilize Dashers toward high-demand windows without pressure or clutter.', o: 'portrait' },
-      { img: R('m4', './assets/ouster-fleet.png'), video: './assets/video/ouster-smooth-test.webm', videoMp4: './assets/video/ouster-smooth-h264.mp4', title: 'fleet management', company: 'Ouster', href: './work/ouster.dc.html', blurb: 'A web tool for monitoring, configuring, and interpreting fleets of lidar sensors at scale.', o: 'landscape' },
+      { img: R('m4', './assets/ouster-fleet.png'), title: 'fleet management', company: 'Ouster', href: './work/ouster.dc.html', blurb: 'A web tool for monitoring, configuring, and interpreting fleets of lidar sensors at scale.', o: 'landscape' },
       { img: R('m1', './assets/chat-poster.png'), video: './assets/video/in-app-chat.webm', title: 'in-app chat', company: 'DoorDash', href: './work/in-app-chat.dc.html', blurb: 'Real-time messaging that connects Dashers, customers, and support in one calm, legible thread during an active delivery.', o: 'portrait' },
     ];
   }
@@ -1748,6 +1748,7 @@ class Component extends DCLogic {
             ] : null),
         ]);
       };
+      // The poster-only Ouster device is slightly taller than the artwork, leaving a slim black breather.
       const faceFit = isTablet ? 'contain' : 'cover';
 
       // --- Titanium body: stacked side-wall layers behind the glass ---
@@ -1800,7 +1801,7 @@ class Component extends DCLogic {
         ));
       }
       const body = h('div', { style: {
-        position: 'relative', width: DEVICE_W + 'px', aspectRatio: isTablet ? '1.3136' : '0.4997',
+        position: 'relative', width: DEVICE_W + 'px', aspectRatio: isTablet ? (base.video ? '1.3136' : '1.52') : '0.4997',
         transformStyle: 'preserve-3d', WebkitTransformStyle: 'preserve-3d',
         transform: 'scale(1)',
       } }, parts);
