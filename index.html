@@ -1240,11 +1240,11 @@ class Component extends DCLogic {
     try { gl = canvas.getContext('webgl', { antialias: false, alpha: false, depth: false, powerPreference: 'low-power' }); } catch (e) {}
     if (!gl) return;
     this._bgGl = gl;
-    // Reversible Dragonfly-inspired ASCII study. The normal background remains the default;
-    // append ?ascii-test=1 to render the same waves through the site's Doto numerator font.
+    // Production Dragonfly-inspired ASCII background. PP Neue Montreal is the selected default;
+    // append ?ascii=off for the legacy WebGL treatment or ?ascii-font=doto for the alternate face.
     const asciiParams = new URLSearchParams(window.location.search);
-    const asciiEnabled = asciiParams.get('ascii-test') === '1';
-    const asciiFontFamily = asciiParams.get('ascii-font') === 'montreal' ? 'PP Neue Montreal' : 'Doto';
+    const asciiEnabled = asciiParams.get('ascii') !== 'off';
+    const asciiFontFamily = asciiParams.get('ascii-font') === 'doto' ? 'Doto' : 'PP Neue Montreal';
     canvas.dataset.ascii = asciiEnabled ? 'on' : 'off';
     canvas.dataset.asciiFont = asciiFontFamily;
     const vs = 'attribute vec2 a; void main(){ gl_Position = vec4(a,0.,1.); }';

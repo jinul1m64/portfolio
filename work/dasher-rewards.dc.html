@@ -90,7 +90,10 @@
     c.appendChild(fb);
     var hdr = document.createElement('div');
     hdr.style.cssText = 'position:absolute;top:0;left:0;right:0;height:52px;display:flex;justify-content:space-between;align-items:center;padding:0 16px;color:#e2e1e2;';
-    hdr.innerHTML = '<span class="case-nav-type">jason lim</span><span class="case-nav-type">contact</span><div class="vt-bridge__center"><img class="vt-bridge__image" src="../assets/profile.png" alt="" draggable="false" /><span class="case-nav-type">about</span></div>';
+    var center = window.__TO_ABOUT
+      ? '<span class="case-nav-type">exit</span>'
+      : '<img class="vt-bridge__image" src="../assets/profile.png" alt="" draggable="false" /><span class="case-nav-type">about</span>';
+    hdr.innerHTML = '<span class="case-nav-type">jason lim</span><span class="case-nav-type">contact</span><div class="vt-bridge__center">' + center + '</div>';
     c.appendChild(hdr);
     (document.body || document.documentElement).appendChild(c);
   };
@@ -226,7 +229,7 @@
 
   <!-- Center avatar + About toggle (kept out of the header's difference blend so the photo stays true colour) -->
   <div class="case-avatar m-avatar">
-    <div class="case-avatar__inner">
+    <div ref="{{ setAvatarInner }}" class="case-avatar__inner">
       <div class="case-avatar__image-hit" data-cursor-label="MOI" data-clickable="true" onClick="{{ goAbout }}">
         <img class="case-avatar__image" src="../assets/profile.png" alt="Jason Lim" draggable="false" />
       </div>
@@ -638,6 +641,7 @@ class Component extends DCLogic {
       setNextEyebrow: (el) => { this.nextEyebrowEl = el; },
       setNextTitle: (el) => { this.nextTitleEl = el; },
       setMain: (el) => { this.mainEl = el; },
+      setAvatarInner: (el) => { this.avatarInnerEl = el; },
       setCursorEl: (el) => { this.cursorEl = el; },
       setCursorLabel: (el) => { this.cursorLabel = el; },
       setCursorScale: (el) => { this.cursorScale = el; },
@@ -664,8 +668,10 @@ class Component extends DCLogic {
         if (this._navigating) return; this._navigating = true;
         this._curReady = false; if (this._hideCursorLabelNow) this._hideCursorLabelNow();
         try { sessionStorage.setItem('aboutReturn', location.href.split('#')[0]); } catch (e) {}
+        window.__TO_ABOUT = true;
+        if (this.avatarInnerEl) { this.avatarInnerEl.style.transition = 'opacity .5s ease'; this.avatarInnerEl.style.opacity = '0'; this.avatarInnerEl.style.pointerEvents = 'none'; }
         this._gooOutAll();
-        setTimeout(() => { window.location.href = '../index.html#about'; }, 620);
+        setTimeout(() => { window.location.href = '../index.html#about'; }, 800);
       },
     };
   }
