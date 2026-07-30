@@ -1240,10 +1240,19 @@ class Component extends DCLogic {
     try { gl = canvas.getContext('webgl', { antialias: false, alpha: false, depth: false, powerPreference: 'low-power' }); } catch (e) {}
     if (!gl) return;
     this._bgGl = gl;
+    // Reversible Dragonfly-inspired ASCII study. The normal background remains the default;
+    // append ?ascii-test=1 to render the same waves through the site's Doto numerator font.
+    const asciiParams = new URLSearchParams(window.location.search);
+    const asciiEnabled = asciiParams.get('ascii-test') === '1';
+    const asciiFontFamily = asciiParams.get('ascii-font') === 'montreal' ? 'PP Neue Montreal' : 'Doto';
+    const asciiOriginalBrightness = asciiParams.get('brightness') === 'original';
+    canvas.dataset.ascii = asciiEnabled ? 'on' : 'off';
+    canvas.dataset.asciiFont = asciiFontFamily;
     const vs = 'attribute vec2 a; void main(){ gl_Position = vec4(a,0.,1.); }';
     const fs = [
       'precision highp float;',
       'uniform vec2 u_res; uniform float u_time; uniform float u_shift; uniform float u_fade; uniform float u_dith; uniform vec2 u_mouse; uniform float u_hole;',
+      'uniform float u_ascii; uniform float u_asciiGain; uniform float u_asciiOverall; uniform vec2 u_cell; uniform float u_glyphCount; uniform sampler2D u_atlas;',
       'float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }',
       'float noise(vec2 p){ vec2 i=floor(p), f=fract(p);',
       '  float a=hash(i), b=hash(i+vec2(1.,0.)), c=hash(i+vec2(0.,1.)), d=hash(i+vec2(1.,1.));',
@@ -1253,7 +1262,11 @@ class Component extends DCLogic {
       'float bayer4(vec2 a){ return bayer2(0.5*a)*0.25+bayer2(a); }',
       'float bayer8(vec2 a){ return bayer4(0.5*a)*0.25+bayer2(a); }',
       'void main(){',
-      '  vec2 uv=gl_FragCoord.xy/u_res.xy;',
+      '  vec2 cellId=floor(gl_FragCoord.xy/u_cell);',
+      '  vec2 glyphUV=fract(gl_FragCoord.xy/u_cell);',
+      '  vec2 rawUV=gl_FragCoord.xy/u_res.xy;',
+      '  vec2 cellUV=((cellId+0.5)*u_cell)/u_res.xy;',
+      '  vec2 uv=mix(rawUV,cellUV,u_ascii);',
       '  vec2 muv=u_mouse/u_res.xy; vec2 duv=uv-muv; vec2 dua=duv; dua.x*=u_res.x/u_res.y;',
       '  float pull=u_hole*smoothstep(0.22,0.0,length(dua));',
       '  uv-=duv*pull*0.82;',
@@ -1266,8 +1279,11 @@ class Component extends DCLogic {
       '  float metal=pow(c1,1.9)*0.72+pow(c2,2.5)*0.35;',
       '  float aurora=clamp(metal,0.0,1.0);',
       '  vec2 cc=uv-0.5; cc.x*=u_res.x/u_res.y;',
-      '  aurora*=smoothstep(0.16,0.58,length(cc));',
+      '  float edgeMask=smoothstep(0.16,0.58,length(cc));',
+      '  aurora*=edgeMask;',
       '  aurora*=u_fade;',
+      '  float asciiAurora=clamp(pow(c1,3.1)*0.76+pow(c2,4.0)*0.30,0.0,1.0);',
+      '  asciiAurora*=edgeMask*u_fade;',
       '  vec3 base=vec3(0.016,0.017,0.019);',
       '  vec3 glow=vec3(0.070,0.073,0.082);',
       '  float bth=(bayer8(floor(gl_FragCoord.xy/5.0))-0.5)*1.1*u_dith*(1.0+pull*4.0);',
@@ -1276,8 +1292,30 @@ class Component extends DCLogic {
       '  vec3 col=mix(base,glow,q);',
       '  float vig=smoothstep(1.3,0.2,length(uv-0.5));',
       '  col*=mix(0.55,1.0,vig);',
+      '  if(u_ascii>0.5){',
+      '    float stillNoise=(hash(cellId+17.3)-0.5)*0.055;',
+      '    float shade=clamp(asciiAurora+stillNoise,0.0,0.999);',
+      '    float direction=fract(wq.x*3.7+wq.y*5.1+h*1.9);',
+      '    float glyph=0.0;',
+      '    if(shade>0.07) glyph=1.0;',
+      '    if(shade>0.13) glyph=2.0;',
+      '    if(shade>0.20) glyph=3.0;',
+      '    if(shade>0.34) glyph=4.0;',
+      '    if(shade>0.42) glyph=5.0+floor(direction*4.0);',
+      '    if(shade>0.60) glyph=9.0;',
+      '    if(shade>0.72) glyph=10.0;',
+      '    if(shade>0.88) glyph=11.0;',
+      '    vec2 atlasUV=vec2((glyph+glyphUV.x)/u_glyphCount,glyphUV.y);',
+      '    float ink=texture2D(u_atlas,atlasUV).r;',
+      '    vec3 asciiLow=vec3(0.048,0.050,0.056);',
+      '    vec3 asciiHigh=vec3(0.36,0.37,0.41)*u_asciiGain;',
+      '    vec3 asciiInk=mix(asciiLow,asciiHigh,smoothstep(0.06,0.92,shade));',
+      '    asciiInk*=u_asciiOverall;',
+      '    col=mix(base,asciiInk,ink);',
+      '    col*=mix(0.62,1.0,vig);',
+      '  }',
       '  float g=hash(gl_FragCoord.xy+fract(u_time)*vec2(91.7,47.3));',
-      '  col+=(g-0.5)*0.015;',
+      '  col+=(g-0.5)*mix(0.015,0.005,u_ascii);',
       '  gl_FragColor=vec4(col,1.0);',
       '}',
     ].join('\n');
@@ -1291,7 +1329,40 @@ class Component extends DCLogic {
     const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     const loc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    const uRes = gl.getUniformLocation(prog, 'u_res'), uTime = gl.getUniformLocation(prog, 'u_time'), uShift = gl.getUniformLocation(prog, 'u_shift'), uFade = gl.getUniformLocation(prog, 'u_fade'), uDith = gl.getUniformLocation(prog, 'u_dith'), uMouse = gl.getUniformLocation(prog, 'u_mouse'), uHole = gl.getUniformLocation(prog, 'u_hole');
+    const uRes = gl.getUniformLocation(prog, 'u_res'), uTime = gl.getUniformLocation(prog, 'u_time'), uShift = gl.getUniformLocation(prog, 'u_shift'), uFade = gl.getUniformLocation(prog, 'u_fade'), uDith = gl.getUniformLocation(prog, 'u_dith'), uMouse = gl.getUniformLocation(prog, 'u_mouse'), uHole = gl.getUniformLocation(prog, 'u_hole'), uAscii = gl.getUniformLocation(prog, 'u_ascii'), uAsciiGain = gl.getUniformLocation(prog, 'u_asciiGain'), uAsciiOverall = gl.getUniformLocation(prog, 'u_asciiOverall'), uCell = gl.getUniformLocation(prog, 'u_cell'), uGlyphCount = gl.getUniformLocation(prog, 'u_glyphCount'), uAtlas = gl.getUniformLocation(prog, 'u_atlas');
+
+    // Generate a compact single-row glyph atlas from the existing Doto face. It is uploaded once
+    // immediately, then refreshed when the webfont confirms it has loaded so no external font is needed.
+    // Brightness ladder observed in the reference: sparse punctuation → directional
+    // strokes → dense symbols. Use numeric zero only; never the letter "o".
+    const glyphs = [' ', '.', ':', '-', '=', '/', '\\', '<', '>', '+', '0', '#'];
+    const glyphW = 28, glyphH = 40;
+    const asciiFontSize = asciiFontFamily === 'Doto' ? 35 : 30;
+    const atlasCanvas = document.createElement('canvas');
+    atlasCanvas.width = glyphW * glyphs.length; atlasCanvas.height = glyphH;
+    const atlasCtx = atlasCanvas.getContext('2d');
+    const atlasTex = gl.createTexture();
+    const uploadAtlas = () => {
+      atlasCtx.clearRect(0, 0, atlasCanvas.width, atlasCanvas.height);
+      atlasCtx.fillStyle = '#ffffff';
+      atlasCtx.font = "400 " + asciiFontSize + "px '" + asciiFontFamily + "', monospace";
+      atlasCtx.textAlign = 'center'; atlasCtx.textBaseline = 'middle';
+      glyphs.forEach((glyph, i) => atlasCtx.fillText(glyph, i * glyphW + glyphW / 2, glyphH / 2 + 1));
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, atlasTex);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, atlasCanvas);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    };
+    uploadAtlas();
+    if (document.fonts && document.fonts.load) document.fonts.load("400 " + asciiFontSize + "px '" + asciiFontFamily + "'").then(uploadAtlas).catch(() => {});
+    gl.uniform1i(uAtlas, 0);
+    gl.uniform1f(uAscii, asciiEnabled ? 1 : 0);
+    gl.uniform1f(uAsciiGain, asciiFontFamily === 'PP Neue Montreal' && !asciiOriginalBrightness ? 0.76 : 1);
+    gl.uniform1f(uAsciiOverall, asciiFontFamily === 'PP Neue Montreal' && !asciiOriginalBrightness ? 0.94 : 1);
+    gl.uniform1f(uGlyphCount, glyphs.length);
     this._bgResize = () => {
       const dpr = Math.min(1.5, window.devicePixelRatio || 1);
       this._bgDpr = dpr;
@@ -1299,6 +1370,11 @@ class Component extends DCLogic {
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(uRes, canvas.width, canvas.height);
+      // Doto is slightly larger and more tightly packed; Montreal keeps its existing spacing.
+      const isDoto = asciiFontFamily === 'Doto';
+      const cellW = isDoto ? 6.2 : 6.5;
+      const cellH = isDoto ? 9.4 : 10;
+      gl.uniform2f(uCell, Math.max(isDoto ? 6 : 7, Math.round(cellW * dpr)), Math.max(isDoto ? 9 : 10, Math.round(cellH * dpr)));
     };
     window.addEventListener('resize', this._bgResize); this._bgResize();
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
