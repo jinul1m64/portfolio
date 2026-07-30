@@ -789,31 +789,7 @@ class Component extends DCLogic {
       if (this.cursorBlurInner) this.cursorBlurInner.style.transform = 'scale(.55)';
       if (this.cursorCorners) this.cursorCorners.style.transform = 'scale(1)';
     };
-    // Hide the large hover treatment while the user is actively moving the ring, but preserve the
-    // pointer coordinates so the correct label can return after the ring has settled.
-    this._suppressCursorLabelForMotion = () => {
-      const labelEl = this.cursorLabel;
-      this._cursorLabelText = null;
-      cancelAnimationFrame(this._curScrRaf);
-      if (labelEl) { clearInterval(labelEl.__scr); labelEl.__scr = null; labelEl.style.opacity = '0'; labelEl.textContent = ''; }
-      if (this.cursorScale) this.cursorScale.style.transform = 'scale(0.9)';
-      if (this.cursorBlur) this.cursorBlur.style.opacity = '0';
-      if (this.cursorTextBg) this.cursorTextBg.style.opacity = '0';
-      if (this.cursorBlurInner) this.cursorBlurInner.style.transform = 'scale(.55)';
-      if (this.cursorCorners) this.cursorCorners.style.transform = 'scale(1)';
-    };
     this._refreshCursorLabel = () => {
-      const now = performance.now();
-      const ringInputMoving = this.dragging || Math.abs(this.dragMomentum || 0) > 0.4 || now < (this._ringInputUntil || 0);
-      if (ringInputMoving) {
-        this._cursorRingSettleUntil = now + 50;
-        this._suppressCursorLabelForMotion();
-        return;
-      }
-      if (now < (this._cursorRingSettleUntil || 0)) {
-        this._suppressCursorLabelForMotion();
-        return;
-      }
       const x = this._cursorX, y = this._cursorY;
       let label = null;
       let anchor = 'br';
@@ -928,12 +904,16 @@ class Component extends DCLogic {
     // way into a case study).
     if (this.footerEl) fadeIn(this.footerEl, 450, 100);
     if (this.sceneEl) { this.sceneEl.style.pointerEvents = ''; this._revealScene(1500, 250); }
-    this._revealMini(1550);
+    // On repeat arrivals, start the minimap exactly when the large ring's
+    // 250ms delay + 1500ms reveal finishes.
+    this._revealMini(1750);
     // Inverse of the leave transition: dither the WebGL background back IN via the fade uniform.
     // Hold it fully dithered-out until the root view-transition crossfade settles, then ramp so the
     // dither-in plays on the already-opaque page instead of being masked by the crossfade.
-    this._bgFade = 0; this._bgFadeTarget = 0; this._bgFadeRate = 0.028;
-    setTimeout(() => { this._bgFadeTarget = 1; }, 520);
+    this._bgFade = 0; this._bgFadeTarget = 0; this._bgFadeRate = 0.024;
+    // The large ring reveals from 250–1750ms. Begin the WebGL reveal at its
+    // exact midpoint, then let it develop slightly more slowly than before.
+    setTimeout(() => { this._bgFadeTarget = 1; }, 1000);
     this._booting = false;
     if (this._applyVideoPlayback) this._applyVideoPlayback();
   }
@@ -1263,7 +1243,7 @@ class Component extends DCLogic {
     const vs = 'attribute vec2 a; void main(){ gl_Position = vec4(a,0.,1.); }';
     const fs = [
       'precision highp float;',
-      'uniform vec2 u_res; uniform float u_time; uniform float u_dir; uniform float u_fade; uniform float u_dith; uniform vec2 u_mouse; uniform float u_hole;',
+      'uniform vec2 u_res; uniform float u_time; uniform float u_shift; uniform float u_fade; uniform float u_dith; uniform vec2 u_mouse; uniform float u_hole;',
       'float hash(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }',
       'float noise(vec2 p){ vec2 i=floor(p), f=fract(p);',
       '  float a=hash(i), b=hash(i+vec2(1.,0.)), c=hash(i+vec2(0.,1.)), d=hash(i+vec2(1.,1.));',
@@ -1280,7 +1260,7 @@ class Component extends DCLogic {
       '  vec2 p=uv; p.x*=u_res.x/u_res.y; p*=2.2;',
       '  float t=u_time*0.12;',
       '  vec2 wq=vec2(fbm(p+vec2(0.0,t*0.4)), fbm(p+vec2(3.1,1.7)-t*0.28));',
-      '  float h=fbm(p*1.4+wq*2.7+vec2(t*0.28*u_dir,0.0));',
+      '  float h=fbm(p*1.4+wq*2.7+vec2(u_shift,0.0));',
       '  float c1=abs(sin(h*7.4+t));',
       '  float c2=abs(sin(h*14.8-t*0.7));',
       '  float metal=pow(c1,1.9)*0.72+pow(c2,2.5)*0.35;',
@@ -1289,7 +1269,7 @@ class Component extends DCLogic {
       '  aurora*=smoothstep(0.16,0.58,length(cc));',
       '  aurora*=u_fade;',
       '  vec3 base=vec3(0.016,0.017,0.019);',
-      '  vec3 glow=vec3(0.058,0.061,0.068);',
+      '  vec3 glow=vec3(0.070,0.073,0.082);',
       '  float bth=(bayer8(floor(gl_FragCoord.xy/5.0))-0.5)*1.1*u_dith*(1.0+pull*4.0);',
       '  float a2=aurora+bth*smoothstep(0.02,0.14,aurora);',
       '  float q=step(0.5,a2);',
@@ -1311,7 +1291,7 @@ class Component extends DCLogic {
     const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     const loc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    const uRes = gl.getUniformLocation(prog, 'u_res'), uTime = gl.getUniformLocation(prog, 'u_time'), uDir = gl.getUniformLocation(prog, 'u_dir'), uFade = gl.getUniformLocation(prog, 'u_fade'), uDith = gl.getUniformLocation(prog, 'u_dith'), uMouse = gl.getUniformLocation(prog, 'u_mouse'), uHole = gl.getUniformLocation(prog, 'u_hole');
+    const uRes = gl.getUniformLocation(prog, 'u_res'), uTime = gl.getUniformLocation(prog, 'u_time'), uShift = gl.getUniformLocation(prog, 'u_shift'), uFade = gl.getUniformLocation(prog, 'u_fade'), uDith = gl.getUniformLocation(prog, 'u_dith'), uMouse = gl.getUniformLocation(prog, 'u_mouse'), uHole = gl.getUniformLocation(prog, 'u_hole');
     this._bgResize = () => {
       const dpr = Math.min(1.5, window.devicePixelRatio || 1);
       this._bgDpr = dpr;
@@ -1324,6 +1304,8 @@ class Component extends DCLogic {
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const t0 = performance.now();
     this._bgDir = -(this.spinDir || 1);
+    this._bgShift = this._bgShift || 0;
+    let _bgLast = t0;
     let _seenBg = false; try { _seenBg = !!sessionStorage.getItem('om_seen'); } catch (e) {}
     if (this._bgFade == null) this._bgFade = _seenBg ? 0 : 1;   // internal arrival: start dithered-out so no full-brightness flash before _revealInstant
     if (this._bgFadeTarget == null) this._bgFadeTarget = _seenBg ? 0 : 1;
@@ -1347,8 +1329,13 @@ class Component extends DCLogic {
       document.addEventListener('pointerleave', this._bgLeave);
     }
     const draw = (now) => {
+      const bgDt = Math.min(0.05, Math.max(0, (now - _bgLast) / 1000));
+      _bgLast = now;
       const target = -(this.spinDir || 1);
       this._bgDir += (target - this._bgDir) * 0.025;
+      // Integrate a small directional drift instead of multiplying direction by total page time.
+      // Arrow changes now reverse smoothly without throwing the texture across wide screens.
+      this._bgShift += bgDt * 0.0336 * this._bgDir;
       this._bgFade += (this._bgFadeTarget - this._bgFade) * (this._bgFadeRate || 0.06);
       this._bgDith += (this._bgDithTarget - this._bgDith) * 0.035;
       const ringMoving = this.dragging || Math.abs(this.dragMomentum || 0) > 0.4 || now < (this._ringInputUntil || 0);
@@ -1357,14 +1344,14 @@ class Component extends DCLogic {
       this._holeOn += (this._holeOnTarget - this._holeOn) * 0.07;
       this._holePos.x += (this._holeTarget.x - this._holePos.x) * 0.24;
       this._holePos.y += (this._holeTarget.y - this._holePos.y) * 0.24;
-      gl.uniform1f(uDith, this._bgDith); gl.uniform1f(uFade, this._bgFade); gl.uniform1f(uDir, this._bgDir);
+      gl.uniform1f(uDith, this._bgDith); gl.uniform1f(uFade, this._bgFade); gl.uniform1f(uShift, this._bgShift);
       const _dpr = this._bgDpr || 1;
       gl.uniform2f(uMouse, this._holePos.x * _dpr, canvas.height - this._holePos.y * _dpr);
       gl.uniform1f(uHole, this._holeOn); gl.uniform1f(uTime, (now - t0) / 1000);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       if (!reduce && !document.hidden) this._bgRaf = requestAnimationFrame(draw);
     };
-    if (reduce) { gl.uniform1f(uDith, 1); gl.uniform1f(uFade, 1); gl.uniform1f(uDir, -1); gl.uniform1f(uTime, 12.0); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+    if (reduce) { gl.uniform1f(uDith, 1); gl.uniform1f(uFade, 1); gl.uniform1f(uShift, 0); gl.uniform1f(uTime, 12.0); gl.drawArrays(gl.TRIANGLES, 0, 3); }
     else this._bgRaf = requestAnimationFrame(draw);
     this._bgVis = () => { if (document.hidden) cancelAnimationFrame(this._bgRaf); else if (!reduce) this._bgRaf = requestAnimationFrame(draw); };
     document.addEventListener('visibilitychange', this._bgVis);
@@ -1908,10 +1895,10 @@ class Component extends DCLogic {
       setMiniRing: (el) => { this.miniRing = el; this._buildMiniRing && this._buildMiniRing(); },
       setMiniDevices: (el) => { this.miniDevices = el; this._buildMiniDevices && this._buildMiniDevices(); },
       setMiniDevicesBright: (el) => { this.miniDevicesBright = el; this._buildMiniDevices && this._buildMiniDevices(); },
-      onDown: (e) => { if (e.target && e.target.closest && e.target.closest('a, h1, [data-clickable]')) return; this._downDevice = (e.target && e.target.closest && e.target.closest('[data-href]')) || null; this._dragDist = 0; this.dragging = true; this._ringInputUntil = performance.now() + 220; this._suppressCursorLabelForMotion && this._suppressCursorLabelForMotion(); this.lastX = e.clientX; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} if (e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grabbing'; },
+      onDown: (e) => { if (e.target && e.target.closest && e.target.closest('a, h1, [data-clickable]')) return; this._downDevice = (e.target && e.target.closest && e.target.closest('[data-href]')) || null; this._dragDist = 0; this.dragging = true; this._ringInputUntil = performance.now() + 220; this.lastX = e.clientX; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {} if (e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grabbing'; },
       onMove: (e) => { if (!this.dragging) return; const dx = e.clientX - this.lastX; this.lastX = e.clientX; this._dragDist = (this._dragDist || 0) + Math.abs(dx); this.spin += dx * 0.28; this.dragMomentum = dx * 12; this._ringInputUntil = performance.now() + 220; },
       onUp: (e) => { const wasTap = this.dragging && (this._dragDist || 0) < 6; this.dragging = false; this._ringInputUntil = performance.now() + 220; if (e && e.currentTarget && e.currentTarget.style) e.currentTarget.style.cursor = 'grab'; if (wasTap && this._downDevice) { const href = this._downDevice.getAttribute('data-href'); if (href && !/^https?:/i.test(href)) this.openCase(href); } this._downDevice = null; },
-      onWheel: (e) => { this.dragMomentum += e.deltaY * 0.5; this._ringInputUntil = performance.now() + 220; this._suppressCursorLabelForMotion && this._suppressCursorLabelForMotion(); },
+      onWheel: (e) => { this.dragMomentum += e.deltaY * 0.5; this._ringInputUntil = performance.now() + 220; },
     };
   }
 }
