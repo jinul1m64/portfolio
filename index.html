@@ -1245,7 +1245,6 @@ class Component extends DCLogic {
     const asciiParams = new URLSearchParams(window.location.search);
     const asciiEnabled = asciiParams.get('ascii-test') === '1';
     const asciiFontFamily = asciiParams.get('ascii-font') === 'montreal' ? 'PP Neue Montreal' : 'Doto';
-    const asciiOriginalBrightness = asciiParams.get('brightness') === 'original';
     canvas.dataset.ascii = asciiEnabled ? 'on' : 'off';
     canvas.dataset.asciiFont = asciiFontFamily;
     const vs = 'attribute vec2 a; void main(){ gl_Position = vec4(a,0.,1.); }';
@@ -1360,8 +1359,8 @@ class Component extends DCLogic {
     if (document.fonts && document.fonts.load) document.fonts.load("400 " + asciiFontSize + "px '" + asciiFontFamily + "'").then(uploadAtlas).catch(() => {});
     gl.uniform1i(uAtlas, 0);
     gl.uniform1f(uAscii, asciiEnabled ? 1 : 0);
-    gl.uniform1f(uAsciiGain, asciiFontFamily === 'PP Neue Montreal' && !asciiOriginalBrightness ? 0.76 : 1);
-    gl.uniform1f(uAsciiOverall, asciiFontFamily === 'PP Neue Montreal' && !asciiOriginalBrightness ? 0.94 : 1);
+    gl.uniform1f(uAsciiGain, asciiFontFamily === 'PP Neue Montreal' ? 0.76 : 1);
+    gl.uniform1f(uAsciiOverall, asciiFontFamily === 'PP Neue Montreal' ? 0.94 : 1);
     gl.uniform1f(uGlyphCount, glyphs.length);
     this._bgResize = () => {
       const dpr = Math.min(1.5, window.devicePixelRatio || 1);
